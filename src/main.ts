@@ -166,6 +166,7 @@ const elements = {
   cropLensButton: document.querySelector<HTMLButtonElement>("#crop-lens"),
   cropAiButton: document.querySelector<HTMLButtonElement>("#crop-ai"),
   cropCopyButton: document.querySelector<HTMLButtonElement>("#crop-copy"),
+  cropRevealButton: document.querySelector<HTMLButtonElement>("#crop-reveal"),
   cropCancelButton: document.querySelector<HTMLButtonElement>("#crop-cancel"),
   thumbs: document.querySelector<HTMLElement>("#thumbs"),
   emptyState: document.querySelector<HTMLElement>("#empty-state"),
@@ -218,6 +219,10 @@ window.addEventListener("DOMContentLoaded", () => {
   elements.cropCopyButton?.addEventListener("click", (event) => {
     event.stopPropagation();
     copyCropToClipboard();
+  });
+  elements.cropRevealButton?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    revealCropInFinder();
   });
   elements.cropCancelButton?.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -697,10 +702,27 @@ async function openCropSearch(target: "lens" | "ai") {
     const crop = await createCropImage();
     const copied = await tryCopyBlobToClipboard(crop.blob);
     setCropStatus(copied ? "コピー済み。⌘Vで貼付" : "一時保存済み。手動で選択");
+    if (!copied && crop.path) await revealSavedCrop(crop.path);
     if (crop.path) console.info(`Saved crop: ${crop.path}`);
   } catch (error) {
     console.error(error);
     setCropStatus("失敗");
+  }
+}
+
+async function revealCropInFinder() {
+  try {
+    setCropStatus("切り出し中");
+    const crop = await createCropImage();
+    if (!crop.path) {
+      setCropStatus("Tauri版のみ");
+      return;
+    }
+    await revealSavedCrop(crop.path);
+    setCropStatus("Finderで表示");
+  } catch (error) {
+    console.error(error);
+    setCropStatus("Finder表示失敗");
   }
 }
 
@@ -817,6 +839,12 @@ async function openExternalUrl(url: string) {
     await invoke("open_external_url", { url });
   } else {
     window.open(url, "_blank", "noopener,noreferrer");
+  }
+}
+
+async function revealSavedCrop(path: string) {
+  if (isTauriRuntime()) {
+    await invoke("reveal_file", { path });
   }
 }
 

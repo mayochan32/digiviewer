@@ -81,6 +81,37 @@ fn open_external_url(url: String) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn reveal_file(path: String) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .args(["-R", &path])
+            .spawn()
+            .map_err(|error| error.to_string())?;
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg(format!("/select,{path}"))
+            .spawn()
+            .map_err(|error| error.to_string())?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        if let Some(parent) = Path::new(&path).parent() {
+            std::process::Command::new("xdg-open")
+                .arg(parent)
+                .spawn()
+                .map_err(|error| error.to_string())?;
+        }
+    }
+
+    Ok(())
+}
+
 fn visit_directory(directory: &Path, images: &mut Vec<ImageFile>) -> Result<(), String> {
     for entry in fs::read_dir(directory).map_err(|error| error.to_string())? {
         let entry = entry.map_err(|error| error.to_string())?;
@@ -156,7 +187,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             scan_images,
             save_crop_image,
-            open_external_url
+            open_external_url,
+            reveal_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
