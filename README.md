@@ -53,7 +53,7 @@ The Tauri build uses a native folder picker and scans image paths through a Rust
 
 The preload count is adjustable in the top toolbar. A value of `6` preloads six images before and six images after the active image.
 
-After selecting a crop region, DigiViewer can copy the cropped PNG to the clipboard and open Google Lens or AI Mode. Automatic upload is intentionally not assumed because Google's web UI and account availability can change.
+After selecting a crop region, DigiViewer can copy the cropped PNG to the clipboard and open Google Lens or AI Mode. In the Tauri app, cropped images are also saved to `~/Pictures/DigiViewer Crops`. Automatic upload is intentionally not assumed because Google's web UI and account availability can change.
 
 ## Planned Native Layer
 

@@ -37,7 +37,11 @@ fn scan_images(directory: String) -> Result<Vec<ImageFile>, String> {
 
 #[tauri::command]
 fn save_crop_image(image: CropImage) -> Result<String, String> {
-    let directory = std::env::temp_dir().join("digiviewer");
+    let directory = std::env::var("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| std::env::temp_dir())
+        .join("Pictures")
+        .join("DigiViewer Crops");
     fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
     let timestamp = std::time::SystemTime::now()
         .duration_since(UNIX_EPOCH)
