@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DigiViewer</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <strong>DigiViewer</strong>
+          <span id="image-count">0 / 0</span>
+        </div>
+        <div class="topbar-actions">
+          <button id="choose-folder" type="button" class="file-button">フォルダ</button>
+          <button id="choose-files" type="button" class="file-button">画像</button>
+          <input id="open-folder" class="hidden-file-input" type="file" webkitdirectory multiple />
+          <input id="open-files" class="hidden-file-input" type="file" accept="image/*,.heic,.heif" multiple />
+          <div class="segmented" aria-label="比較枚数">
+            <button type="button" data-compare-count="1" aria-pressed="true">1</button>
+            <button type="button" data-compare-count="2" aria-pressed="false">2</button>
+            <button type="button" data-compare-count="3" aria-pressed="false">3</button>
+            <button type="button" data-compare-count="4" aria-pressed="false">4</button>
+          </div>
+          <button id="sync-toggle" type="button" class="tool-button" aria-pressed="true">同期 ON</button>
+          <label class="cache-setting">
+            <span>先読み</span>
+            <input id="preload-radius" type="number" min="0" max="50" step="1" value="6" />
+          </label>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <section class="viewer-panel">
+          <footer class="exif-bar">
+            <span id="exif-text">EXIF情報</span>
+            <span id="gps-text">GPSなし</span>
+            <button id="map-button" type="button" class="map-button" hidden>地図</button>
+          </footer>
+
+          <aside class="thumb-rail" aria-label="画像一覧">
+            <div id="thumbs" class="thumbs"></div>
+          </aside>
+
+          <div class="viewer-toolbar">
+            <button id="prev-button" type="button" class="icon-button" disabled title="前の画像">←</button>
+            <button id="next-button" type="button" class="icon-button" disabled title="次の画像">→</button>
+            <button id="fit-button" type="button" class="tool-button">フィット</button>
+            <button id="actual-button" type="button" class="tool-button">等倍</button>
+            <span id="zoom-value" class="zoom-readout">100%</span>
+            <div class="active-file">
+              <strong id="active-name">フォルダまたは画像を選択</strong>
+              <span id="active-meta">画像を読み込むとここにファイル情報が表示されます。</span>
+            </div>
+          </div>
+
+          <div id="viewer" class="viewer">
+            <div id="empty-state" class="empty-state">
+              <h1>大量画像を、止まらず見る。</h1>
+              <p>フォルダを選んで、矢印キーで移動。数字キー 1-4 で比較枚数を切り替え。ホイールで拡大、ドラッグで移動できます。</p>
+            </div>
+            <div id="compare-grid" class="compare-grid compare-1" hidden></div>
+            <section id="map-panel" class="map-panel" hidden>
+              <div class="map-panel-header">
+                <strong>撮影場所</strong>
+                <button id="map-close" type="button" class="icon-button" title="地図を閉じる">×</button>
+              </div>
+              <iframe id="map-frame" title="GPS撮影場所の地図"></iframe>
+            </section>
+          </div>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>
