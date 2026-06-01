@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -21,6 +21,11 @@ enum FileKind {
     Raw,
 }
 
+#[derive(Deserialize)]
+struct CropImage {
+    bytes: Vec<u8>,
+}
+
 #[tauri::command]
 fn scan_images(directory: String) -> Result<Vec<ImageFile>, String> {
     let root = PathBuf::from(directory);
@@ -28,6 +33,19 @@ fn scan_images(directory: String) -> Result<Vec<ImageFile>, String> {
     visit_directory(&root, &mut images)?;
     images.sort_by(|a, b| natordish(&a.path).cmp(&natordish(&b.path)));
     Ok(images)
+}
+
+#[tauri::command]
+fn save_crop_image(image: CropImage) -> Result<String, String> {
+    let directory = std::env::temp_dir().join("digiviewer");
+    fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| error.to_string())?
+        .as_millis();
+    let path = directory.join(format!("digiviewer-crop-{timestamp}.png"));
+    fs::write(&path, image.bytes).map_err(|error| error.to_string())?;
+    Ok(path.to_string_lossy().into_owned())
 }
 
 fn visit_directory(directory: &Path, images: &mut Vec<ImageFile>) -> Result<(), String> {
@@ -102,7 +120,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![scan_images])
+        .invoke_handler(tauri::generate_handler![scan_images, save_crop_image])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

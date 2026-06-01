@@ -13,6 +13,7 @@ The first MVP focuses on interaction feel:
 - display zoom as image-pixel scale, where 100% means one image pixel per screen pixel
 - preload and decode nearby images around the active image
 - detect same-basename RAW sidecar files and show `RAWあり`
+- crop a selected region and send it to Google Lens or Google AI Mode
 - inspect focus and composition differences without modifying original files
 
 ## Current MVP
@@ -42,6 +43,7 @@ The Tauri build uses a native folder picker and scans image paths through a Rust
 | `ArrowDown` / `ArrowUp` | jump forward / backward 10 images |
 | `1` `2` `3` `4` | switch comparison count |
 | drag thumbnail to pane | assign image to comparison slot |
+| `Shift` + drag on image | select a crop region |
 | mouse wheel | zoom |
 | drag | pan |
 | `F` | fit / reset view |
@@ -50,6 +52,8 @@ The Tauri build uses a native folder picker and scans image paths through a Rust
 | `L` | toggle sync lock |
 
 The preload count is adjustable in the top toolbar. A value of `6` preloads six images before and six images after the active image.
+
+After selecting a crop region, DigiViewer can copy the cropped PNG to the clipboard and open Google Lens or AI Mode. Automatic upload is intentionally not assumed because Google's web UI and account availability can change.
 
 ## Planned Native Layer
 

@@ -1,5 +1,6 @@
 import exifr from "exifr";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 
 type ImageItem = {
@@ -51,6 +52,19 @@ type NativeImageFile = {
   size: number;
   modified_at: number;
   kind?: "image" | "raw";
+};
+
+type CropRect = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+
+type SavedCrop = {
+  blob: Blob;
+  bytes: Uint8Array;
+  path?: string;
 };
 
 declare global {
@@ -119,6 +133,10 @@ const state = {
   syncView: true,
   activeSlot: 0,
   isDragging: false,
+  isSelecting: false,
+  selectionStartX: 0,
+  selectionStartY: 0,
+  selectionRect: null as CropRect | null,
   dragStartX: 0,
   dragStartY: 0,
   dragBaseX: 0,
@@ -143,6 +161,12 @@ const elements = {
   fileInput: document.querySelector<HTMLInputElement>("#open-files"),
   viewport: document.querySelector<HTMLElement>("#viewer"),
   compareGrid: document.querySelector<HTMLElement>("#compare-grid"),
+  selectionBox: document.querySelector<HTMLElement>("#selection-box"),
+  cropActions: document.querySelector<HTMLElement>("#crop-actions"),
+  cropLensButton: document.querySelector<HTMLButtonElement>("#crop-lens"),
+  cropAiButton: document.querySelector<HTMLButtonElement>("#crop-ai"),
+  cropCopyButton: document.querySelector<HTMLButtonElement>("#crop-copy"),
+  cropCancelButton: document.querySelector<HTMLButtonElement>("#crop-cancel"),
   thumbs: document.querySelector<HTMLElement>("#thumbs"),
   emptyState: document.querySelector<HTMLElement>("#empty-state"),
   imageCount: document.querySelector<HTMLElement>("#image-count"),
@@ -182,6 +206,10 @@ window.addEventListener("DOMContentLoaded", () => {
   elements.viewport?.addEventListener("pointermove", handlePointerMove);
   elements.viewport?.addEventListener("pointerup", endDrag);
   elements.viewport?.addEventListener("pointercancel", endDrag);
+  elements.cropLensButton?.addEventListener("click", () => openCropSearch("lens"));
+  elements.cropAiButton?.addEventListener("click", () => openCropSearch("ai"));
+  elements.cropCopyButton?.addEventListener("click", copyCropToClipboard);
+  elements.cropCancelButton?.addEventListener("click", clearSelection);
 
   elements.prevButton?.addEventListener("click", () => moveActive(-1));
   elements.nextButton?.addEventListener("click", () => moveActive(1));
@@ -481,6 +509,7 @@ function handleKeyDown(event: KeyboardEvent) {
     render();
   } else if (event.key === "Escape") {
     state.mapOpen = false;
+    clearSelection();
     renderMap();
   }
 }
@@ -510,6 +539,13 @@ function handlePointerDown(event: PointerEvent) {
   if (!pane || pane.classList.contains("is-empty")) return;
 
   state.activeSlot = Number(pane.dataset.slot ?? 0);
+  const imageIndex = state.compareSlots[state.activeSlot];
+  if (imageIndex !== null) state.activeIndex = imageIndex;
+  if (event.shiftKey) {
+    startSelection(event);
+    return;
+  }
+
   const view = currentView();
   state.isDragging = true;
   state.dragStartX = event.clientX;
@@ -522,6 +558,10 @@ function handlePointerDown(event: PointerEvent) {
 }
 
 function handlePointerMove(event: PointerEvent) {
+  if (state.isSelecting) {
+    updateSelection(event);
+    return;
+  }
   if (!state.isDragging) return;
   updateCurrentView({
     ...currentView(),
@@ -532,12 +572,207 @@ function handlePointerMove(event: PointerEvent) {
 }
 
 function endDrag(event: PointerEvent) {
+  if (state.isSelecting) {
+    finishSelection(event);
+    return;
+  }
   if (!state.isDragging || !elements.viewport) return;
   state.isDragging = false;
   if (elements.viewport.hasPointerCapture(event.pointerId)) {
     elements.viewport.releasePointerCapture(event.pointerId);
   }
   elements.viewport.classList.remove("is-dragging");
+}
+
+function startSelection(event: PointerEvent) {
+  if (!elements.viewport) return;
+  clearSelection();
+  const bounds = elements.viewport.getBoundingClientRect();
+  state.isSelecting = true;
+  state.selectionStartX = event.clientX - bounds.left;
+  state.selectionStartY = event.clientY - bounds.top;
+  state.selectionRect = {
+    left: state.selectionStartX,
+    top: state.selectionStartY,
+    width: 0,
+    height: 0,
+  };
+  elements.viewport.setPointerCapture(event.pointerId);
+  elements.viewport.classList.add("is-selecting");
+  renderSelection();
+}
+
+function updateSelection(event: PointerEvent) {
+  if (!elements.viewport) return;
+  const bounds = elements.viewport.getBoundingClientRect();
+  const currentX = clamp(event.clientX - bounds.left, 0, bounds.width);
+  const currentY = clamp(event.clientY - bounds.top, 0, bounds.height);
+  const left = Math.min(state.selectionStartX, currentX);
+  const top = Math.min(state.selectionStartY, currentY);
+  state.selectionRect = {
+    left,
+    top,
+    width: Math.abs(currentX - state.selectionStartX),
+    height: Math.abs(currentY - state.selectionStartY),
+  };
+  renderSelection();
+}
+
+function finishSelection(event: PointerEvent) {
+  if (!elements.viewport) return;
+  state.isSelecting = false;
+  if (elements.viewport.hasPointerCapture(event.pointerId)) {
+    elements.viewport.releasePointerCapture(event.pointerId);
+  }
+  elements.viewport.classList.remove("is-selecting");
+  if (!state.selectionRect || state.selectionRect.width < 8 || state.selectionRect.height < 8) {
+    clearSelection();
+    return;
+  }
+  renderSelection();
+}
+
+function renderSelection() {
+  const rect = state.selectionRect;
+  if (!rect || !elements.selectionBox || !elements.cropActions) return;
+
+  Object.assign(elements.selectionBox.style, {
+    left: `${rect.left}px`,
+    top: `${rect.top}px`,
+    width: `${rect.width}px`,
+    height: `${rect.height}px`,
+  });
+  elements.selectionBox.hidden = false;
+
+  const actionLeft = Math.max(8, rect.left);
+  const actionTop = Math.max(8, rect.top - 44);
+  Object.assign(elements.cropActions.style, {
+    left: `${actionLeft}px`,
+    top: `${actionTop}px`,
+  });
+  elements.cropActions.hidden = state.isSelecting || rect.width < 8 || rect.height < 8;
+}
+
+function clearSelection() {
+  state.isSelecting = false;
+  state.selectionRect = null;
+  elements.viewport?.classList.remove("is-selecting");
+  if (elements.selectionBox) elements.selectionBox.hidden = true;
+  if (elements.cropActions) elements.cropActions.hidden = true;
+}
+
+async function openCropSearch(target: "lens" | "ai") {
+  try {
+    const crop = await createCropImage();
+    await copyBlobToClipboard(crop.blob);
+    if (target === "lens") {
+      await openExternalUrl("https://lens.google.com/upload");
+    } else {
+      await openExternalUrl("https://www.google.com/search?udm=50&q=%E3%81%93%E3%81%AE%E7%94%9F%E3%81%8D%E7%89%A9%E3%81%AE%E7%A8%AE%E5%90%8D%E3%82%92%E5%90%8C%E5%AE%9A%E3%81%97%E3%81%A6%E3%80%81%E5%80%99%E8%A3%9C%E3%81%A8%E6%A0%B9%E6%8B%A0%E3%82%92%E6%97%A5%E6%9C%AC%E8%AA%9E%E3%81%A7%E8%AA%AC%E6%98%8E%E3%81%97%E3%81%A6");
+    }
+    if (crop.path) console.info(`Saved crop: ${crop.path}`);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function copyCropToClipboard() {
+  try {
+    const crop = await createCropImage();
+    await copyBlobToClipboard(crop.blob);
+    if (crop.path) console.info(`Saved crop: ${crop.path}`);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function createCropImage(): Promise<SavedCrop> {
+  const image = activeImage();
+  const rect = state.selectionRect;
+  const pane = document.querySelector<HTMLElement>(`.image-pane[data-slot="${state.activeSlot}"]`);
+  const img = pane?.querySelector<HTMLImageElement>(".view-image");
+  if (!image || !rect || !pane || !img || !image.width || !image.height) {
+    throw new Error("切り出す画像または矩形がありません。");
+  }
+
+  const source = await loadCanvasImage(image.url);
+  const crop = selectionToImageRect(rect, pane, image);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(crop.width));
+  canvas.height = Math.max(1, Math.round(crop.height));
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Canvasを作成できません。");
+  context.drawImage(
+    source,
+    crop.left,
+    crop.top,
+    crop.width,
+    crop.height,
+    0,
+    0,
+    canvas.width,
+    canvas.height,
+  );
+
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((value) => value ? resolve(value) : reject(new Error("画像の切り出しに失敗しました。")), "image/png");
+  });
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const path = isTauriRuntime()
+    ? await invoke<string>("save_crop_image", { image: { bytes: Array.from(bytes) } })
+    : undefined;
+  return { blob, bytes, path };
+}
+
+function selectionToImageRect(rect: CropRect, pane: HTMLElement, image: ImageItem) {
+  const paneBounds = pane.getBoundingClientRect();
+  const viewerBounds = elements.viewport?.getBoundingClientRect();
+  if (!viewerBounds) throw new Error("ビューアー領域がありません。");
+  const view = currentView();
+  const paneLeft = paneBounds.left - viewerBounds.left;
+  const paneTop = paneBounds.top - viewerBounds.top;
+  const centerX = paneLeft + paneBounds.width / 2 + view.offsetX;
+  const centerY = paneTop + paneBounds.height / 2 + view.offsetY;
+  const imageLeft = centerX - (image.width! * view.zoom) / 2;
+  const imageTop = centerY - (image.height! * view.zoom) / 2;
+
+  const left = clamp((rect.left - imageLeft) / view.zoom, 0, image.width!);
+  const top = clamp((rect.top - imageTop) / view.zoom, 0, image.height!);
+  const right = clamp((rect.left + rect.width - imageLeft) / view.zoom, 0, image.width!);
+  const bottom = clamp((rect.top + rect.height - imageTop) / view.zoom, 0, image.height!);
+
+  return {
+    left,
+    top,
+    width: Math.max(1, right - left),
+    height: Math.max(1, bottom - top),
+  };
+}
+
+function loadCanvasImage(url: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("画像を読み込めません。"));
+    img.src = url;
+  });
+}
+
+async function copyBlobToClipboard(blob: Blob) {
+  if (!navigator.clipboard || typeof ClipboardItem === "undefined") {
+    throw new Error("この環境では画像のクリップボードコピーに対応していません。");
+  }
+  await navigator.clipboard.write([
+    new ClipboardItem({ [blob.type]: blob }),
+  ]);
+}
+
+async function openExternalUrl(url: string) {
+  if (isTauriRuntime()) {
+    await openUrl(url);
+  } else {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
 }
 
 function setZoom(value: number) {
