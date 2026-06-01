@@ -163,6 +163,7 @@ const elements = {
   compareGrid: document.querySelector<HTMLElement>("#compare-grid"),
   selectionBox: document.querySelector<HTMLElement>("#selection-box"),
   cropActions: document.querySelector<HTMLElement>("#crop-actions"),
+  cropStatus: document.querySelector<HTMLElement>("#crop-status"),
   cropLensButton: document.querySelector<HTMLButtonElement>("#crop-lens"),
   cropAiButton: document.querySelector<HTMLButtonElement>("#crop-ai"),
   cropCopyButton: document.querySelector<HTMLButtonElement>("#crop-copy"),
@@ -206,10 +207,25 @@ window.addEventListener("DOMContentLoaded", () => {
   elements.viewport?.addEventListener("pointermove", handlePointerMove);
   elements.viewport?.addEventListener("pointerup", endDrag);
   elements.viewport?.addEventListener("pointercancel", endDrag);
-  elements.cropLensButton?.addEventListener("click", () => openCropSearch("lens"));
-  elements.cropAiButton?.addEventListener("click", () => openCropSearch("ai"));
-  elements.cropCopyButton?.addEventListener("click", copyCropToClipboard);
-  elements.cropCancelButton?.addEventListener("click", clearSelection);
+  elements.cropActions?.addEventListener("pointerdown", (event) => event.stopPropagation());
+  elements.cropLensButton?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    openCropSearch("lens");
+  });
+  elements.cropAiButton?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    openCropSearch("ai");
+  });
+  elements.cropCopyButton?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    copyCropToClipboard();
+  });
+  elements.cropCancelButton?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    clearSelection();
+  });
+  window.addEventListener("keydown", handleGlobalKeyChange);
+  window.addEventListener("keyup", handleGlobalKeyChange);
 
   elements.prevButton?.addEventListener("click", () => moveActive(-1));
   elements.nextButton?.addEventListener("click", () => moveActive(1));
@@ -514,6 +530,11 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
+function handleGlobalKeyChange(event: KeyboardEvent) {
+  if (event.key !== "Shift") return;
+  elements.viewport?.classList.toggle("is-shift-select", event.type === "keydown");
+}
+
 function moveActive(delta: number) {
   if (!state.images.length) return;
   const nextIndex = Math.max(0, Math.min(state.images.length - 1, state.activeIndex + delta));
@@ -659,12 +680,15 @@ function clearSelection() {
   elements.viewport?.classList.remove("is-selecting");
   if (elements.selectionBox) elements.selectionBox.hidden = true;
   if (elements.cropActions) elements.cropActions.hidden = true;
+  setCropStatus("");
 }
 
 async function openCropSearch(target: "lens" | "ai") {
   try {
+    setCropStatus("切り出し中");
     const crop = await createCropImage();
-    await copyBlobToClipboard(crop.blob);
+    await tryCopyBlobToClipboard(crop.blob);
+    setCropStatus(crop.path ? "一時保存済み" : "コピー済み");
     if (target === "lens") {
       await openExternalUrl("https://lens.google.com/upload");
     } else {
@@ -673,16 +697,20 @@ async function openCropSearch(target: "lens" | "ai") {
     if (crop.path) console.info(`Saved crop: ${crop.path}`);
   } catch (error) {
     console.error(error);
+    setCropStatus("失敗");
   }
 }
 
 async function copyCropToClipboard() {
   try {
+    setCropStatus("切り出し中");
     const crop = await createCropImage();
     await copyBlobToClipboard(crop.blob);
+    setCropStatus("コピー済み");
     if (crop.path) console.info(`Saved crop: ${crop.path}`);
   } catch (error) {
     console.error(error);
+    setCropStatus("コピー失敗");
   }
 }
 
@@ -765,6 +793,18 @@ async function copyBlobToClipboard(blob: Blob) {
   await navigator.clipboard.write([
     new ClipboardItem({ [blob.type]: blob }),
   ]);
+}
+
+async function tryCopyBlobToClipboard(blob: Blob) {
+  try {
+    await copyBlobToClipboard(blob);
+  } catch (error) {
+    console.warn("Clipboard copy failed", error);
+  }
+}
+
+function setCropStatus(message: string) {
+  if (elements.cropStatus) elements.cropStatus.textContent = message;
 }
 
 async function openExternalUrl(url: string) {

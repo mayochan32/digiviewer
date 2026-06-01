@@ -222,7 +222,8 @@ button:disabled {
   cursor: grabbing;
 }
 
-.viewer.is-selecting {
+.viewer.is-selecting,
+.viewer.is-shift-select {
   cursor: crosshair;
 }
 
@@ -516,4 +517,14 @@ button:disabled {
 
 .crop-actions button:hover {
   border-color: #52616d;
+}
+
+.crop-status {
+  display: inline-flex;
+  align-items: center;
+  min-width: 74px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
