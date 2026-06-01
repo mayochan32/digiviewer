@@ -190,6 +190,7 @@ const elements = {
 };
 
 window.addEventListener("DOMContentLoaded", () => {
+  ensureCropDirectory();
   elements.chooseFolderButton?.addEventListener("click", openFolder);
   elements.chooseFilesButton?.addEventListener("click", openFiles);
   elements.openInput?.addEventListener("change", handleFileSelection);
@@ -265,6 +266,16 @@ window.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("keydown", handleKeyDown);
   render();
 });
+
+async function ensureCropDirectory() {
+  if (!isTauriRuntime()) return;
+  try {
+    const directory = await invoke<string>("ensure_crop_directory");
+    console.info(`Crop directory: ${directory}`);
+  } catch (error) {
+    console.warn("Failed to create crop directory", error);
+  }
+}
 
 async function openFolder() {
   if (isTauriRuntime()) {

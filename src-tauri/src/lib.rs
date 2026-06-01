@@ -37,11 +37,7 @@ fn scan_images(directory: String) -> Result<Vec<ImageFile>, String> {
 
 #[tauri::command]
 fn save_crop_image(image: CropImage) -> Result<String, String> {
-    let directory = std::env::var("HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| std::env::temp_dir())
-        .join("Pictures")
-        .join("DigiViewer Crops");
+    let directory = crop_output_dir();
     fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
     let timestamp = std::time::SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -50,6 +46,21 @@ fn save_crop_image(image: CropImage) -> Result<String, String> {
     let path = directory.join(format!("digiviewer-crop-{timestamp}.png"));
     fs::write(&path, image.bytes).map_err(|error| error.to_string())?;
     Ok(path.to_string_lossy().into_owned())
+}
+
+#[tauri::command]
+fn ensure_crop_directory() -> Result<String, String> {
+    let directory = crop_output_dir();
+    fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
+    Ok(directory.to_string_lossy().into_owned())
+}
+
+fn crop_output_dir() -> PathBuf {
+    std::env::var("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| std::env::temp_dir())
+        .join("Pictures")
+        .join("DigiViewer Crops")
 }
 
 #[tauri::command]
@@ -191,6 +202,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             scan_images,
             save_crop_image,
+            ensure_crop_directory,
             open_external_url,
             reveal_file
         ])
