@@ -729,8 +729,8 @@ async function revealCropInFinder() {
       setCropStatus("Tauri版のみ");
       return;
     }
-    await revealSavedCrop(crop.path);
-    setCropStatus("Finderで表示");
+    const directory = await openCropDirectory();
+    setCropStatus(`保存先を表示: ${directory}`);
   } catch (error) {
     console.error(error);
     setCropStatus("Finder表示失敗");
@@ -860,6 +860,13 @@ async function revealSavedCrop(path: string) {
   if (isTauriRuntime()) {
     await invoke("reveal_file", { path });
   }
+}
+
+async function openCropDirectory() {
+  if (isTauriRuntime()) {
+    return invoke<string>("open_crop_directory");
+  }
+  return "";
 }
 
 function setZoom(value: number) {

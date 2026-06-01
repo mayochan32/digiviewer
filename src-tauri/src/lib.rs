@@ -127,6 +127,38 @@ fn reveal_file(path: String) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn open_crop_directory() -> Result<String, String> {
+    let directory = crop_output_dir();
+    fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
+
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&directory)
+            .spawn()
+            .map_err(|error| error.to_string())?;
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg(&directory)
+            .spawn()
+            .map_err(|error| error.to_string())?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&directory)
+            .spawn()
+            .map_err(|error| error.to_string())?;
+    }
+
+    Ok(directory.to_string_lossy().into_owned())
+}
+
 fn visit_directory(directory: &Path, images: &mut Vec<ImageFile>) -> Result<(), String> {
     for entry in fs::read_dir(directory).map_err(|error| error.to_string())? {
         let entry = entry.map_err(|error| error.to_string())?;
@@ -204,7 +236,8 @@ pub fn run() {
             save_crop_image,
             ensure_crop_directory,
             open_external_url,
-            reveal_file
+            reveal_file,
+            open_crop_directory
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
