@@ -755,12 +755,14 @@ async function createCropImage(): Promise<SavedCrop> {
   const rect = state.selectionRect;
   const pane = document.querySelector<HTMLElement>(`.image-pane[data-slot="${state.activeSlot}"]`);
   const img = pane?.querySelector<HTMLImageElement>(".view-image");
-  if (!image || !rect || !pane || !img || !image.width || !image.height) {
-    throw new Error("切り出す画像または矩形がありません。");
+  if (!image || !image.width || !image.height) {
+    throw new Error("切り出す画像がありません。");
   }
 
   const source = await loadCanvasImage(image.url);
-  const crop = selectionToImageRect(rect, pane, image);
+  const crop = rect && pane && img
+    ? selectionToImageRect(rect, pane, image)
+    : { left: 0, top: 0, width: image.width, height: image.height };
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(crop.width));
   canvas.height = Math.max(1, Math.round(crop.height));
@@ -785,6 +787,7 @@ async function createCropImage(): Promise<SavedCrop> {
   const path = isTauriRuntime()
     ? await invoke<string>("save_crop_image", { image: { bytes: Array.from(bytes) } })
     : undefined;
+  if (path) setCropStatus(`保存済み: ${path}`);
   return { blob, bytes, path };
 }
 
