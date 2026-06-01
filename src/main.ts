@@ -687,12 +687,11 @@ async function openCropSearch(target: "lens" | "ai") {
     ? "https://lens.google.com/upload"
     : "https://www.google.com/search?udm=50&q=%E3%81%93%E3%81%AE%E7%94%9F%E3%81%8D%E7%89%A9%E3%81%AE%E7%A8%AE%E5%90%8D%E3%82%92%E5%90%8C%E5%AE%9A%E3%81%97%E3%81%A6%E3%80%81%E5%80%99%E8%A3%9C%E3%81%A8%E6%A0%B9%E6%8B%A0%E3%82%92%E6%97%A5%E6%9C%AC%E8%AA%9E%E3%81%A7%E8%AA%AC%E6%98%8E%E3%81%97%E3%81%A6";
   try {
-    setCropStatus(target === "lens" ? "Lensを開きます" : "AI Modeを開きます");
-    await openExternalUrl(url);
     setCropStatus("切り出し中");
     const crop = await createCropImage();
-    await tryCopyBlobToClipboard(crop.blob);
-    setCropStatus(crop.path ? "一時保存済み" : "コピー済み");
+    const copied = await tryCopyBlobToClipboard(crop.blob);
+    setCropStatus(copied ? "コピー済み。開いたら⌘V" : "一時保存済み。手動で選択");
+    await openExternalUrl(url);
     if (crop.path) console.info(`Saved crop: ${crop.path}`);
   } catch (error) {
     console.error(error);
@@ -797,8 +796,10 @@ async function copyBlobToClipboard(blob: Blob) {
 async function tryCopyBlobToClipboard(blob: Blob) {
   try {
     await copyBlobToClipboard(blob);
+    return true;
   } catch (error) {
     console.warn("Clipboard copy failed", error);
+    return false;
   }
 }
 
