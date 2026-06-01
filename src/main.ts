@@ -16,6 +16,7 @@ type ImageItem = {
   cachePromise?: Promise<void>;
   exif?: ExifSummary | null;
   exifLoaded: boolean;
+  rawExtensions: string[];
 };
 
 type ExifSummary = {
@@ -49,6 +50,7 @@ type NativeImageFile = {
   name: string;
   size: number;
   modified_at: number;
+  kind?: "image" | "raw";
 };
 
 declare global {
@@ -88,6 +90,19 @@ const supportedExtensions = new Set([
   "avif",
   "heic",
   "heif",
+]);
+
+const rawExtensions = new Set([
+  "cr2",
+  "cr3",
+  "nef",
+  "nrw",
+  "arw",
+  "orf",
+  "raf",
+  "rw2",
+  "pef",
+  "dng",
 ]);
 
 function isTauriRuntime() {
@@ -294,6 +309,7 @@ function handleFileSelection(event: Event) {
 
 function loadPickedFiles(pickedFiles: PickedFile[]) {
   clearObjectUrls();
+  const rawByBase = rawExtensionsByBase(pickedFiles.map(({ path }) => path));
   const files = pickedFiles.filter(({ file }) => isSupportedImage(file));
   files.sort(comparePickedFiles);
 
@@ -307,6 +323,7 @@ function loadPickedFiles(pickedFiles: PickedFile[]) {
     url: URL.createObjectURL(file),
     cacheLoaded: false,
     exifLoaded: false,
+    rawExtensions: rawByBase.get(baseKeyForPath(path)) ?? [],
   }));
   state.activeIndex = 0;
   state.activeSlot = 0;
@@ -318,7 +335,8 @@ function loadPickedFiles(pickedFiles: PickedFile[]) {
 
 function loadNativeImages(nativeImages: NativeImageFile[]) {
   clearObjectUrls();
-  const images = nativeImages.filter((image) => isSupportedImagePath(image.path));
+  const rawByBase = rawExtensionsByBase(nativeImages.map((image) => image.path));
+  const images = nativeImages.filter((image) => (image.kind ?? "image") === "image" && isSupportedImagePath(image.path));
   images.sort((a, b) => a.path.localeCompare(b.path, undefined, { numeric: true, sensitivity: "base" }));
 
   state.images = images.map((image, index) => ({
@@ -330,6 +348,7 @@ function loadNativeImages(nativeImages: NativeImageFile[]) {
     url: convertFileSrc(image.path),
     cacheLoaded: false,
     exifLoaded: false,
+    rawExtensions: rawByBase.get(baseKeyForPath(image.path)) ?? [],
   }));
   state.activeIndex = 0;
   state.activeSlot = 0;
@@ -360,6 +379,34 @@ function isSupportedImage(file: File) {
 function isSupportedImagePath(path: string) {
   const extension = path.split(".").pop()?.toLowerCase() ?? "";
   return supportedExtensions.has(extension);
+}
+
+function isRawImagePath(path: string) {
+  const extension = path.split(".").pop()?.toLowerCase() ?? "";
+  return rawExtensions.has(extension);
+}
+
+function rawExtensionsByBase(paths: string[]) {
+  const map = new Map<string, string[]>();
+  for (const path of paths) {
+    if (!isRawImagePath(path)) continue;
+    const key = baseKeyForPath(path);
+    const extension = path.split(".").pop()?.toUpperCase();
+    if (!extension) continue;
+    const values = map.get(key) ?? [];
+    if (!values.includes(extension)) values.push(extension);
+    map.set(key, values);
+  }
+  return map;
+}
+
+function baseKeyForPath(path: string) {
+  const separatorIndex = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
+  const directory = separatorIndex >= 0 ? path.slice(0, separatorIndex + 1) : "";
+  const filename = separatorIndex >= 0 ? path.slice(separatorIndex + 1) : path;
+  const dotIndex = filename.lastIndexOf(".");
+  const basename = dotIndex >= 0 ? filename.slice(0, dotIndex) : filename;
+  return `${directory}${basename}`.toLowerCase();
 }
 
 function comparePickedFiles(a: PickedFile, b: PickedFile) {
@@ -818,8 +865,9 @@ function renderMeta() {
 
 function exifLineForImage(image: ImageItem) {
   const dimensions = formatImageDimensions(image);
+  const raw = image.rawExtensions.length ? `RAWあり: ${image.rawExtensions.join(", ")}` : null;
   const exifLine = image.exifLoaded ? image.exif?.line ?? "EXIFなし" : "EXIF読み込み中";
-  return [dimensions, exifLine].filter(Boolean).join(" / ");
+  return [dimensions, raw, exifLine].filter(Boolean).join(" / ");
 }
 
 function formatImageDimensions(image: ImageItem) {

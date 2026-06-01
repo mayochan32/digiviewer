@@ -12,6 +12,7 @@ The first MVP focuses on interaction feel:
 - show a one-line EXIF bar and GPS map when location metadata exists
 - display zoom as image-pixel scale, where 100% means one image pixel per screen pixel
 - preload and decode nearby images around the active image
+- detect same-basename RAW sidecar files and show `RAWあり`
 - inspect focus and composition differences without modifying original files
 
 ## Current MVP

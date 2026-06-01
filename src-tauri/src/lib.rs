@@ -11,6 +11,14 @@ struct ImageFile {
     name: String,
     size: u64,
     modified_at: u128,
+    kind: FileKind,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "lowercase")]
+enum FileKind {
+    Image,
+    Raw,
 }
 
 #[tauri::command]
@@ -30,7 +38,7 @@ fn visit_directory(directory: &Path, images: &mut Vec<ImageFile>) -> Result<(), 
 
         if file_type.is_dir() {
             visit_directory(&path, images)?;
-        } else if file_type.is_file() && is_supported_image(&path) {
+        } else if file_type.is_file() && (is_supported_image(&path) || is_raw_image(&path)) {
             let metadata = entry.metadata().map_err(|error| error.to_string())?;
             let modified_at = metadata
                 .modified()
@@ -48,11 +56,29 @@ fn visit_directory(directory: &Path, images: &mut Vec<ImageFile>) -> Result<(), 
                     .to_owned(),
                 size: metadata.len(),
                 modified_at,
+                kind: if is_supported_image(&path) {
+                    FileKind::Image
+                } else {
+                    FileKind::Raw
+                },
             });
         }
     }
 
     Ok(())
+}
+
+fn is_raw_image(path: &Path) -> bool {
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .map(|extension| {
+            matches!(
+                extension.to_ascii_lowercase().as_str(),
+                "cr2" | "cr3" | "nef" | "nrw" | "arw" | "orf" | "raf" | "rw2" | "pef"
+                    | "dng"
+            )
+        })
+        .unwrap_or(false)
 }
 
 fn is_supported_image(path: &Path) -> bool {
