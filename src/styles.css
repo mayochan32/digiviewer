@@ -80,6 +80,11 @@ button {
   text-align: right;
 }
 
+.brand .app-version {
+  min-width: auto;
+  text-align: left;
+}
+
 .file-button,
 .tool-button,
 .icon-button,

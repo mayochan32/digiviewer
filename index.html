@@ -12,6 +12,7 @@
       <header class="topbar">
         <div class="brand">
           <strong>DigiViewer</strong>
+          <span id="app-version" class="app-version">v0.1.0</span>
           <span id="image-count">0 / 0</span>
         </div>
         <div class="topbar-actions">
@@ -27,8 +28,16 @@
           </div>
           <button id="sync-toggle" type="button" class="tool-button" aria-pressed="true">同期 ON</button>
           <label class="cache-setting">
-            <span>先読み</span>
+            <span>本画像</span>
             <input id="preload-radius" type="number" min="0" max="50" step="1" value="6" />
+          </label>
+          <label class="cache-setting">
+            <span>サムネ</span>
+            <input id="thumb-preload-radius" type="number" min="0" max="1000" step="10" value="120" />
+          </label>
+          <label class="cache-setting">
+            <span>容量MB</span>
+            <input id="thumb-cache-limit" type="number" min="64" max="10240" step="64" value="1024" />
           </label>
         </div>
       </header>

@@ -10,6 +10,9 @@ type ImageItem = {
   size: number;
   modifiedAt: number;
   url: string;
+  thumbnailUrl?: string;
+  thumbnailLoaded: boolean;
+  thumbnailRequested: boolean;
   width?: number;
   height?: number;
   cacheLoaded: boolean;
@@ -118,6 +121,17 @@ const rawExtensions = new Set([
   "dng",
 ]);
 
+const thumbnailMaxEdge = 192;
+const thumbnailConcurrency = 2;
+const thumbnailBackgroundDelayMs = 350;
+const thumbnailPruneInterval = 64;
+const thumbItemWidth = 102;
+let thumbnailQueue: number[] = [];
+let activeThumbnailJobs = 0;
+let thumbnailScrollFrame = 0;
+let thumbnailPreloadTimer = 0;
+let thumbnailRequestsSincePrune = 0;
+
 function isTauriRuntime() {
   return "__TAURI_INTERNALS__" in window;
 }
@@ -128,6 +142,8 @@ const state = {
   compareCount: 1,
   compareSlots: [0, null, null, null] as Array<number | null>,
   preloadRadius: Number(localStorage.getItem("digiviewer.preloadRadius") ?? 6),
+  thumbPreloadRadius: Number(localStorage.getItem("digiviewer.thumbPreloadRadius") ?? 120),
+  thumbCacheLimitMb: Number(localStorage.getItem("digiviewer.thumbCacheLimitMb") ?? 1024),
   fitMode: true,
   syncView: true,
   activeSlot: 0,
@@ -170,11 +186,14 @@ const elements = {
   cropCancelButton: document.querySelector<HTMLButtonElement>("#crop-cancel"),
   thumbs: document.querySelector<HTMLElement>("#thumbs"),
   emptyState: document.querySelector<HTMLElement>("#empty-state"),
+  appVersion: document.querySelector<HTMLElement>("#app-version"),
   imageCount: document.querySelector<HTMLElement>("#image-count"),
   activeName: document.querySelector<HTMLElement>("#active-name"),
   activeMeta: document.querySelector<HTMLElement>("#active-meta"),
   zoomValue: document.querySelector<HTMLElement>("#zoom-value"),
   preloadRadiusInput: document.querySelector<HTMLInputElement>("#preload-radius"),
+  thumbPreloadRadiusInput: document.querySelector<HTMLInputElement>("#thumb-preload-radius"),
+  thumbCacheLimitInput: document.querySelector<HTMLInputElement>("#thumb-cache-limit"),
   exifText: document.querySelector<HTMLElement>("#exif-text"),
   gpsText: document.querySelector<HTMLElement>("#gps-text"),
   mapButton: document.querySelector<HTMLButtonElement>("#map-button"),
@@ -191,6 +210,7 @@ const elements = {
 
 window.addEventListener("DOMContentLoaded", () => {
   ensureCropDirectory();
+  loadAppVersion();
   elements.chooseFolderButton?.addEventListener("click", openFolder);
   elements.chooseFilesButton?.addEventListener("click", openFiles);
   elements.openInput?.addEventListener("change", handleFileSelection);
@@ -201,6 +221,24 @@ window.addEventListener("DOMContentLoaded", () => {
       state.preloadRadius = clamp(Number(elements.preloadRadiusInput?.value ?? 0), 0, 50);
       localStorage.setItem("digiviewer.preloadRadius", String(state.preloadRadius));
       preloadAroundActive();
+    });
+  }
+  if (elements.thumbPreloadRadiusInput) {
+    elements.thumbPreloadRadiusInput.value = String(state.thumbPreloadRadius);
+    elements.thumbPreloadRadiusInput.addEventListener("change", () => {
+      state.thumbPreloadRadius = clamp(Number(elements.thumbPreloadRadiusInput?.value ?? 0), 0, 1000);
+      localStorage.setItem("digiviewer.thumbPreloadRadius", String(state.thumbPreloadRadius));
+      preloadVisibleThumbnails();
+      scheduleThumbnailPreload();
+      renderThumbs();
+    });
+  }
+  if (elements.thumbCacheLimitInput) {
+    elements.thumbCacheLimitInput.value = String(state.thumbCacheLimitMb);
+    elements.thumbCacheLimitInput.addEventListener("change", () => {
+      state.thumbCacheLimitMb = clamp(Number(elements.thumbCacheLimitInput?.value ?? 0), 64, 10240);
+      localStorage.setItem("digiviewer.thumbCacheLimitMb", String(state.thumbCacheLimitMb));
+      scheduleThumbnailPreload();
     });
   }
   elements.viewport?.addEventListener("wheel", handleWheel, { passive: false });
@@ -248,6 +286,13 @@ window.addEventListener("DOMContentLoaded", () => {
     state.mapOpen = false;
     renderMap();
   });
+  elements.thumbs?.parentElement?.addEventListener("scroll", () => {
+    if (thumbnailScrollFrame) return;
+    thumbnailScrollFrame = window.requestAnimationFrame(() => {
+      thumbnailScrollFrame = 0;
+      preloadVisibleThumbnails();
+    });
+  });
   elements.syncButton?.addEventListener("click", () => {
     toggleSyncView();
     render();
@@ -274,6 +319,16 @@ async function ensureCropDirectory() {
     console.info(`Crop directory: ${directory}`);
   } catch (error) {
     console.warn("Failed to create crop directory", error);
+  }
+}
+
+async function loadAppVersion() {
+  if (!elements.appVersion || !isTauriRuntime()) return;
+  try {
+    const version = await invoke<string>("app_version");
+    elements.appVersion.textContent = `v${version}`;
+  } catch (error) {
+    console.warn("Failed to load app version", error);
   }
 }
 
@@ -380,6 +435,9 @@ function loadPickedFiles(pickedFiles: PickedFile[]) {
     size: file.size,
     modifiedAt: file.lastModified,
     url: URL.createObjectURL(file),
+    thumbnailUrl: URL.createObjectURL(file),
+    thumbnailLoaded: true,
+    thumbnailRequested: true,
     cacheLoaded: false,
     exifLoaded: false,
     rawExtensions: rawByBase.get(baseKeyForPath(path)) ?? [],
@@ -387,6 +445,7 @@ function loadPickedFiles(pickedFiles: PickedFile[]) {
   state.activeIndex = 0;
   state.activeSlot = 0;
   state.compareSlots = [0, null, null, null];
+  resetThumbnailQueue();
   refillEmptySlots();
   fitView();
   render();
@@ -405,6 +464,8 @@ function loadNativeImages(nativeImages: NativeImageFile[]) {
     size: image.size,
     modifiedAt: image.modified_at,
     url: convertFileSrc(image.path),
+    thumbnailLoaded: false,
+    thumbnailRequested: false,
     cacheLoaded: false,
     exifLoaded: false,
     rawExtensions: rawByBase.get(baseKeyForPath(image.path)) ?? [],
@@ -412,6 +473,7 @@ function loadNativeImages(nativeImages: NativeImageFile[]) {
   state.activeIndex = 0;
   state.activeSlot = 0;
   state.compareSlots = [0, null, null, null];
+  resetThumbnailQueue();
   refillEmptySlots();
   fitView();
   render();
@@ -427,7 +489,24 @@ function nativeFileFromPath(path: string): NativeImageFile {
 }
 
 function clearObjectUrls() {
-  for (const image of state.images) URL.revokeObjectURL(image.url);
+  for (const image of state.images) {
+    if (image.file) {
+      URL.revokeObjectURL(image.url);
+      if (image.thumbnailUrl && image.thumbnailUrl !== image.url) {
+        URL.revokeObjectURL(image.thumbnailUrl);
+      }
+    }
+  }
+}
+
+function resetThumbnailQueue() {
+  thumbnailQueue = [];
+  activeThumbnailJobs = 0;
+  thumbnailRequestsSincePrune = 0;
+  if (thumbnailPreloadTimer) {
+    window.clearTimeout(thumbnailPreloadTimer);
+    thumbnailPreloadTimer = 0;
+  }
 }
 
 function isSupportedImage(file: File) {
@@ -552,11 +631,13 @@ function handleGlobalKeyChange(event: KeyboardEvent) {
 
 function moveActive(delta: number) {
   if (!state.images.length) return;
-  const nextIndex = Math.max(0, Math.min(state.images.length - 1, state.activeIndex + delta));
-  if (nextIndex === state.activeIndex) return;
+  const slotIndex = Math.min(state.activeSlot, state.compareCount - 1);
+  const currentIndex = state.compareSlots[slotIndex] ?? state.activeIndex;
+  const nextIndex = Math.max(0, Math.min(state.images.length - 1, currentIndex + delta));
+  if (nextIndex === currentIndex) return;
   state.activeIndex = nextIndex;
-  state.activeSlot = 0;
-  state.compareSlots[0] = nextIndex;
+  state.activeSlot = slotIndex;
+  state.compareSlots[slotIndex] = nextIndex;
   fitView();
   render();
 }
@@ -723,17 +804,20 @@ async function openCropSearch(target: "lens" | "ai") {
 
 async function revealCropInFinder() {
   try {
-    setCropStatus("切り出し中");
-    const crop = await createCropImage();
-    if (!crop.path) {
-      setCropStatus("Tauri版のみ");
-      return;
-    }
+    setCropStatus("保存先を開きます");
     const directory = await openCropDirectory();
     setCropStatus(`保存先を表示: ${directory}`);
   } catch (error) {
     console.error(error);
     setCropStatus("Finder表示失敗");
+    return;
+  }
+
+  try {
+    const crop = await createCropImage();
+    if (crop.path) setCropStatus(`保存済み: ${crop.path}`);
+  } catch (error) {
+    console.warn("Crop save failed after opening directory", error);
   }
 }
 
@@ -926,7 +1010,7 @@ function refillEmptySlots() {
 }
 
 function activeImage() {
-  return state.images[state.activeIndex];
+  return slotImage(state.activeSlot) ?? state.images[state.activeIndex];
 }
 
 function slotImage(slotIndex: number) {
@@ -991,6 +1075,121 @@ function loadImageInfo(image: ImageItem) {
   return image.cachePromise;
 }
 
+function scheduleThumbnailPreload() {
+  if (!state.images.length) return;
+  if (thumbnailPreloadTimer) window.clearTimeout(thumbnailPreloadTimer);
+  thumbnailPreloadTimer = window.setTimeout(() => {
+    thumbnailPreloadTimer = 0;
+    preloadThumbnailsAroundActive();
+  }, thumbnailBackgroundDelayMs);
+}
+
+function preloadThumbnailsAroundActive() {
+  if (!state.images.length) return;
+
+  const radius = Math.max(0, Math.floor(state.thumbPreloadRadius));
+  const start = Math.max(0, state.activeIndex - radius);
+  const end = Math.min(state.images.length - 1, state.activeIndex + radius);
+  const indexes = [];
+  for (let index = start; index <= end; index += 1) indexes.push(index);
+  indexes.sort((a, b) => Math.abs(a - state.activeIndex) - Math.abs(b - state.activeIndex));
+  for (const index of indexes) queueThumbnail(index, false);
+}
+
+function preloadVisibleThumbnails() {
+  const rail = elements.thumbs?.parentElement;
+  if (!rail || !state.images.length) return;
+
+  const visibleStart = Math.max(0, Math.floor(rail.scrollLeft / thumbItemWidth) - 24);
+  const visibleEnd = Math.min(
+    state.images.length - 1,
+    Math.ceil((rail.scrollLeft + rail.clientWidth) / thumbItemWidth) + 24,
+  );
+  for (let index = visibleStart; index <= visibleEnd; index += 1) {
+    queueThumbnail(index, true);
+  }
+}
+
+function queueThumbnail(index: number, priority: boolean) {
+  const image = state.images[index];
+  if (!image || image.thumbnailLoaded) return;
+  if (!isTauriRuntime()) return;
+
+  if (image.thumbnailRequested) {
+    if (priority) {
+      const queuedIndex = thumbnailQueue.indexOf(index);
+      if (queuedIndex >= 0) {
+        thumbnailQueue.splice(queuedIndex, 1);
+        thumbnailQueue.unshift(index);
+      }
+    }
+    return;
+  }
+
+  image.thumbnailRequested = true;
+  if (priority) {
+    thumbnailQueue.unshift(index);
+  } else {
+    thumbnailQueue.push(index);
+  }
+  pumpThumbnailQueue();
+}
+
+function pumpThumbnailQueue() {
+  while (activeThumbnailJobs < thumbnailConcurrency && thumbnailQueue.length) {
+    const index = thumbnailQueue.shift()!;
+    const image = state.images[index];
+    if (!image || image.thumbnailLoaded) continue;
+
+    activeThumbnailJobs += 1;
+    loadThumbnail(index, image)
+      .catch((error) => {
+        image.thumbnailLoaded = true;
+        console.warn("Thumbnail generation failed", error);
+      })
+      .finally(() => {
+        activeThumbnailJobs = Math.max(0, activeThumbnailJobs - 1);
+        pumpThumbnailQueue();
+      });
+  }
+}
+
+async function loadThumbnail(index: number, image: ImageItem) {
+  const pruneCache = state.thumbCacheLimitMb > 0
+    && thumbnailRequestsSincePrune++ % thumbnailPruneInterval === 0;
+  const path = await invoke<string | null>("get_thumbnail", {
+    request: {
+      path: image.path,
+      size: image.size,
+      modifiedAt: image.modifiedAt,
+      maxEdge: thumbnailMaxEdge,
+      cacheLimitMb: state.thumbCacheLimitMb,
+      pruneCache,
+    },
+  });
+  image.thumbnailLoaded = true;
+  if (path) {
+    image.thumbnailUrl = convertFileSrc(path);
+  }
+  updateThumbnailElement(index);
+}
+
+function updateThumbnailElement(index: number) {
+  const image = state.images[index];
+  const button = elements.thumbs?.querySelector<HTMLButtonElement>(`.thumb[data-index="${index}"]`);
+  if (!image || !button || !image.thumbnailUrl) return;
+
+  let img = button.querySelector<HTMLImageElement>("img");
+  if (!img) {
+    img = document.createElement("img");
+    img.alt = "";
+    img.loading = "lazy";
+    img.draggable = false;
+    button.prepend(img);
+  }
+  img.src = image.thumbnailUrl;
+}
+
 function render() {
   renderChrome();
   renderCompareGrid();
@@ -998,6 +1197,8 @@ function render() {
   renderMeta();
   renderMap();
   preloadAroundActive();
+  preloadVisibleThumbnails();
+  scheduleThumbnailPreload();
   loadExifForActiveImage();
 }
 
@@ -1106,7 +1307,6 @@ function handlePaneDrop(event: DragEvent, slotIndex: number) {
 function renderThumbs() {
   if (!elements.thumbs) return;
   const fragment = document.createDocumentFragment();
-  const preloadRadius = 120;
 
   state.images.forEach((image, index) => {
     const button = document.createElement("button");
@@ -1117,9 +1317,10 @@ function renderThumbs() {
     button.setAttribute("aria-current", String(index === state.activeIndex));
     button.title = image.path;
     button.addEventListener("click", () => {
+      const slotIndex = Math.min(state.activeSlot, state.compareCount - 1);
       state.activeIndex = index;
-      state.activeSlot = 0;
-      state.compareSlots[0] = index;
+      state.activeSlot = slotIndex;
+      state.compareSlots[slotIndex] = index;
       fitView();
       render();
     });
@@ -1128,9 +1329,9 @@ function renderThumbs() {
       event.dataTransfer?.setDragImage(button, 48, 36);
     });
 
-    if (Math.abs(index - state.activeIndex) <= preloadRadius) {
+    if (image.thumbnailUrl) {
       const img = document.createElement("img");
-      img.src = image.url;
+      img.src = image.thumbnailUrl;
       img.alt = "";
       img.loading = "lazy";
       img.draggable = false;
