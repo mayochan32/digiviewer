@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DigiViewer - デジタル観察のための高速画像ビューアー</title>
+    <meta
+      name="description"
+      content="DigiViewerは、昆虫や野生生物の写真を大量に見返し、比較し、観察記録につなげるための高速画像ビューアーです。"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0d1110;
+        --panel: #151a18;
+        --panel-2: #1d2522;
+        --ink: #f5f7f2;
+        --muted: #a7b4ad;
+        --line: #31403a;
+        --accent: #78d7b5;
+        --accent-2: #f0c85a;
+        --leaf: #9fd46f;
+        --water: #5cb5d6;
+        --shadow: rgba(0, 0, 0, 0.32);
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        font-size: 16px;
+        line-height: 1.7;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          linear-gradient(180deg, rgba(14, 42, 34, 0.72), transparent 620px),
+          radial-gradient(circle at 14% 18%, rgba(120, 215, 181, 0.14), transparent 30%),
+          radial-gradient(circle at 88% 12%, rgba(240, 200, 90, 0.12), transparent 24%),
+          var(--bg);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 14px clamp(20px, 5vw, 64px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(13, 17, 16, 0.82);
+        backdrop-filter: blur(16px);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 900;
+      }
+
+      .brand img {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        color: var(--muted);
+        font-size: 0.92rem;
+        font-weight: 700;
+      }
+
+      .nav a {
+        text-decoration: none;
+      }
+
+      .hero {
+        min-height: calc(100vh - 70px);
+        display: grid;
+        align-items: center;
+        padding: clamp(44px, 7vw, 88px) clamp(20px, 5vw, 64px) 56px;
+      }
+
+      .hero-inner {
+        display: grid;
+        grid-template-columns: minmax(0, 0.92fr) minmax(360px, 1.08fr);
+        align-items: center;
+        gap: clamp(32px, 5vw, 72px);
+        width: min(1180px, 100%);
+        margin: 0 auto;
+      }
+
+      .eyebrow {
+        margin: 0 0 16px;
+        color: var(--accent);
+        font-size: 0.9rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+      }
+
+      h1 {
+        max-width: 11em;
+        margin: 0;
+        font-size: clamp(2.7rem, 7vw, 6.4rem);
+        line-height: 0.98;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        max-width: 680px;
+        margin: 24px 0 0;
+        color: #d4ded8;
+        font-size: clamp(1.05rem, 2vw, 1.25rem);
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 30px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel-2);
+        color: var(--ink);
+        font-weight: 900;
+        text-decoration: none;
+      }
+
+      .button.primary {
+        border-color: transparent;
+        background: var(--accent);
+        color: #06130f;
+      }
+
+      .viewer-mock {
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        background: #0a0d0c;
+        box-shadow: 0 28px 80px var(--shadow);
+      }
+
+      .mock-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        background: #101513;
+      }
+
+      .mock-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 900;
+      }
+
+      .mock-title img {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+      }
+
+      .mock-count {
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 800;
+      }
+
+      .mock-toolbar {
+        display: flex;
+        gap: 6px;
+      }
+
+      .mock-pill {
+        min-width: 32px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: #202a26;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .mock-rail {
+        display: flex;
+        gap: 8px;
+        padding: 10px;
+        border-bottom: 1px solid var(--line);
+        background: #0e1211;
+      }
+
+      .mock-thumb {
+        position: relative;
+        flex: 1;
+        height: 58px;
+        min-width: 0;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        background:
+          linear-gradient(135deg, rgba(120, 215, 181, 0.75), rgba(92, 181, 214, 0.45)),
+          linear-gradient(45deg, #17201d, #222f28);
+      }
+
+      .mock-thumb:nth-child(2n) {
+        background:
+          linear-gradient(135deg, rgba(240, 200, 90, 0.72), rgba(159, 212, 111, 0.42)),
+          #20261e;
+      }
+
+      .mock-thumb.active {
+        border-color: var(--accent);
+      }
+
+      .mock-thumb span {
+        position: absolute;
+        left: 5px;
+        bottom: 4px;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.64);
+        font-size: 0.68rem;
+        font-weight: 900;
+      }
+
+      .mock-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1px;
+        background: #000;
+        aspect-ratio: 1.45 / 1;
+      }
+
+      .mock-pane {
+        position: relative;
+        overflow: hidden;
+        min-height: 0;
+        background:
+          radial-gradient(circle at 50% 46%, rgba(246, 222, 92, 0.96) 0 8%, transparent 9%),
+          radial-gradient(circle at 45% 51%, rgba(20, 20, 18, 0.9) 0 4%, transparent 5%),
+          radial-gradient(circle at 55% 51%, rgba(20, 20, 18, 0.9) 0 4%, transparent 5%),
+          linear-gradient(135deg, rgba(88, 139, 92, 0.68), rgba(45, 85, 72, 0.92));
+      }
+
+      .mock-pane:nth-child(2) {
+        filter: brightness(0.92) saturate(1.05);
+      }
+
+      .mock-pane:nth-child(3) {
+        filter: contrast(1.1);
+      }
+
+      .mock-pane:nth-child(4) {
+        filter: brightness(1.08);
+      }
+
+      .mock-pane::before,
+      .mock-pane::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        transform: rotate(-18deg);
+      }
+
+      .mock-pane::before {
+        width: 38%;
+        height: 15%;
+        left: 31%;
+        top: 44%;
+        background: repeating-linear-gradient(90deg, #191514 0 18%, #f0c85a 18% 36%);
+        box-shadow: 0 0 0 3px rgba(30, 20, 18, 0.65);
+      }
+
+      .mock-pane::after {
+        width: 22%;
+        height: 16%;
+        left: 36%;
+        top: 29%;
+        border: 2px solid rgba(255, 255, 255, 0.7);
+        background: rgba(190, 238, 236, 0.42);
+        box-shadow: 42px 12px 0 rgba(190, 238, 236, 0.34);
+      }
+
+      .mock-name {
+        position: absolute;
+        right: 8px;
+        bottom: 8px;
+        z-index: 1;
+        max-width: calc(100% - 16px);
+        overflow: hidden;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.66);
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 900;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .section {
+        padding: 76px clamp(20px, 5vw, 64px);
+      }
+
+      .section-inner {
+        width: min(1120px, 100%);
+        margin: 0 auto;
+      }
+
+      .section h2 {
+        max-width: 760px;
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3.4rem);
+        line-height: 1.08;
+        letter-spacing: 0;
+      }
+
+      .section-copy {
+        max-width: 760px;
+        margin: 18px 0 0;
+        color: var(--muted);
+        font-size: 1.08rem;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 32px;
+      }
+
+      .feature {
+        min-height: 190px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(21, 26, 24, 0.78);
+      }
+
+      .feature strong {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 1.08rem;
+      }
+
+      .feature p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1px;
+        margin-top: 34px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--line);
+      }
+
+      .flow-step {
+        min-height: 190px;
+        padding: 24px;
+        background: #111715;
+      }
+
+      .flow-step span {
+        color: var(--accent-2);
+        font-weight: 900;
+      }
+
+      .flow-step strong {
+        display: block;
+        margin-top: 12px;
+        font-size: 1.15rem;
+      }
+
+      .flow-step p {
+        margin: 10px 0 0;
+        color: var(--muted);
+      }
+
+      .callout {
+        border: 1px solid rgba(120, 215, 181, 0.32);
+        border-radius: 8px;
+        padding: clamp(24px, 4vw, 42px);
+        background: linear-gradient(135deg, rgba(120, 215, 181, 0.14), rgba(92, 181, 214, 0.08));
+      }
+
+      .site-footer {
+        padding: 34px clamp(20px, 5vw, 64px);
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+      }
+
+      .footer-inner {
+        width: min(1120px, 100%);
+        margin: 0 auto;
+      }
+
+      @media (max-width: 900px) {
+        .site-header {
+          position: static;
+        }
+
+        .nav {
+          display: none;
+        }
+
+        .hero {
+          min-height: auto;
+        }
+
+        .hero-inner,
+        .feature-grid,
+        .flow {
+          grid-template-columns: 1fr;
+        }
+
+        .viewer-mock {
+          margin-top: 8px;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .mock-toolbar {
+          display: none;
+        }
+
+        .mock-grid {
+          grid-template-columns: 1fr;
+          aspect-ratio: auto;
+        }
+
+        .mock-pane {
+          min-height: 180px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="brand">
+        <img src="./assets/digiview-icon.png" alt="" />
+        <span>DigiViewer</span>
+      </div>
+      <nav class="nav" aria-label="ページ内ナビゲーション">
+        <a href="#features">機能</a>
+        <a href="#project">デジタル観察</a>
+        <a href="#future">これから</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-inner">
+          <div>
+            <p class="eyebrow">デジタル観察のための高速画像ビューアー</p>
+            <h1>DigiViewer</h1>
+            <p class="lead">
+              フィールドで撮った大量の写真を、止まらず見返す。ピント、構図、模様、撮影場所をすばやく確認し、昆虫や野生生物の観察記録へつなげるためのデスクトップアプリです。
+            </p>
+            <div class="hero-actions">
+              <a class="button primary" href="https://github.com/mayochan32/digiviewer">GitHubで見る</a>
+              <a class="button" href="#features">できること</a>
+            </div>
+          </div>
+
+          <div class="viewer-mock" aria-label="DigiViewerの比較表示イメージ">
+            <div class="mock-top">
+              <div class="mock-title">
+                <img src="./assets/digiview-icon.png" alt="" />
+                <span>DigiViewer</span>
+                <span class="mock-count">v0.1.0</span>
+              </div>
+              <div class="mock-toolbar">
+                <span class="mock-pill">1</span>
+                <span class="mock-pill">2</span>
+                <span class="mock-pill">3</span>
+                <span class="mock-pill">4</span>
+              </div>
+            </div>
+            <div class="mock-rail">
+              <div class="mock-thumb"><span>42</span></div>
+              <div class="mock-thumb active"><span>43</span></div>
+              <div class="mock-thumb"><span>44</span></div>
+              <div class="mock-thumb"><span>45</span></div>
+              <div class="mock-thumb"><span>46</span></div>
+            </div>
+            <div class="mock-grid">
+              <div class="mock-pane"><span class="mock-name">IMG_1043.JPG</span></div>
+              <div class="mock-pane"><span class="mock-name">IMG_1044.JPG</span></div>
+              <div class="mock-pane"><span class="mock-name">IMG_1045.JPG</span></div>
+              <div class="mock-pane"><span class="mock-name">IMG_1046.JPG</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section">
+        <div class="section-inner">
+          <h2>観察写真の「あとで見る」を軽くする。</h2>
+          <p class="section-copy">
+            連写、角度違い、ピント違い。生き物の写真は、撮ったあとに比べて初めて見えてくる情報があります。DigiViewerは、その確認作業の待ち時間を減らします。
+          </p>
+          <div class="feature-grid">
+            <article class="feature">
+              <strong>大量画像を高速に確認</strong>
+              <p>フォルダ内の画像を読み込み、矢印キーで連続確認。サムネイルキャッシュと先読みで、次の写真へ進む感覚を軽くします。</p>
+            </article>
+            <article class="feature">
+              <strong>2/3/4枚の同期比較</strong>
+              <p>ピントや構図が少し違う写真を並べ、同じ倍率・同じ位置で比較できます。4枚表示は田の字レイアウトです。</p>
+            </article>
+            <article class="feature">
+              <strong>記録に必要な情報を確認</strong>
+              <p>EXIF、GPS、画像サイズ、RAW同時記録の有無を表示。観察記録へ進む前の確認に使えます。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="project" class="section">
+        <div class="section-inner">
+          <h2>デジタル観察のススメの、実用的な1ピース。</h2>
+          <p class="section-copy">
+            「デジタル観察のススメ」は、カメラやスマートフォン、位置情報、画像比較を使って、身近な自然をもっと深く見るための考え方と道具づくりです。DigiViewerは、撮影後の確認を担当します。
+          </p>
+          <div class="flow">
+            <div class="flow-step">
+              <span>01</span>
+              <strong>見つける</strong>
+              <p>足元の葉、川沿いの草地、夜の灯り。身近な場所で生き物に出会います。</p>
+            </div>
+            <div class="flow-step">
+              <span>02</span>
+              <strong>撮る</strong>
+              <p>角度や距離を変えて、識別に使える情報をできるだけ残します。</p>
+            </div>
+            <div class="flow-step">
+              <span>03</span>
+              <strong>比べる</strong>
+              <p>DigiViewerでピント、模様、形、撮影位置を確認します。</p>
+            </div>
+            <div class="flow-step">
+              <span>04</span>
+              <strong>記録する</strong>
+              <p>写真を観察記録に変え、地域の自然情報として共有できる形にします。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="future" class="section">
+        <div class="section-inner">
+          <div class="callout">
+            <h2>犬山の生き物サイト、そして他地域でも使える観察フレームワークへ。</h2>
+            <p class="section-copy">
+              DigiViewerは、これから一般化して公開していく犬山の生き物サイトの周辺ツールとしても育てていきます。地域の生き物情報を、写真、位置情報、観察日、メモと結びつけ、誰かの発見が次の観察の手がかりになるような仕組みを目指します。
+            </p>
+            <p class="section-copy">
+              まずはMac向けMVPとして操作感と速度を磨き、必要に応じてWindows対応や記録データベースとの連携を進めていきます。
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <strong>DigiViewer</strong>
+        <div>Fast local image review for digital field observation.</div>
+      </div>
+    </footer>
+  </body>
+</html>

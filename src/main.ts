@@ -56,6 +56,14 @@ type NativeImageFile = {
   kind?: "image" | "raw";
 };
 
+type RenameResult = {
+  old_path: string;
+  path: string;
+  name: string;
+  size: number;
+  modified_at: number;
+};
+
 type CropRect = {
   left: number;
   top: number;
@@ -157,6 +165,8 @@ const state = {
   dragBaseX: 0,
   dragBaseY: 0,
   mapOpen: false,
+  checkedIndexes: new Set<number>(),
+  lastCheckedIndex: null as number | null,
   view: {
     zoom: 1,
     offsetX: 0,
@@ -197,6 +207,15 @@ const elements = {
   exifText: document.querySelector<HTMLElement>("#exif-text"),
   gpsText: document.querySelector<HTMLElement>("#gps-text"),
   mapButton: document.querySelector<HTMLButtonElement>("#map-button"),
+  selectionCount: document.querySelector<HTMLElement>("#selection-count"),
+  appendSpeciesButton: document.querySelector<HTMLButtonElement>("#append-species"),
+  copyFilesButton: document.querySelector<HTMLButtonElement>("#copy-files"),
+  clearSelectionButton: document.querySelector<HTMLButtonElement>("#clear-file-selection"),
+  speciesDialog: document.querySelector<HTMLElement>("#species-dialog"),
+  speciesDialogMessage: document.querySelector<HTMLElement>("#species-dialog-message"),
+  speciesNameInput: document.querySelector<HTMLInputElement>("#species-name-input"),
+  speciesOkButton: document.querySelector<HTMLButtonElement>("#species-ok"),
+  speciesCancelButton: document.querySelector<HTMLButtonElement>("#species-cancel"),
   mapPanel: document.querySelector<HTMLElement>("#map-panel"),
   mapFrame: document.querySelector<HTMLIFrameElement>("#map-frame"),
   mapCloseButton: document.querySelector<HTMLButtonElement>("#map-close"),
@@ -281,6 +300,13 @@ window.addEventListener("DOMContentLoaded", () => {
   elements.mapButton?.addEventListener("click", () => {
     state.mapOpen = !state.mapOpen;
     renderMap();
+  });
+  elements.appendSpeciesButton?.addEventListener("click", appendSpeciesNameToCheckedImages);
+  elements.copyFilesButton?.addEventListener("click", copyCheckedFiles);
+  elements.clearSelectionButton?.addEventListener("click", () => {
+    clearCheckedImages();
+    renderThumbs();
+    renderChrome();
   });
   elements.mapCloseButton?.addEventListener("click", () => {
     state.mapOpen = false;
@@ -445,6 +471,7 @@ function loadPickedFiles(pickedFiles: PickedFile[]) {
   state.activeIndex = 0;
   state.activeSlot = 0;
   state.compareSlots = [0, null, null, null];
+  clearCheckedImages();
   resetThumbnailQueue();
   refillEmptySlots();
   fitView();
@@ -473,6 +500,7 @@ function loadNativeImages(nativeImages: NativeImageFile[]) {
   state.activeIndex = 0;
   state.activeSlot = 0;
   state.compareSlots = [0, null, null, null];
+  clearCheckedImages();
   resetThumbnailQueue();
   refillEmptySlots();
   fitView();
@@ -507,6 +535,18 @@ function resetThumbnailQueue() {
     window.clearTimeout(thumbnailPreloadTimer);
     thumbnailPreloadTimer = 0;
   }
+}
+
+function clearCheckedImages() {
+  state.checkedIndexes.clear();
+  state.lastCheckedIndex = null;
+}
+
+function checkedImages() {
+  return [...state.checkedIndexes]
+    .sort((a, b) => a - b)
+    .map((index) => state.images[index])
+    .filter(Boolean);
 }
 
 function isSupportedImage(file: File) {
@@ -638,7 +678,7 @@ function moveActive(delta: number) {
   state.activeIndex = nextIndex;
   state.activeSlot = slotIndex;
   state.compareSlots[slotIndex] = nextIndex;
-  fitView();
+  state.fitMode = false;
   render();
 }
 
@@ -953,6 +993,120 @@ async function openCropDirectory() {
   return "";
 }
 
+async function appendSpeciesNameToCheckedImages() {
+  const images = checkedImages();
+  if (!images.length) return;
+  if (!isTauriRuntime()) {
+    window.alert("ファイル名変更はTauri版のみ対応です。");
+    return;
+  }
+
+  const speciesName = await requestSpeciesName(images.length);
+  if (speciesName === null) return;
+  const trimmedName = speciesName.trim();
+  if (!trimmedName) return;
+
+  try {
+    const results = await invoke<RenameResult[]>("rename_images", {
+      request: {
+        paths: images.map((image) => image.path),
+        speciesName: trimmedName,
+      },
+    });
+    applyRenameResults(results);
+    clearCheckedImages();
+    render();
+  } catch (error) {
+    console.error(error);
+    window.alert(`ファイル名変更に失敗しました。\n${String(error)}`);
+  }
+}
+
+function requestSpeciesName(count: number) {
+  return new Promise<string | null>((resolve) => {
+    if (!elements.speciesDialog || !elements.speciesNameInput) {
+      resolve(window.prompt(`${count}枚のファイル名に追加する種名を入力してください。`));
+      return;
+    }
+
+    if (elements.speciesDialogMessage) {
+      elements.speciesDialogMessage.textContent = `${count}枚のファイル名の最後に種名を追加します。`;
+    }
+    elements.speciesNameInput.value = "";
+    elements.speciesDialog.hidden = false;
+    elements.speciesNameInput.focus();
+
+    const cleanup = () => {
+      elements.speciesDialog!.hidden = true;
+      elements.speciesOkButton?.removeEventListener("click", handleOk);
+      elements.speciesCancelButton?.removeEventListener("click", handleCancel);
+      elements.speciesNameInput?.removeEventListener("keydown", handleKeyDown);
+    };
+    const handleOk = () => {
+      const value = elements.speciesNameInput?.value ?? "";
+      cleanup();
+      resolve(value);
+    };
+    const handleCancel = () => {
+      cleanup();
+      resolve(null);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        handleOk();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        handleCancel();
+      }
+    };
+
+    elements.speciesOkButton?.addEventListener("click", handleOk);
+    elements.speciesCancelButton?.addEventListener("click", handleCancel);
+    elements.speciesNameInput.addEventListener("keydown", handleKeyDown);
+  });
+}
+
+function applyRenameResults(results: RenameResult[]) {
+  const byOldPath = new Map(results.map((result) => [result.old_path, result]));
+  for (const image of state.images) {
+    const result = byOldPath.get(image.path);
+    if (!result) continue;
+
+    image.id = `${result.path}-${result.size}-${result.modified_at}`;
+    image.path = result.path;
+    image.name = result.name;
+    image.size = result.size;
+    image.modifiedAt = result.modified_at;
+    image.url = convertFileSrc(result.path);
+    image.thumbnailUrl = undefined;
+    image.thumbnailLoaded = false;
+    image.thumbnailRequested = false;
+  }
+  resetThumbnailQueue();
+}
+
+async function copyCheckedFiles() {
+  const images = checkedImages();
+  if (!images.length) return;
+  if (!isTauriRuntime()) {
+    window.alert("ファイルコピーはTauri版のみ対応です。");
+    return;
+  }
+
+  try {
+    await invoke("copy_files_to_clipboard", {
+      paths: images.map((image) => image.path),
+    });
+    if (elements.selectionCount) {
+      elements.selectionCount.textContent = `${images.length}枚コピー済み`;
+    }
+  } catch (error) {
+    console.error(error);
+    window.alert(`ファイルコピーに失敗しました。\n${String(error)}`);
+  }
+}
+
 function setZoom(value: number) {
   state.fitMode = false;
   updateCurrentView({
@@ -1208,6 +1362,13 @@ function renderChrome() {
   elements.compareGrid?.toggleAttribute("hidden", !hasImages);
   elements.prevButton?.toggleAttribute("disabled", !hasImages || state.activeIndex <= 0);
   elements.nextButton?.toggleAttribute("disabled", !hasImages || state.activeIndex >= state.images.length - 1);
+  const checkedCount = state.checkedIndexes.size;
+  if (elements.selectionCount) {
+    elements.selectionCount.textContent = `選択 ${checkedCount}`;
+  }
+  elements.appendSpeciesButton?.toggleAttribute("disabled", checkedCount === 0);
+  elements.copyFilesButton?.toggleAttribute("disabled", checkedCount === 0);
+  elements.clearSelectionButton?.toggleAttribute("disabled", checkedCount === 0);
 
   for (const button of elements.modeButtons) {
     const count = Number(button.dataset.compareCount ?? 1);
@@ -1315,8 +1476,15 @@ function renderThumbs() {
     button.draggable = true;
     button.dataset.index = String(index);
     button.setAttribute("aria-current", String(index === state.activeIndex));
+    button.setAttribute("aria-checked", String(state.checkedIndexes.has(index)));
     button.title = image.path;
-    button.addEventListener("click", () => {
+    button.addEventListener("click", (event) => {
+      if (event.shiftKey || event.metaKey || event.ctrlKey) {
+        toggleThumbCheck(index, !state.checkedIndexes.has(index), event.shiftKey);
+        renderThumbs();
+        renderChrome();
+        return;
+      }
       const slotIndex = Math.min(state.activeSlot, state.compareCount - 1);
       state.activeIndex = index;
       state.activeSlot = slotIndex;
@@ -1329,6 +1497,19 @@ function renderThumbs() {
       event.dataTransfer?.setDragImage(button, 48, 36);
     });
 
+    const check = document.createElement("span");
+    check.className = "thumb-check";
+    check.textContent = state.checkedIndexes.has(index) ? "✓" : "";
+    check.title = state.checkedIndexes.has(index) ? "チェックを外す" : "チェックする";
+    check.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleThumbCheck(index, !state.checkedIndexes.has(index), event.shiftKey);
+      renderThumbs();
+      renderChrome();
+    });
+    button.append(check);
+
     if (image.thumbnailUrl) {
       const img = document.createElement("img");
       img.src = image.thumbnailUrl;
@@ -1339,6 +1520,7 @@ function renderThumbs() {
     }
 
     const indexLabel = document.createElement("span");
+    indexLabel.className = "thumb-index";
     indexLabel.textContent = String(index + 1);
     button.append(indexLabel);
     fragment.append(button);
@@ -1347,6 +1529,24 @@ function renderThumbs() {
   elements.thumbs.replaceChildren(fragment);
   const activeThumb = elements.thumbs.querySelector<HTMLElement>('[aria-current="true"]');
   activeThumb?.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
+
+function toggleThumbCheck(index: number, checked: boolean, useRange: boolean) {
+  const start = useRange && state.lastCheckedIndex !== null
+    ? Math.min(state.lastCheckedIndex, index)
+    : index;
+  const end = useRange && state.lastCheckedIndex !== null
+    ? Math.max(state.lastCheckedIndex, index)
+    : index;
+
+  for (let current = start; current <= end; current += 1) {
+    if (checked) {
+      state.checkedIndexes.add(current);
+    } else {
+      state.checkedIndexes.delete(current);
+    }
+  }
+  state.lastCheckedIndex = index;
 }
 
 function renderPaneSelection() {

@@ -1,66 +1,116 @@
 # DigiViewer
 
-DigiViewer is a fast local image review and comparison viewer for large photo sets.
+DigiViewerは、昆虫や野生生物の写真を大量に見返すための高速画像ビューアーです。
 
-The first MVP focuses on interaction feel:
+フィールドで撮った何百枚、何千枚の画像を、止まらずに確認する。微妙なピント、構図、翅の角度、模様の差を並べて比べる。GPSやEXIF、RAW同時記録の有無を見ながら、観察記録へつなげる。
 
-- open a folder or multiple image files
-- move quickly with arrow keys
-- compare 2, 3, or 4 images in slots
-- synchronize zoom and pan across comparison panes
-- drag thumbnails into comparison slots
-- show a one-line EXIF bar and GPS map when location metadata exists
-- display zoom as image-pixel scale, where 100% means one image pixel per screen pixel
-- preload and decode nearby images around the active image
-- detect same-basename RAW sidecar files and show `RAWあり`
-- crop a selected region and send it to Google Lens or Google AI Mode
-- inspect focus and composition differences without modifying original files
+DigiViewerは「デジタル観察のススメ」を支える道具のひとつとして開発しています。今後、一般公開を目指している「犬山の生き物サイト」のような地域の生き物データベースや、観察記録を整理・公開するためのフレームワークとも連携しやすい形を目指します。
 
-## Current MVP
+## 何をするアプリか
 
-This repository is scaffolded as a Tauri app, but the current viewer can also run in the browser through Vite. That keeps the first interaction prototype usable before Rust is installed.
+デジタル観察では、撮影した瞬間よりも、その後の「見返す時間」が重要になります。
+
+- 似た写真から一番ピントの合ったものを選ぶ
+- 同じ個体の別カットを比較する
+- 模様や形態の違いを確認する
+- 撮影場所や撮影時刻を見ながら記録を整理する
+- RAW同時記録がある画像を把握する
+
+DigiViewerは、この確認作業を軽く、速く、気持ちよくするための独立したデスクトップアプリです。
+
+## 主な機能
+
+- フォルダ内の画像をまとめて読み込み
+- 矢印キーで高速に画像移動
+- 2枚、3枚、4枚の同期比較
+- 4枚比較では田の字レイアウト
+- 比較スロットごとの画像差し替え
+- 拡大率と表示位置の同期
+- ピクセル等倍表示
+- 上部サムネイル一覧
+- サムネイルのディスクキャッシュ
+- 本画像とサムネイルの先読み枚数を設定可能
+- EXIFを1行で表示
+- GPSがある場合は地図表示
+- RAW同時記録の検出
+- アプリ内にバージョン表示
+
+## 対応形式
+
+表示対象:
+
+- JPEG / JPG
+- PNG
+- WebP
+- GIF
+- AVIF
+- HEIC / HEIF
+
+RAWは表示対象ではなく、同じベース名のRAWファイルがあることを検出して `RAWあり` と表示します。
+
+検出対象:
+
+- CR2 / CR3
+- NEF / NRW
+- ARW
+- ORF
+- RAF
+- RW2
+- PEF
+- DNG
+
+## 操作
+
+| 操作 | 内容 |
+| --- | --- |
+| `ArrowRight` / `ArrowLeft` | 次/前の画像 |
+| `ArrowDown` / `ArrowUp` | 10枚先/10枚前へ移動 |
+| `1` `2` `3` `4` | 比較枚数を切り替え |
+| 比較枠をクリック | その枠を操作対象にする |
+| サムネイルをクリック | 操作対象の比較枠に画像を入れる |
+| サムネイルを比較枠へドラッグ | その枠に画像を入れる |
+| マウスホイール | 拡大縮小 |
+| ドラッグ | 表示位置を移動 |
+| `F` | フィット |
+| `0` | ピクセル等倍 |
+| `+` / `-` | 拡大/縮小 |
+| `L` | 同期表示のON/OFF |
+
+複数枚表示中は、フォーカスされている枠だけが画像送りの対象になります。同期ON/OFFは拡大率と表示位置の同期に使います。
+
+## 開発
+
+DigiViewerはTauri + Rust + TypeScriptで作っています。
+
+macOSでのMVPを先に作り、操作感と速度を確認しながら、将来的にWindows対応も進める方針です。
 
 ```sh
 npm install
-npm run dev
-```
-
-Then open the local URL printed by Vite.
-
-For the desktop app, install Rust and run:
-
-```sh
 npm run tauri dev
 ```
 
-The Tauri build uses a native folder picker and scans image paths through a Rust command. Browser mode still uses the browser file picker as a fallback.
+フロントエンドだけを確認する場合:
 
-## Controls
+```sh
+npm run dev
+```
 
-| Key / Action | Behavior |
-| --- | --- |
-| `ArrowRight` / `ArrowLeft` | next / previous image |
-| `ArrowDown` / `ArrowUp` | jump forward / backward 10 images |
-| `1` `2` `3` `4` | switch comparison count |
-| drag thumbnail to pane | assign image to comparison slot |
-| `Shift` + drag on image | select a crop region |
-| mouse wheel | zoom |
-| drag | pan |
-| `F` | fit / reset view |
-| `0` | actual size / pixel 100% |
-| `+` / `-` | zoom in / out |
-| `L` | toggle sync lock |
+ビルド:
 
-The preload count is adjustable in the top toolbar. A value of `6` preloads six images before and six images after the active image.
+```sh
+npm run tauri build -- --bundles app
+```
 
-After selecting a crop region, DigiViewer can copy the cropped PNG to the clipboard and open Google Lens or AI Mode. In the Tauri app, cropped images are also saved to `~/Pictures/DigiViewer Crops`. Automatic upload is intentionally not assumed because Google's web UI and account availability can change.
+## ランディングページ
 
-## Planned Native Layer
+公開用の簡易ランディングページは `docs/index.html` にあります。
 
-The Tauri/Rust layer will add:
+GitHub Pagesで公開する場合は、Pagesの公開元を `docs/` に設定してください。
 
-- native EXIF loading
-- thumbnail disk cache
-- SQLite labels and notes
-- preloading around the active image
-- macOS app bundle and later Windows builds
+## 位置づけ
+
+DigiViewerは、単なる画像ビューアーではなく、観察から記録、記録から共有へ進むための入り口です。
+
+「デジタル観察のススメ」では、身近な自然をデジタル機材で観察し、写真やデータを使って生き物をより深く見る方法を整理しています。DigiViewerは、その中で大量の画像を確認し、比較し、次の記録作業につなげるための実用的なピースです。
+
+将来的には、犬山周辺の生き物情報を扱うサイトや、他地域でも使える観察記録フレームワークと連携し、撮った写真を地域の自然情報として活かせる流れを作っていきます。
