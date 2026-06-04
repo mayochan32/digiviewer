@@ -36,6 +36,32 @@ struct ThumbnailRequest {
     max_edge: u32,
     cache_limit_mb: u64,
     prune_cache: bool,
+    cache_scope: Option<ThumbnailCacheScope>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum ThumbnailCacheScope {
+    App,
+    Folder,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ThumbnailCacheRequest {
+    paths: Vec<String>,
+    max_edge: u32,
+    cache_scope: Option<ThumbnailCacheScope>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ThumbnailCacheResult {
+    total: usize,
+    created: usize,
+    reused: usize,
+    failed: usize,
+    deleted: usize,
 }
 
 #[derive(Deserialize)]
@@ -149,32 +175,83 @@ fn get_thumbnail(request: ThumbnailRequest) -> Result<Option<String>, String> {
     }
 
     let max_edge = request.max_edge.clamp(64, 512);
-    let cache_dir = thumbnail_cache_dir();
-    fs::create_dir_all(&cache_dir).map_err(|error| error.to_string())?;
-
-    let cache_key = thumbnail_cache_key(&request.path, request.size, request.modified_at, max_edge);
-    let cache_path = cache_dir.join(format!("{cache_key}.jpg"));
-    if cache_path.is_file() {
-        return Ok(Some(cache_path.to_string_lossy().into_owned()));
+    let cache_path = thumbnail_cache_path_for(
+        &source,
+        &request.path,
+        request.size,
+        request.modified_at,
+        max_edge,
+        request.cache_scope.as_ref(),
+    )?;
+    if let Some(parent) = cache_path.parent() {
+        fs::create_dir_all(parent).map_err(|error| error.to_string())?;
     }
 
-    let reader = image::ImageReader::open(&source).map_err(|error| error.to_string())?;
-    let image = match reader.decode() {
-        Ok(image) => image,
-        Err(_) => return Ok(None),
-    };
-    let thumbnail = image.thumbnail(max_edge, max_edge).to_rgb8();
-    let file = File::create(&cache_path).map_err(|error| error.to_string())?;
-    let writer = BufWriter::new(file);
-    let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(writer, 78);
-    encoder
-        .encode_image(&thumbnail)
-        .map_err(|error| error.to_string())?;
+    let existed = cache_path.is_file();
+    if !existed {
+        create_thumbnail_file(&source, &cache_path, max_edge)?;
+    }
 
     if request.prune_cache {
         prune_thumbnail_cache(request.cache_limit_mb);
     }
     Ok(Some(cache_path.to_string_lossy().into_owned()))
+}
+
+#[tauri::command]
+fn build_thumbnail_cache(request: ThumbnailCacheRequest) -> Result<ThumbnailCacheResult, String> {
+    let mut result = ThumbnailCacheResult {
+        total: request.paths.len(),
+        created: 0,
+        reused: 0,
+        failed: 0,
+        deleted: 0,
+    };
+    let max_edge = request.max_edge.clamp(64, 512);
+
+    for path in request.paths {
+        let source = PathBuf::from(&path);
+        if !source.is_file() {
+            result.failed += 1;
+            continue;
+        }
+        let Ok(metadata) = fs::metadata(&source) else {
+            result.failed += 1;
+            continue;
+        };
+        let modified_at = modified_at_millis(&metadata);
+        let cache_path = thumbnail_cache_path_for(
+            &source,
+            &path,
+            metadata.len(),
+            modified_at,
+            max_edge,
+            request.cache_scope.as_ref(),
+        )?;
+        if cache_path.is_file() {
+            result.reused += 1;
+            continue;
+        }
+        if let Some(parent) = cache_path.parent() {
+            fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+        }
+        match create_thumbnail_file(&source, &cache_path, max_edge) {
+            Ok(()) => result.created += 1,
+            Err(_) => result.failed += 1,
+        }
+    }
+
+    Ok(result)
+}
+
+#[tauri::command]
+fn clean_thumbnail_cache(directory: String) -> Result<ThumbnailCacheResult, String> {
+    clean_folder_thumbnail_cache(&PathBuf::from(directory), false)
+}
+
+#[tauri::command]
+fn clear_thumbnail_cache(directory: String) -> Result<ThumbnailCacheResult, String> {
+    clean_folder_thumbnail_cache(&PathBuf::from(directory), true)
 }
 
 #[tauri::command]
@@ -319,6 +396,46 @@ fn thumbnail_cache_dir() -> PathBuf {
     }
 }
 
+fn folder_thumbnail_cache_dir(source: &Path, max_edge: u32) -> Option<PathBuf> {
+    source
+        .parent()
+        .map(|parent| parent.join(".digiviewer").join("thumbs").join(max_edge.to_string()))
+}
+
+fn thumbnail_cache_path_for(
+    source: &Path,
+    path: &str,
+    size: u64,
+    modified_at: u128,
+    max_edge: u32,
+    scope: Option<&ThumbnailCacheScope>,
+) -> Result<PathBuf, String> {
+    let cache_key = thumbnail_cache_key(path, size, modified_at, max_edge);
+    let filename = thumbnail_cache_filename(source, &cache_key);
+    match scope {
+        Some(ThumbnailCacheScope::Folder) => {
+            let Some(cache_dir) = folder_thumbnail_cache_dir(source, max_edge) else {
+                return Ok(thumbnail_cache_dir().join(filename));
+            };
+            match fs::create_dir_all(&cache_dir) {
+                Ok(()) => Ok(cache_dir.join(filename)),
+                Err(_) => Ok(thumbnail_cache_dir().join(filename)),
+            }
+        }
+        _ => Ok(thumbnail_cache_dir().join(filename)),
+    }
+}
+
+fn thumbnail_cache_filename(source: &Path, cache_key: &str) -> String {
+    let stem = source
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .map(sanitize_filename_part)
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| "thumb".to_owned());
+    format!("{stem}__{cache_key}.jpg")
+}
+
 fn thumbnail_cache_key(path: &str, size: u64, modified_at: u128, max_edge: u32) -> String {
     let input = format!("{path}\0{size}\0{modified_at}\0{max_edge}");
     let mut hash = 0xcbf29ce484222325_u64;
@@ -327,6 +444,112 @@ fn thumbnail_cache_key(path: &str, size: u64, modified_at: u128, max_edge: u32) 
         hash = hash.wrapping_mul(0x100000001b3);
     }
     format!("{hash:016x}")
+}
+
+fn create_thumbnail_file(source: &Path, cache_path: &Path, max_edge: u32) -> Result<(), String> {
+    let reader = image::ImageReader::open(source).map_err(|error| error.to_string())?;
+    let image = match reader.decode() {
+        Ok(image) => image,
+        Err(_) => return Ok(()),
+    };
+    let thumbnail = image.thumbnail(max_edge, max_edge).to_rgb8();
+    let file = File::create(cache_path).map_err(|error| error.to_string())?;
+    let writer = BufWriter::new(file);
+    let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(writer, 78);
+    encoder
+        .encode_image(&thumbnail)
+        .map_err(|error| error.to_string())
+}
+
+fn clean_folder_thumbnail_cache(
+    directory: &Path,
+    clear_all: bool,
+) -> Result<ThumbnailCacheResult, String> {
+    let mut result = ThumbnailCacheResult {
+        total: 0,
+        created: 0,
+        reused: 0,
+        failed: 0,
+        deleted: 0,
+    };
+    clean_folder_thumbnail_cache_recursive(directory, clear_all, &mut result)?;
+    Ok(result)
+}
+
+fn clean_folder_thumbnail_cache_recursive(
+    directory: &Path,
+    clear_all: bool,
+    result: &mut ThumbnailCacheResult,
+) -> Result<(), String> {
+    let cache_root = directory.join(".digiviewer").join("thumbs");
+    if !cache_root.exists() {
+        // Still visit child folders; each folder owns its local thumbnail cache.
+    } else {
+        let valid_prefixes = valid_thumbnail_prefixes(directory)?;
+        clean_thumbnail_cache_dir(&cache_root, clear_all, &valid_prefixes, result);
+    }
+
+    for entry in fs::read_dir(directory).map_err(|error| error.to_string())? {
+        let entry = entry.map_err(|error| error.to_string())?;
+        let path = entry.path();
+        if path.is_dir()
+            && path.file_name().and_then(|value| value.to_str()) != Some(".digiviewer")
+        {
+            clean_folder_thumbnail_cache_recursive(&path, clear_all, result)?;
+        }
+    }
+    Ok(())
+}
+
+fn valid_thumbnail_prefixes(directory: &Path) -> Result<std::collections::HashSet<String>, String> {
+    let mut valid_prefixes = std::collections::HashSet::new();
+    for entry in fs::read_dir(directory).map_err(|error| error.to_string())? {
+        let Ok(entry) = entry else {
+            continue;
+        };
+        let path = entry.path();
+        if !path.is_file() || !is_supported_image(&path) {
+            continue;
+        }
+        if let Some(stem) = path.file_stem().and_then(|value| value.to_str()) {
+            valid_prefixes.insert(format!("{}__", sanitize_filename_part(stem)));
+        }
+    }
+    Ok(valid_prefixes)
+}
+
+fn clean_thumbnail_cache_dir(
+    directory: &Path,
+    clear_all: bool,
+    valid_prefixes: &std::collections::HashSet<String>,
+    result: &mut ThumbnailCacheResult,
+) {
+    let Ok(entries) = fs::read_dir(directory) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            clean_thumbnail_cache_dir(&path, clear_all, valid_prefixes, result);
+            let _ = fs::remove_dir(&path);
+            continue;
+        }
+        if !path.is_file() {
+            continue;
+        }
+        result.total += 1;
+        let filename = path.file_name().and_then(|value| value.to_str()).unwrap_or("");
+        let should_delete = clear_all || !valid_prefixes.iter().any(|prefix| filename.starts_with(prefix));
+        if should_delete {
+            if fs::remove_file(path).is_ok() {
+                result.deleted += 1;
+            } else {
+                result.failed += 1;
+            }
+        } else {
+            result.reused += 1;
+        }
+    }
 }
 
 fn prune_thumbnail_cache(cache_limit_mb: u64) {
@@ -480,6 +703,9 @@ fn visit_directory(directory: &Path, images: &mut Vec<ImageFile>) -> Result<(), 
         let file_type = entry.file_type().map_err(|error| error.to_string())?;
 
         if file_type.is_dir() {
+            if is_digiviewer_cache_dir(&path) {
+                continue;
+            }
             visit_directory(&path, images)?;
         } else if file_type.is_file() && (is_supported_image(&path) || is_raw_image(&path)) {
             let metadata = entry.metadata().map_err(|error| error.to_string())?;
@@ -509,6 +735,13 @@ fn visit_directory(directory: &Path, images: &mut Vec<ImageFile>) -> Result<(), 
     }
 
     Ok(())
+}
+
+fn is_digiviewer_cache_dir(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .map(|name| name == ".digiviewer")
+        .unwrap_or(false)
 }
 
 fn is_raw_image(path: &Path) -> bool {
@@ -550,6 +783,9 @@ pub fn run() {
             copy_files_to_clipboard,
             app_version,
             get_thumbnail,
+            build_thumbnail_cache,
+            clean_thumbnail_cache,
+            clear_thumbnail_cache,
             save_crop_image,
             ensure_crop_directory,
             open_external_url,

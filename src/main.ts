@@ -64,6 +64,16 @@ type RenameResult = {
   modified_at: number;
 };
 
+type ThumbnailCacheResult = {
+  total: number;
+  created: number;
+  reused: number;
+  failed: number;
+  deleted: number;
+};
+
+type FontSizeMode = "small" | "medium" | "large";
+
 type CropRect = {
   left: number;
   top: number;
@@ -75,6 +85,17 @@ type SavedCrop = {
   blob: Blob;
   bytes: Uint8Array;
   path?: string;
+};
+
+type PerfStats = {
+  scanMs: number | null;
+  listMs: number | null;
+  renderMs: number | null;
+  imageMs: number | null;
+  exifMs: number | null;
+  thumbLastMs: number | null;
+  thumbAvgMs: number | null;
+  thumbCount: number;
 };
 
 declare global {
@@ -130,28 +151,67 @@ const rawExtensions = new Set([
 ]);
 
 const thumbnailMaxEdge = 192;
-const thumbnailConcurrency = 2;
-const thumbnailBackgroundDelayMs = 350;
+const thumbnailConcurrency = 1;
+const thumbnailBackgroundDelayMs = 900;
 const thumbnailPruneInterval = 64;
+const maxInitialImagePreloadRadius = 1;
+const maxInitialThumbnailPreloadRadius = 24;
+const visibleThumbnailBuffer = 4;
+const thumbnailBackgroundBatchLimit = 12;
+const exifDelayMs = 900;
 const thumbItemWidth = 102;
 let thumbnailQueue: number[] = [];
 let activeThumbnailJobs = 0;
 let thumbnailScrollFrame = 0;
 let thumbnailPreloadTimer = 0;
 let thumbnailRequestsSincePrune = 0;
+let exifTimer = 0;
+const perf: PerfStats = {
+  scanMs: null,
+  listMs: null,
+  renderMs: null,
+  imageMs: null,
+  exifMs: null,
+  thumbLastMs: null,
+  thumbAvgMs: null,
+  thumbCount: 0,
+};
 
 function isTauriRuntime() {
   return "__TAURI_INTERNALS__" in window;
 }
 
+function normalizeFontSizeMode(value: string | undefined): FontSizeMode {
+  return value === "medium" || value === "large" ? value : "small";
+}
+
+function applyFontSizeMode() {
+  const addPx = state.fontSizeMode === "large"
+    ? 6
+    : state.fontSizeMode === "medium"
+      ? 3
+      : 0;
+  document.documentElement.style.setProperty("--font-size-add", `${addPx}px`);
+}
+
 const state = {
   images: [] as ImageItem[],
+  filteredIndexes: [] as number[],
+  filenameFilter: "",
   activeIndex: 0,
   compareCount: 1,
   compareSlots: [0, null, null, null] as Array<number | null>,
-  preloadRadius: Number(localStorage.getItem("digiviewer.preloadRadius") ?? 6),
-  thumbPreloadRadius: Number(localStorage.getItem("digiviewer.thumbPreloadRadius") ?? 120),
+  preloadRadius: Math.min(
+    Number(localStorage.getItem("digiviewer.preloadRadius") ?? 1),
+    maxInitialImagePreloadRadius,
+  ),
+  thumbPreloadRadius: Math.min(
+    Number(localStorage.getItem("digiviewer.thumbPreloadRadius") ?? 12),
+    maxInitialThumbnailPreloadRadius,
+  ),
   thumbCacheLimitMb: Number(localStorage.getItem("digiviewer.thumbCacheLimitMb") ?? 1024),
+  perfVisible: localStorage.getItem("digiviewer.perfVisible") !== "false",
+  fontSizeMode: normalizeFontSizeMode(localStorage.getItem("digiviewer.fontSizeMode") ?? "small"),
   fitMode: true,
   syncView: true,
   activeSlot: 0,
@@ -167,6 +227,9 @@ const state = {
   mapOpen: false,
   checkedIndexes: new Set<number>(),
   lastCheckedIndex: null as number | null,
+  currentDirectory: "",
+  isBuildingThumbCache: false,
+  thumbCacheStatus: "",
   view: {
     zoom: 1,
     offsetX: 0,
@@ -200,10 +263,14 @@ const elements = {
   imageCount: document.querySelector<HTMLElement>("#image-count"),
   activeName: document.querySelector<HTMLElement>("#active-name"),
   activeMeta: document.querySelector<HTMLElement>("#active-meta"),
+  perfMeter: document.querySelector<HTMLElement>("#perf-meter"),
   zoomValue: document.querySelector<HTMLElement>("#zoom-value"),
+  filenameFilterInput: document.querySelector<HTMLInputElement>("#filename-filter"),
   preloadRadiusInput: document.querySelector<HTMLInputElement>("#preload-radius"),
   thumbPreloadRadiusInput: document.querySelector<HTMLInputElement>("#thumb-preload-radius"),
   thumbCacheLimitInput: document.querySelector<HTMLInputElement>("#thumb-cache-limit"),
+  perfVisibleInput: document.querySelector<HTMLInputElement>("#perf-visible"),
+  fontSizeModeSelect: document.querySelector<HTMLSelectElement>("#font-size-mode"),
   exifText: document.querySelector<HTMLElement>("#exif-text"),
   gpsText: document.querySelector<HTMLElement>("#gps-text"),
   mapButton: document.querySelector<HTMLButtonElement>("#map-button"),
@@ -211,6 +278,13 @@ const elements = {
   appendSpeciesButton: document.querySelector<HTMLButtonElement>("#append-species"),
   copyFilesButton: document.querySelector<HTMLButtonElement>("#copy-files"),
   clearSelectionButton: document.querySelector<HTMLButtonElement>("#clear-file-selection"),
+  buildThumbCacheButton: document.querySelector<HTMLButtonElement>("#build-thumb-cache"),
+  cleanThumbCacheButton: document.querySelector<HTMLButtonElement>("#clean-thumb-cache"),
+  clearThumbCacheButton: document.querySelector<HTMLButtonElement>("#clear-thumb-cache"),
+  thumbCacheStatus: document.querySelector<HTMLElement>("#thumb-cache-status"),
+  settingsButton: document.querySelector<HTMLButtonElement>("#settings-button"),
+  settingsDialog: document.querySelector<HTMLElement>("#settings-dialog"),
+  settingsCloseButton: document.querySelector<HTMLButtonElement>("#settings-close"),
   speciesDialog: document.querySelector<HTMLElement>("#species-dialog"),
   speciesDialogMessage: document.querySelector<HTMLElement>("#species-dialog-message"),
   speciesNameInput: document.querySelector<HTMLInputElement>("#species-name-input"),
@@ -225,15 +299,22 @@ const elements = {
   actualButton: document.querySelector<HTMLButtonElement>("#actual-button"),
   prevButton: document.querySelector<HTMLButtonElement>("#prev-button"),
   nextButton: document.querySelector<HTMLButtonElement>("#next-button"),
+  viewerPrevButton: document.querySelector<HTMLButtonElement>("#viewer-prev-button"),
+  viewerNextButton: document.querySelector<HTMLButtonElement>("#viewer-next-button"),
 };
 
 window.addEventListener("DOMContentLoaded", () => {
+  applyFontSizeMode();
   ensureCropDirectory();
   loadAppVersion();
   elements.chooseFolderButton?.addEventListener("click", openFolder);
   elements.chooseFilesButton?.addEventListener("click", openFiles);
   elements.openInput?.addEventListener("change", handleFileSelection);
   elements.fileInput?.addEventListener("change", handleFileSelection);
+  elements.filenameFilterInput?.addEventListener("input", () => {
+    state.filenameFilter = elements.filenameFilterInput?.value ?? "";
+    applyFilenameFilter();
+  });
   if (elements.preloadRadiusInput) {
     elements.preloadRadiusInput.value = String(state.preloadRadius);
     elements.preloadRadiusInput.addEventListener("change", () => {
@@ -258,6 +339,22 @@ window.addEventListener("DOMContentLoaded", () => {
       state.thumbCacheLimitMb = clamp(Number(elements.thumbCacheLimitInput?.value ?? 0), 64, 10240);
       localStorage.setItem("digiviewer.thumbCacheLimitMb", String(state.thumbCacheLimitMb));
       scheduleThumbnailPreload();
+    });
+  }
+  if (elements.perfVisibleInput) {
+    elements.perfVisibleInput.checked = state.perfVisible;
+    elements.perfVisibleInput.addEventListener("change", () => {
+      state.perfVisible = Boolean(elements.perfVisibleInput?.checked);
+      localStorage.setItem("digiviewer.perfVisible", String(state.perfVisible));
+      renderPerfMeter();
+    });
+  }
+  if (elements.fontSizeModeSelect) {
+    elements.fontSizeModeSelect.value = state.fontSizeMode;
+    elements.fontSizeModeSelect.addEventListener("change", () => {
+      state.fontSizeMode = normalizeFontSizeMode(elements.fontSizeModeSelect?.value);
+      localStorage.setItem("digiviewer.fontSizeMode", state.fontSizeMode);
+      applyFontSizeMode();
     });
   }
   elements.viewport?.addEventListener("wheel", handleWheel, { passive: false });
@@ -291,6 +388,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
   elements.prevButton?.addEventListener("click", () => moveActive(-1));
   elements.nextButton?.addEventListener("click", () => moveActive(1));
+  elements.viewerPrevButton?.addEventListener("click", () => moveActive(-1));
+  elements.viewerNextButton?.addEventListener("click", () => moveActive(1));
   elements.fitButton?.addEventListener("click", () => {
     fitView();
     renderViewTransform();
@@ -303,6 +402,14 @@ window.addEventListener("DOMContentLoaded", () => {
   });
   elements.appendSpeciesButton?.addEventListener("click", appendSpeciesNameToCheckedImages);
   elements.copyFilesButton?.addEventListener("click", copyCheckedFiles);
+  elements.buildThumbCacheButton?.addEventListener("click", buildAllThumbnailCache);
+  elements.cleanThumbCacheButton?.addEventListener("click", cleanThumbnailCache);
+  elements.clearThumbCacheButton?.addEventListener("click", clearThumbnailCache);
+  elements.settingsButton?.addEventListener("click", openSettings);
+  elements.settingsCloseButton?.addEventListener("click", closeSettings);
+  elements.settingsDialog?.addEventListener("click", (event) => {
+    if (event.target === elements.settingsDialog) closeSettings();
+  });
   elements.clearSelectionButton?.addEventListener("click", () => {
     clearCheckedImages();
     renderThumbs();
@@ -367,7 +474,10 @@ async function openFolder() {
         title: "画像フォルダを選択",
       });
       if (typeof selected !== "string") return;
+      const scanStart = performance.now();
       const images = await invoke<NativeImageFile[]>("scan_images", { directory: selected });
+      perf.scanMs = performance.now() - scanStart;
+      state.currentDirectory = selected;
       loadNativeImages(images);
     } catch (error) {
       console.error(error);
@@ -448,6 +558,13 @@ function handleFileSelection(event: Event) {
 }
 
 function loadPickedFiles(pickedFiles: PickedFile[]) {
+  const listStart = performance.now();
+  perf.scanMs = null;
+  state.currentDirectory = "";
+  state.thumbCacheStatus = "";
+  state.filenameFilter = "";
+  if (elements.filenameFilterInput) elements.filenameFilterInput.value = "";
+  resetThumbnailPerf();
   clearObjectUrls();
   const rawByBase = rawExtensionsByBase(pickedFiles.map(({ path }) => path));
   const files = pickedFiles.filter(({ file }) => isSupportedImage(file));
@@ -468,6 +585,7 @@ function loadPickedFiles(pickedFiles: PickedFile[]) {
     exifLoaded: false,
     rawExtensions: rawByBase.get(baseKeyForPath(path)) ?? [],
   }));
+  updateFilteredIndexes();
   state.activeIndex = 0;
   state.activeSlot = 0;
   state.compareSlots = [0, null, null, null];
@@ -475,13 +593,22 @@ function loadPickedFiles(pickedFiles: PickedFile[]) {
   resetThumbnailQueue();
   refillEmptySlots();
   fitView();
+  perf.listMs = performance.now() - listStart;
   render();
 }
 
 function loadNativeImages(nativeImages: NativeImageFile[]) {
+  const listStart = performance.now();
+  resetThumbnailPerf();
+  state.filenameFilter = "";
+  if (elements.filenameFilterInput) elements.filenameFilterInput.value = "";
   clearObjectUrls();
   const rawByBase = rawExtensionsByBase(nativeImages.map((image) => image.path));
-  const images = nativeImages.filter((image) => (image.kind ?? "image") === "image" && isSupportedImagePath(image.path));
+  const images = nativeImages.filter((image) =>
+    (image.kind ?? "image") === "image"
+    && isSupportedImagePath(image.path)
+    && !isDigiViewerCachePath(image.path)
+  );
   images.sort((a, b) => a.path.localeCompare(b.path, undefined, { numeric: true, sensitivity: "base" }));
 
   state.images = images.map((image, index) => ({
@@ -497,6 +624,7 @@ function loadNativeImages(nativeImages: NativeImageFile[]) {
     exifLoaded: false,
     rawExtensions: rawByBase.get(baseKeyForPath(image.path)) ?? [],
   }));
+  updateFilteredIndexes();
   state.activeIndex = 0;
   state.activeSlot = 0;
   state.compareSlots = [0, null, null, null];
@@ -504,6 +632,7 @@ function loadNativeImages(nativeImages: NativeImageFile[]) {
   resetThumbnailQueue();
   refillEmptySlots();
   fitView();
+  perf.listMs = performance.now() - listStart;
   render();
 }
 
@@ -531,10 +660,20 @@ function resetThumbnailQueue() {
   thumbnailQueue = [];
   activeThumbnailJobs = 0;
   thumbnailRequestsSincePrune = 0;
+  if (exifTimer) {
+    window.clearTimeout(exifTimer);
+    exifTimer = 0;
+  }
   if (thumbnailPreloadTimer) {
     window.clearTimeout(thumbnailPreloadTimer);
     thumbnailPreloadTimer = 0;
   }
+}
+
+function resetThumbnailPerf() {
+  perf.thumbLastMs = null;
+  perf.thumbAvgMs = null;
+  perf.thumbCount = 0;
 }
 
 function clearCheckedImages() {
@@ -557,6 +696,43 @@ function isSupportedImage(file: File) {
 function isSupportedImagePath(path: string) {
   const extension = path.split(".").pop()?.toLowerCase() ?? "";
   return supportedExtensions.has(extension);
+}
+
+function isDigiViewerCachePath(path: string) {
+  return path.split(/[\\/]/).includes(".digiviewer");
+}
+
+function updateFilteredIndexes() {
+  const needle = state.filenameFilter.trim().toLocaleLowerCase();
+  state.filteredIndexes = state.images
+    .map((_, index) => index)
+    .filter((index) => {
+      if (!needle) return true;
+      return state.images[index].name.toLocaleLowerCase().includes(needle);
+    });
+}
+
+function visibleIndexes() {
+  return state.filteredIndexes.length || state.filenameFilter.trim()
+    ? state.filteredIndexes
+    : state.images.map((_, index) => index);
+}
+
+function visiblePositionForIndex(imageIndex: number) {
+  return visibleIndexes().indexOf(imageIndex);
+}
+
+function applyFilenameFilter() {
+  updateFilteredIndexes();
+  const indexes = visibleIndexes();
+  const currentVisible = indexes.includes(state.activeIndex);
+  state.activeIndex = currentVisible ? state.activeIndex : indexes[0] ?? 0;
+  state.activeSlot = 0;
+  state.compareSlots = [indexes.includes(state.activeIndex) ? state.activeIndex : null, null, null, null];
+  resetThumbnailQueue();
+  refillEmptySlots();
+  fitView();
+  render();
 }
 
 function isRawImagePath(path: string) {
@@ -658,6 +834,7 @@ function handleKeyDown(event: KeyboardEvent) {
     toggleSyncView();
     render();
   } else if (event.key === "Escape") {
+    closeSettings();
     state.mapOpen = false;
     clearSelection();
     renderMap();
@@ -670,10 +847,13 @@ function handleGlobalKeyChange(event: KeyboardEvent) {
 }
 
 function moveActive(delta: number) {
-  if (!state.images.length) return;
+  const indexes = visibleIndexes();
+  if (!indexes.length) return;
   const slotIndex = Math.min(state.activeSlot, state.compareCount - 1);
   const currentIndex = state.compareSlots[slotIndex] ?? state.activeIndex;
-  const nextIndex = Math.max(0, Math.min(state.images.length - 1, currentIndex + delta));
+  const currentPosition = Math.max(0, indexes.indexOf(currentIndex));
+  const nextPosition = Math.max(0, Math.min(indexes.length - 1, currentPosition + delta));
+  const nextIndex = indexes[nextPosition];
   if (nextIndex === currentIndex) return;
   state.activeIndex = nextIndex;
   state.activeSlot = slotIndex;
@@ -993,6 +1173,16 @@ async function openCropDirectory() {
   return "";
 }
 
+function openSettings() {
+  if (!elements.settingsDialog) return;
+  elements.settingsDialog.hidden = false;
+  elements.preloadRadiusInput?.focus();
+}
+
+function closeSettings() {
+  if (elements.settingsDialog) elements.settingsDialog.hidden = true;
+}
+
 async function appendSpeciesNameToCheckedImages() {
   const images = checkedImages();
   if (!images.length) return;
@@ -1083,6 +1273,11 @@ function applyRenameResults(results: RenameResult[]) {
     image.thumbnailLoaded = false;
     image.thumbnailRequested = false;
   }
+  updateFilteredIndexes();
+  if (!visibleIndexes().includes(state.activeIndex)) {
+    state.activeIndex = visibleIndexes()[0] ?? 0;
+    state.compareSlots = [visibleIndexes()[0] ?? null, null, null, null];
+  }
   resetThumbnailQueue();
 }
 
@@ -1152,11 +1347,12 @@ function toggleSyncView() {
 }
 
 function refillEmptySlots() {
+  const indexes = visibleIndexes();
+  const activePosition = Math.max(0, indexes.indexOf(state.activeIndex));
   for (let slotIndex = 0; slotIndex < state.compareCount; slotIndex += 1) {
     const current = state.compareSlots[slotIndex];
-    if (current !== null && current >= 0 && current < state.images.length) continue;
-    const nextIndex = state.activeIndex + slotIndex;
-    state.compareSlots[slotIndex] = nextIndex < state.images.length ? nextIndex : null;
+    if (current !== null && indexes.includes(current)) continue;
+    state.compareSlots[slotIndex] = indexes[activePosition + slotIndex] ?? null;
   }
   for (let slotIndex = state.compareCount; slotIndex < state.compareSlots.length; slotIndex += 1) {
     state.compareSlots[slotIndex] = null;
@@ -1164,11 +1360,13 @@ function refillEmptySlots() {
 }
 
 function activeImage() {
+  if (state.filenameFilter.trim() && !visibleIndexes().length) return null;
   return slotImage(state.activeSlot) ?? state.images[state.activeIndex];
 }
 
 function slotImage(slotIndex: number) {
   const imageIndex = state.compareSlots[slotIndex];
+  if (imageIndex !== null && state.filenameFilter.trim() && !visibleIndexes().includes(imageIndex)) return null;
   return imageIndex === null ? null : state.images[imageIndex] ?? null;
 }
 
@@ -1187,13 +1385,22 @@ function fitScaleForActiveSlot() {
 }
 
 function preloadAroundActive() {
-  if (!state.images.length) return;
-  const radius = Math.max(0, Math.floor(state.preloadRadius));
-  const start = Math.max(0, state.activeIndex - radius);
-  const end = Math.min(state.images.length - 1, state.activeIndex + radius);
-  for (let index = start; index <= end; index += 1) {
-    loadImageInfo(state.images[index]);
-  }
+  if (state.isBuildingThumbCache) return;
+  const indexes = visibleIndexes();
+  if (!indexes.length) return;
+  const radius = Math.min(maxInitialImagePreloadRadius, Math.max(0, Math.floor(state.preloadRadius)));
+  const activePosition = Math.max(0, indexes.indexOf(state.activeIndex));
+  const start = Math.max(0, activePosition - radius);
+  const end = Math.min(indexes.length - 1, activePosition + radius);
+  const activeIndex = state.activeIndex;
+  loadImageInfo(state.images[activeIndex]);
+  window.setTimeout(() => {
+    if (state.activeIndex !== activeIndex) return;
+    for (let position = start; position <= end; position += 1) {
+      const index = indexes[position];
+      if (index !== activeIndex) loadImageInfo(state.images[index]);
+    }
+  }, 250);
 }
 
 function loadImageInfo(image: ImageItem) {
@@ -1201,26 +1408,26 @@ function loadImageInfo(image: ImageItem) {
   if (image.cachePromise) return image.cachePromise;
 
   image.cachePromise = new Promise<void>((resolve) => {
+    const start = performance.now();
     const img = new Image();
     img.decoding = "async";
     img.onload = async () => {
       image.width = img.naturalWidth;
       image.height = img.naturalHeight;
-      try {
-        await img.decode();
-      } catch {
-        // The image can still be usable even when decode() rejects for a browser-specific reason.
-      }
+      perf.imageMs = performance.now() - start;
       image.cacheLoaded = true;
       if (image === activeImage()) {
         if (state.fitMode) fitView();
         renderMeta();
         renderViewTransform();
+        renderPerfMeter();
       }
       resolve();
     };
     img.onerror = () => {
+      perf.imageMs = performance.now() - start;
       image.cacheLoaded = true;
+      renderPerfMeter();
       resolve();
     };
     img.src = image.url;
@@ -1230,6 +1437,7 @@ function loadImageInfo(image: ImageItem) {
 }
 
 function scheduleThumbnailPreload() {
+  if (state.isBuildingThumbCache) return;
   if (!state.images.length) return;
   if (thumbnailPreloadTimer) window.clearTimeout(thumbnailPreloadTimer);
   thumbnailPreloadTimer = window.setTimeout(() => {
@@ -1239,29 +1447,47 @@ function scheduleThumbnailPreload() {
 }
 
 function preloadThumbnailsAroundActive() {
-  if (!state.images.length) return;
+  const visible = visibleIndexes();
+  if (!visible.length) return;
 
-  const radius = Math.max(0, Math.floor(state.thumbPreloadRadius));
-  const start = Math.max(0, state.activeIndex - radius);
-  const end = Math.min(state.images.length - 1, state.activeIndex + radius);
+  const radius = Math.min(maxInitialThumbnailPreloadRadius, Math.max(0, Math.floor(state.thumbPreloadRadius)));
+  const activePosition = Math.max(0, visible.indexOf(state.activeIndex));
+  const start = Math.max(0, activePosition - radius);
+  const end = Math.min(visible.length - 1, activePosition + radius);
   const indexes = [];
-  for (let index = start; index <= end; index += 1) indexes.push(index);
+  for (let position = start; position <= end; position += 1) indexes.push(visible[position]);
   indexes.sort((a, b) => Math.abs(a - state.activeIndex) - Math.abs(b - state.activeIndex));
-  for (const index of indexes) queueThumbnail(index, false);
+  const keepIndexes = new Set(indexes);
+  keepQueuedThumbnails((index) => keepIndexes.has(index));
+  for (const index of indexes.slice(0, thumbnailBackgroundBatchLimit)) queueThumbnail(index, false);
 }
 
 function preloadVisibleThumbnails() {
+  if (state.isBuildingThumbCache) return;
   const rail = elements.thumbs?.parentElement;
-  if (!rail || !state.images.length) return;
+  const visible = visibleIndexes();
+  if (!rail || !visible.length) return;
 
-  const visibleStart = Math.max(0, Math.floor(rail.scrollLeft / thumbItemWidth) - 24);
+  const visibleStart = Math.max(0, Math.floor(rail.scrollLeft / thumbItemWidth) - visibleThumbnailBuffer);
   const visibleEnd = Math.min(
-    state.images.length - 1,
-    Math.ceil((rail.scrollLeft + rail.clientWidth) / thumbItemWidth) + 24,
+    visible.length - 1,
+    Math.ceil((rail.scrollLeft + rail.clientWidth) / thumbItemWidth) + visibleThumbnailBuffer,
   );
-  for (let index = visibleStart; index <= visibleEnd; index += 1) {
+  const indexes = visible.slice(visibleStart, visibleEnd + 1);
+  const keepIndexes = new Set(indexes);
+  keepQueuedThumbnails((index) => keepIndexes.has(index));
+  for (const index of indexes) {
     queueThumbnail(index, true);
   }
+}
+
+function keepQueuedThumbnails(keep: (index: number) => boolean) {
+  thumbnailQueue = thumbnailQueue.filter((index) => {
+    if (keep(index)) return true;
+    const image = state.images[index];
+    if (image && !image.thumbnailLoaded) image.thumbnailRequested = false;
+    return false;
+  });
 }
 
 function queueThumbnail(index: number, priority: boolean) {
@@ -1286,6 +1512,7 @@ function queueThumbnail(index: number, priority: boolean) {
   } else {
     thumbnailQueue.push(index);
   }
+  renderThumbCacheStatus();
   pumpThumbnailQueue();
 }
 
@@ -1303,12 +1530,14 @@ function pumpThumbnailQueue() {
       })
       .finally(() => {
         activeThumbnailJobs = Math.max(0, activeThumbnailJobs - 1);
+        renderThumbCacheStatus();
         pumpThumbnailQueue();
       });
   }
 }
 
 async function loadThumbnail(index: number, image: ImageItem) {
+  const start = performance.now();
   const pruneCache = state.thumbCacheLimitMb > 0
     && thumbnailRequestsSincePrune++ % thumbnailPruneInterval === 0;
   const path = await invoke<string | null>("get_thumbnail", {
@@ -1319,13 +1548,111 @@ async function loadThumbnail(index: number, image: ImageItem) {
       maxEdge: thumbnailMaxEdge,
       cacheLimitMb: state.thumbCacheLimitMb,
       pruneCache,
+      cacheScope: state.currentDirectory ? "folder" : "app",
     },
   });
+  const elapsed = performance.now() - start;
+  perf.thumbLastMs = elapsed;
+  perf.thumbCount += 1;
+  perf.thumbAvgMs = perf.thumbAvgMs === null
+    ? elapsed
+    : ((perf.thumbAvgMs * (perf.thumbCount - 1)) + elapsed) / perf.thumbCount;
   image.thumbnailLoaded = true;
   if (path) {
     image.thumbnailUrl = convertFileSrc(path);
   }
   updateThumbnailElement(index);
+  renderThumbCacheStatus();
+  renderPerfMeter();
+}
+
+async function buildAllThumbnailCache() {
+  if (!state.images.length || !isTauriRuntime()) return;
+  const cacheTargets = state.images.filter((image) => !isDigiViewerCachePath(image.path));
+  state.isBuildingThumbCache = true;
+  state.thumbCacheStatus = `0 / ${cacheTargets.length}`;
+  resetThumbnailQueue();
+  renderChrome();
+
+  const chunkSize = 24;
+  let created = 0;
+  let reused = 0;
+  let failed = 0;
+  try {
+    for (let start = 0; start < cacheTargets.length; start += chunkSize) {
+      const chunk = cacheTargets.slice(start, start + chunkSize);
+      const result = await invoke<ThumbnailCacheResult>("build_thumbnail_cache", {
+        request: {
+          paths: chunk.map((image) => image.path),
+          maxEdge: thumbnailMaxEdge,
+          cacheScope: "folder",
+        },
+      });
+      created += result.created;
+      reused += result.reused;
+      failed += result.failed;
+      state.thumbCacheStatus =
+        `${Math.min(start + chunk.length, cacheTargets.length)} / ${cacheTargets.length} 作成 ${created} 再利用 ${reused} 失敗 ${failed}`;
+      renderThumbCacheStatus();
+      renderPerfMeter();
+      await idlePause();
+    }
+    state.thumbCacheStatus = `完了 作成 ${created} 再利用 ${reused} 失敗 ${failed}`;
+    for (const image of state.images) {
+      image.thumbnailLoaded = false;
+      image.thumbnailRequested = false;
+    }
+    resetThumbnailQueue();
+    preloadVisibleThumbnails();
+  } catch (error) {
+    console.error(error);
+    state.thumbCacheStatus = `作成失敗 ${String(error)}`;
+    renderThumbCacheStatus();
+  } finally {
+    state.isBuildingThumbCache = false;
+    renderChrome();
+  }
+}
+
+async function cleanThumbnailCache() {
+  if (!state.currentDirectory || !isTauriRuntime()) return;
+  try {
+    const result = await invoke<ThumbnailCacheResult>("clean_thumbnail_cache", {
+      directory: state.currentDirectory,
+    });
+    state.thumbCacheStatus = `整理 削除 ${result.deleted} 保持 ${result.reused} 失敗 ${result.failed}`;
+  } catch (error) {
+    console.error(error);
+    state.thumbCacheStatus = `整理失敗 ${String(error)}`;
+  }
+  renderChrome();
+}
+
+async function clearThumbnailCache() {
+  if (!state.currentDirectory || !isTauriRuntime()) return;
+  if (!window.confirm("このフォルダのDigiViewerサムネイルキャッシュを全削除します。よろしいですか？")) return;
+  try {
+    const result = await invoke<ThumbnailCacheResult>("clear_thumbnail_cache", {
+      directory: state.currentDirectory,
+    });
+    state.thumbCacheStatus = `全削除 ${result.deleted} 失敗 ${result.failed}`;
+    for (const image of state.images) {
+      image.thumbnailLoaded = false;
+      image.thumbnailRequested = false;
+      image.thumbnailUrl = undefined;
+    }
+    resetThumbnailQueue();
+    renderThumbs();
+    preloadVisibleThumbnails();
+  } catch (error) {
+    console.error(error);
+    state.thumbCacheStatus = `削除失敗 ${String(error)}`;
+  }
+  renderChrome();
+}
+
+function idlePause() {
+  return new Promise<void>((resolve) => window.setTimeout(resolve, 0));
 }
 
 function updateThumbnailElement(index: number) {
@@ -1345,23 +1672,30 @@ function updateThumbnailElement(index: number) {
 }
 
 function render() {
+  const start = performance.now();
   renderChrome();
   renderCompareGrid();
   renderThumbs();
   renderMeta();
   renderMap();
+  perf.renderMs = performance.now() - start;
+  renderPerfMeter();
   preloadAroundActive();
   preloadVisibleThumbnails();
   scheduleThumbnailPreload();
-  loadExifForActiveImage();
+  scheduleExifLoad();
 }
 
 function renderChrome() {
-  const hasImages = state.images.length > 0;
+  const visible = visibleIndexes();
+  const hasImages = visible.length > 0;
+  const visiblePosition = visiblePositionForIndex(state.activeIndex);
   elements.emptyState?.toggleAttribute("hidden", hasImages);
   elements.compareGrid?.toggleAttribute("hidden", !hasImages);
-  elements.prevButton?.toggleAttribute("disabled", !hasImages || state.activeIndex <= 0);
-  elements.nextButton?.toggleAttribute("disabled", !hasImages || state.activeIndex >= state.images.length - 1);
+  elements.prevButton?.toggleAttribute("disabled", !hasImages || visiblePosition <= 0);
+  elements.nextButton?.toggleAttribute("disabled", !hasImages || visiblePosition >= visible.length - 1);
+  elements.viewerPrevButton?.toggleAttribute("disabled", !hasImages || visiblePosition <= 0);
+  elements.viewerNextButton?.toggleAttribute("disabled", !hasImages || visiblePosition >= visible.length - 1);
   const checkedCount = state.checkedIndexes.size;
   if (elements.selectionCount) {
     elements.selectionCount.textContent = `選択 ${checkedCount}`;
@@ -1369,6 +1703,13 @@ function renderChrome() {
   elements.appendSpeciesButton?.toggleAttribute("disabled", checkedCount === 0);
   elements.copyFilesButton?.toggleAttribute("disabled", checkedCount === 0);
   elements.clearSelectionButton?.toggleAttribute("disabled", checkedCount === 0);
+  const canManageThumbCache = isTauriRuntime() && hasImages && Boolean(state.currentDirectory);
+  elements.buildThumbCacheButton?.toggleAttribute("disabled", !canManageThumbCache || state.isBuildingThumbCache);
+  if (elements.buildThumbCacheButton) {
+    elements.buildThumbCacheButton.textContent = state.isBuildingThumbCache ? "作成中..." : "サムネ作成";
+  }
+  elements.cleanThumbCacheButton?.toggleAttribute("disabled", !canManageThumbCache || state.isBuildingThumbCache);
+  elements.clearThumbCacheButton?.toggleAttribute("disabled", !canManageThumbCache || state.isBuildingThumbCache);
 
   for (const button of elements.modeButtons) {
     const count = Number(button.dataset.compareCount ?? 1);
@@ -1379,6 +1720,46 @@ function renderChrome() {
     elements.syncButton.setAttribute("aria-pressed", String(state.syncView));
     elements.syncButton.textContent = state.syncView ? "同期 ON" : "同期 OFF";
   }
+  renderThumbCacheStatus();
+  renderPerfMeter();
+}
+
+function renderThumbCacheStatus() {
+  if (!elements.thumbCacheStatus) return;
+  const pendingCount = thumbnailQueue.length + activeThumbnailJobs;
+  const message = state.isBuildingThumbCache
+    ? `サムネ作成中 ${state.thumbCacheStatus}`
+    : state.thumbCacheStatus
+      || (pendingCount > 0
+        ? `通常サムネ生成中 残り ${pendingCount} / 生成 ${perf.thumbCount}枚`
+        : state.images.length
+          ? `サムネ待機 生成 ${perf.thumbCount}枚`
+          : "サムネ待機");
+  elements.thumbCacheStatus.textContent = message;
+  elements.thumbCacheStatus.hidden = false;
+}
+
+function renderPerfMeter() {
+  if (!elements.perfMeter) return;
+  elements.perfMeter.hidden = !state.perfVisible;
+  if (!state.perfVisible) return;
+  const values = [
+    `走査 ${formatMs(perf.scanMs)}`,
+    `一覧 ${formatMs(perf.listMs)}`,
+    `描画 ${formatMs(perf.renderMs)}`,
+    `画像 ${formatMs(perf.imageMs)}`,
+    `EXIF ${formatMs(perf.exifMs)}`,
+    `サムネ ${formatMs(perf.thumbLastMs)}`,
+    `平均 ${formatMs(perf.thumbAvgMs)}`,
+    `${perf.thumbCount}枚`,
+  ];
+  elements.perfMeter.textContent = values.join(" / ");
+}
+
+function formatMs(value: number | null) {
+  if (value === null) return "-";
+  if (value < 1000) return `${Math.round(value)}ms`;
+  return `${(value / 1000).toFixed(1)}s`;
 }
 
 function renderCompareGrid() {
@@ -1408,7 +1789,7 @@ function createPane(slotIndex: number) {
     if (imageIndex !== null) state.activeIndex = imageIndex;
     renderPaneSelection();
     renderMeta();
-    loadExifForActiveImage();
+    scheduleExifLoad();
   });
 
   if (!image) {
@@ -1442,7 +1823,8 @@ function createPane(slotIndex: number) {
 
   const badge = document.createElement("div");
   badge.className = "pane-badge";
-  badge.textContent = `${state.compareSlots[slotIndex]! + 1} / ${state.images.length}`;
+  const panePosition = visiblePositionForIndex(state.compareSlots[slotIndex]!);
+  badge.textContent = `${panePosition >= 0 ? panePosition + 1 : "-"} / ${visibleIndexes().length}`;
 
   const name = document.createElement("div");
   name.className = "pane-name";
@@ -1469,7 +1851,8 @@ function renderThumbs() {
   if (!elements.thumbs) return;
   const fragment = document.createDocumentFragment();
 
-  state.images.forEach((image, index) => {
+  visibleIndexes().forEach((index, visiblePosition) => {
+    const image = state.images[index];
     const button = document.createElement("button");
     button.type = "button";
     button.className = "thumb";
@@ -1521,7 +1904,7 @@ function renderThumbs() {
 
     const indexLabel = document.createElement("span");
     indexLabel.className = "thumb-index";
-    indexLabel.textContent = String(index + 1);
+    indexLabel.textContent = String(visiblePosition + 1);
     button.append(indexLabel);
     fragment.append(button);
   });
@@ -1570,8 +1953,11 @@ function renderViewTransform() {
 function renderMeta() {
   const active = activeImage();
   if (elements.imageCount) {
-    elements.imageCount.textContent = state.images.length
-      ? `${state.activeIndex + 1} / ${state.images.length}`
+    const visible = visibleIndexes();
+    const visiblePosition = visiblePositionForIndex(state.activeIndex);
+    const filteredSuffix = state.filenameFilter.trim() ? ` (全${state.images.length})` : "";
+    elements.imageCount.textContent = visible.length
+      ? `${visiblePosition + 1} / ${visible.length}${filteredSuffix}`
       : "0 / 0";
   }
   if (elements.activeName) {
@@ -1641,6 +2027,7 @@ async function loadExifForActiveImage() {
   const image = activeImage();
   if (!image || image.exifLoaded) return;
 
+  const start = performance.now();
   try {
     const source = image.file ?? await fetchImageBlob(image.url);
     const metadata = await exifr.parse(source, {
@@ -1654,12 +2041,23 @@ async function loadExifForActiveImage() {
   } catch {
     image.exif = null;
   } finally {
+    perf.exifMs = performance.now() - start;
     image.exifLoaded = true;
     if (image === activeImage()) {
       renderMeta();
       renderMap();
+      renderPerfMeter();
     }
   }
+}
+
+function scheduleExifLoad() {
+  if (state.isBuildingThumbCache) return;
+  if (exifTimer) window.clearTimeout(exifTimer);
+  exifTimer = window.setTimeout(() => {
+    exifTimer = 0;
+    loadExifForActiveImage();
+  }, exifDelayMs);
 }
 
 async function fetchImageBlob(url: string) {

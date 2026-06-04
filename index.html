@@ -14,31 +14,16 @@
           <strong>DigiViewer</strong>
           <span id="app-version" class="app-version">v0.1.0</span>
           <span id="image-count">0 / 0</span>
+          <div id="perf-meter" class="perf-meter" aria-label="処理時間">計測: -</div>
         </div>
         <div class="topbar-actions">
           <button id="choose-folder" type="button" class="file-button">フォルダ</button>
           <button id="choose-files" type="button" class="file-button">画像</button>
           <input id="open-folder" class="hidden-file-input" type="file" webkitdirectory multiple />
           <input id="open-files" class="hidden-file-input" type="file" accept="image/*,.heic,.heif" multiple />
-          <div class="segmented" aria-label="比較枚数">
-            <button type="button" data-compare-count="1" aria-pressed="true">1</button>
-            <button type="button" data-compare-count="2" aria-pressed="false">2</button>
-            <button type="button" data-compare-count="3" aria-pressed="false">3</button>
-            <button type="button" data-compare-count="4" aria-pressed="false">4</button>
-          </div>
-          <button id="sync-toggle" type="button" class="tool-button" aria-pressed="true">同期 ON</button>
-          <label class="cache-setting">
-            <span>本画像</span>
-            <input id="preload-radius" type="number" min="0" max="50" step="1" value="6" />
-          </label>
-          <label class="cache-setting">
-            <span>サムネ</span>
-            <input id="thumb-preload-radius" type="number" min="0" max="1000" step="10" value="120" />
-          </label>
-          <label class="cache-setting">
-            <span>容量MB</span>
-            <input id="thumb-cache-limit" type="number" min="64" max="10240" step="64" value="1024" />
-          </label>
+          <button id="build-thumb-cache" type="button" class="tool-button" disabled>サムネ作成</button>
+          <span id="thumb-cache-status" class="thumb-cache-status"></span>
+          <button id="settings-button" type="button" class="tool-button">設定</button>
         </div>
       </header>
 
@@ -61,9 +46,17 @@
             <button id="actual-button" type="button" class="tool-button">等倍</button>
             <span id="zoom-value" class="zoom-readout">100%</span>
             <span id="selection-count" class="selection-count">選択 0</span>
+            <div class="segmented" aria-label="比較枚数">
+              <button type="button" data-compare-count="1" aria-pressed="true">1</button>
+              <button type="button" data-compare-count="2" aria-pressed="false">2</button>
+              <button type="button" data-compare-count="3" aria-pressed="false">3</button>
+              <button type="button" data-compare-count="4" aria-pressed="false">4</button>
+            </div>
+            <button id="sync-toggle" type="button" class="tool-button" aria-pressed="true">同期 ON</button>
             <button id="append-species" type="button" class="tool-button" disabled>種名付加</button>
             <button id="copy-files" type="button" class="tool-button" disabled>コピー</button>
             <button id="clear-file-selection" type="button" class="tool-button" disabled>選択解除</button>
+            <input id="filename-filter" class="filename-filter" type="search" placeholder="ファイル名フィルタ" autocomplete="off" />
             <div class="active-file">
               <strong id="active-name">フォルダまたは画像を選択</strong>
               <span id="active-meta">画像を読み込むとここにファイル情報が表示されます。</span>
@@ -76,6 +69,8 @@
               <p>フォルダを選んで、矢印キーで移動。数字キー 1-4 で比較枚数を切り替え。ホイールで拡大、ドラッグで移動できます。</p>
             </div>
             <div id="compare-grid" class="compare-grid compare-1" hidden></div>
+            <button id="viewer-prev-button" type="button" class="viewer-nav-button viewer-nav-prev" title="前の画像" disabled>‹</button>
+            <button id="viewer-next-button" type="button" class="viewer-nav-button viewer-nav-next" title="次の画像" disabled>›</button>
             <section id="map-panel" class="map-panel" hidden>
               <div class="map-panel-header">
                 <strong>撮影場所</strong>
@@ -105,6 +100,45 @@
         <div class="dialog-actions">
           <button id="species-cancel" type="button" class="tool-button">キャンセル</button>
           <button id="species-ok" type="button" class="tool-button">OK</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="settings-dialog" class="modal-backdrop" hidden>
+      <section class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-dialog-title">
+        <header class="settings-header">
+          <h2 id="settings-dialog-title">設定</h2>
+          <button id="settings-close" type="button" class="icon-button" title="設定を閉じる">×</button>
+        </header>
+        <div class="settings-grid">
+          <label class="settings-field">
+            <span>本画像先読み</span>
+            <input id="preload-radius" type="number" min="0" max="50" step="1" value="6" />
+          </label>
+          <label class="settings-field">
+            <span>サムネ先読み</span>
+            <input id="thumb-preload-radius" type="number" min="0" max="1000" step="10" value="120" />
+          </label>
+          <label class="settings-field">
+            <span>容量MB</span>
+            <input id="thumb-cache-limit" type="number" min="64" max="10240" step="64" value="1024" />
+          </label>
+          <label class="settings-check">
+            <input id="perf-visible" type="checkbox" checked />
+            <span>計測表示</span>
+          </label>
+          <label class="settings-field">
+            <span>文字サイズ</span>
+            <select id="font-size-mode">
+              <option value="small">小</option>
+              <option value="medium">中</option>
+              <option value="large">大</option>
+            </select>
+          </label>
+        </div>
+        <div class="settings-actions">
+          <button id="clean-thumb-cache" type="button" class="tool-button" disabled>サムネ整理</button>
+          <button id="clear-thumb-cache" type="button" class="tool-button" disabled>サムネ削除</button>
         </div>
       </section>
     </div>
