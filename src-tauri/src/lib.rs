@@ -279,17 +279,18 @@ fn ensure_crop_directory() -> Result<String, String> {
     Ok(directory.to_string_lossy().into_owned())
 }
 
+#[cfg(not(target_os = "windows"))]
 fn crop_output_dir() -> PathBuf {
-    #[cfg(target_os = "windows")]
-    {
-        return std::env::var("USERPROFILE")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| std::env::temp_dir())
-            .join("Pictures")
-            .join("DigiViewer Crops");
-    }
-
     std::env::var("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| std::env::temp_dir())
+        .join("Pictures")
+        .join("DigiViewer Crops")
+}
+
+#[cfg(target_os = "windows")]
+fn crop_output_dir() -> PathBuf {
+    std::env::var("USERPROFILE")
         .map(PathBuf::from)
         .unwrap_or_else(|_| std::env::temp_dir())
         .join("Pictures")
@@ -377,10 +378,10 @@ fn copy_files_to_macos_pasteboard(paths: &[String]) -> Result<(), String> {
 fn copy_files_to_windows_clipboard(paths: &[String]) -> Result<(), String> {
     use std::{mem, os::windows::ffi::OsStrExt};
     use windows_sys::Win32::{
-        Foundation::POINT,
+        Foundation::{GlobalFree, POINT},
         System::{
             DataExchange::{CloseClipboard, EmptyClipboard, OpenClipboard, SetClipboardData},
-            Memory::{GlobalAlloc, GlobalFree, GlobalLock, GlobalUnlock, GMEM_MOVEABLE},
+            Memory::{GlobalAlloc, GlobalLock, GlobalUnlock, GMEM_MOVEABLE},
             Ole::CF_HDROP,
         },
         UI::Shell::DROPFILES,
