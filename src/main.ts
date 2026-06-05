@@ -1029,7 +1029,7 @@ async function revealCropInFinder() {
     setCropStatus(`保存先を表示: ${directory}`);
   } catch (error) {
     console.error(error);
-    setCropStatus("Finder表示失敗");
+    setCropStatus("保存先表示失敗");
     return;
   }
 

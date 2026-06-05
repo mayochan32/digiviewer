@@ -156,9 +156,14 @@ fn copy_files_to_clipboard(paths: Vec<String>) -> Result<(), String> {
         copy_files_to_macos_pasteboard(&existing_paths)
     }
 
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(target_os = "windows")]
     {
-        Err("ファイルコピーは現在macOSのみ対応です。".to_owned())
+        copy_files_to_windows_clipboard(&existing_paths)
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    {
+        Err("ファイルコピーは現在このOSでは未対応です。".to_owned())
     }
 }
 
@@ -275,6 +280,15 @@ fn ensure_crop_directory() -> Result<String, String> {
 }
 
 fn crop_output_dir() -> PathBuf {
+    #[cfg(target_os = "windows")]
+    {
+        return std::env::var("USERPROFILE")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| std::env::temp_dir())
+            .join("Pictures")
+            .join("DigiViewer Crops");
+    }
+
     std::env::var("HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|_| std::env::temp_dir())
@@ -359,6 +373,92 @@ fn copy_files_to_macos_pasteboard(paths: &[String]) -> Result<(), String> {
     }
 }
 
+#[cfg(target_os = "windows")]
+fn copy_files_to_windows_clipboard(paths: &[String]) -> Result<(), String> {
+    use std::{mem, os::windows::ffi::OsStrExt};
+    use windows_sys::Win32::{
+        Foundation::POINT,
+        System::{
+            DataExchange::{CloseClipboard, EmptyClipboard, OpenClipboard, SetClipboardData},
+            Memory::{GlobalAlloc, GlobalFree, GlobalLock, GlobalUnlock, GMEM_MOVEABLE},
+            Ole::CF_HDROP,
+        },
+        UI::Shell::DROPFILES,
+    };
+
+    struct ClipboardGuard;
+
+    impl Drop for ClipboardGuard {
+        fn drop(&mut self) {
+            unsafe {
+                CloseClipboard();
+            }
+        }
+    }
+
+    let header_size = mem::size_of::<DROPFILES>();
+    let mut wide_paths = Vec::new();
+    for path in paths {
+        let mut wide: Vec<u16> = std::ffi::OsStr::new(path).encode_wide().collect();
+        if wide.is_empty() {
+            continue;
+        }
+        wide.push(0);
+        wide_paths.extend(wide);
+    }
+    wide_paths.push(0);
+
+    let total_size = header_size + wide_paths.len() * mem::size_of::<u16>();
+    let mut data = vec![0_u8; total_size];
+    let dropfiles = DROPFILES {
+        pFiles: header_size as u32,
+        pt: POINT { x: 0, y: 0 },
+        fNC: 0,
+        fWide: 1,
+    };
+
+    unsafe {
+        std::ptr::copy_nonoverlapping(
+            (&dropfiles as *const DROPFILES).cast::<u8>(),
+            data.as_mut_ptr(),
+            header_size,
+        );
+        std::ptr::copy_nonoverlapping(
+            wide_paths.as_ptr().cast::<u8>(),
+            data.as_mut_ptr().add(header_size),
+            wide_paths.len() * mem::size_of::<u16>(),
+        );
+
+        if OpenClipboard(std::ptr::null_mut()) == 0 {
+            return Err("クリップボードを開けません。".to_owned());
+        }
+        let _guard = ClipboardGuard;
+        if EmptyClipboard() == 0 {
+            return Err("クリップボードを初期化できません。".to_owned());
+        }
+
+        let handle = GlobalAlloc(GMEM_MOVEABLE, data.len());
+        if handle.is_null() {
+            return Err("クリップボード用メモリを確保できません。".to_owned());
+        }
+
+        let locked = GlobalLock(handle);
+        if locked.is_null() {
+            GlobalFree(handle);
+            return Err("クリップボード用メモリをロックできません。".to_owned());
+        }
+        std::ptr::copy_nonoverlapping(data.as_ptr(), locked.cast::<u8>(), data.len());
+        GlobalUnlock(handle);
+
+        if SetClipboardData(CF_HDROP as u32, handle).is_null() {
+            GlobalFree(handle);
+            return Err("ファイルコピーに失敗しました。".to_owned());
+        }
+    }
+
+    Ok(())
+}
+
 fn modified_at_millis(metadata: &fs::Metadata) -> u128 {
     metadata
         .modified()
@@ -397,9 +497,12 @@ fn thumbnail_cache_dir() -> PathBuf {
 }
 
 fn folder_thumbnail_cache_dir(source: &Path, max_edge: u32) -> Option<PathBuf> {
-    source
-        .parent()
-        .map(|parent| parent.join(".digiviewer").join("thumbs").join(max_edge.to_string()))
+    source.parent().map(|parent| {
+        parent
+            .join(".digiviewer")
+            .join("thumbs")
+            .join(max_edge.to_string())
+    })
 }
 
 fn thumbnail_cache_path_for(
@@ -492,8 +595,7 @@ fn clean_folder_thumbnail_cache_recursive(
     for entry in fs::read_dir(directory).map_err(|error| error.to_string())? {
         let entry = entry.map_err(|error| error.to_string())?;
         let path = entry.path();
-        if path.is_dir()
-            && path.file_name().and_then(|value| value.to_str()) != Some(".digiviewer")
+        if path.is_dir() && path.file_name().and_then(|value| value.to_str()) != Some(".digiviewer")
         {
             clean_folder_thumbnail_cache_recursive(&path, clear_all, result)?;
         }
@@ -538,8 +640,14 @@ fn clean_thumbnail_cache_dir(
             continue;
         }
         result.total += 1;
-        let filename = path.file_name().and_then(|value| value.to_str()).unwrap_or("");
-        let should_delete = clear_all || !valid_prefixes.iter().any(|prefix| filename.starts_with(prefix));
+        let filename = path
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or("");
+        let should_delete = clear_all
+            || !valid_prefixes
+                .iter()
+                .any(|prefix| filename.starts_with(prefix));
         if should_delete {
             if fs::remove_file(path).is_ok() {
                 result.deleted += 1;
