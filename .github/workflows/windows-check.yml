@@ -1,0 +1,47 @@
+name: Windows Check
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - codex/windows-support
+
+jobs:
+  windows-check:
+    name: Build on Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Check Tauri backend
+        working-directory: src-tauri
+        run: cargo check
+
+      - name: Build Windows executable
+        working-directory: src-tauri
+        run: cargo build --release
+
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: digiviewer-windows-exe
+          path: src-tauri/target/release/digiviewer.exe
+          if-no-files-found: error
