@@ -791,12 +791,20 @@ function isAbortError(error: unknown) {
 }
 
 function handleKeyDown(event: KeyboardEvent) {
-  if (
-    event.target instanceof HTMLInputElement ||
-    event.target instanceof HTMLButtonElement
-  ) return;
+  const target = event.target instanceof Element ? event.target : null;
+  if (isTextInputTarget(target)) return;
 
-  if (event.key === "ArrowRight") {
+  if (event.key.toLowerCase() === "m") {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.repeat) return;
+    toggleActiveCheck();
+    return;
+  }
+
+  if (target instanceof HTMLButtonElement) {
+    return;
+  } else if (event.key === "ArrowRight") {
     event.preventDefault();
     moveActive(1);
   } else if (event.key === "ArrowLeft") {
@@ -839,6 +847,13 @@ function handleKeyDown(event: KeyboardEvent) {
     clearSelection();
     renderMap();
   }
+}
+
+function isTextInputTarget(target: Element | null) {
+  return target instanceof HTMLInputElement ||
+    target instanceof HTMLSelectElement ||
+    target instanceof HTMLTextAreaElement ||
+    Boolean(target?.closest("[contenteditable='true']"));
 }
 
 function handleGlobalKeyChange(event: KeyboardEvent) {
@@ -1930,6 +1945,17 @@ function toggleThumbCheck(index: number, checked: boolean, useRange: boolean) {
     }
   }
   state.lastCheckedIndex = index;
+}
+
+function toggleActiveCheck() {
+  if (!state.images.length) return;
+  const slotIndex = Math.min(state.activeSlot, state.compareCount - 1);
+  const index = state.compareSlots[slotIndex] ?? state.activeIndex;
+  if (!Number.isInteger(index) || index < 0 || index >= state.images.length) return;
+
+  toggleThumbCheck(index, !state.checkedIndexes.has(index), false);
+  renderThumbs();
+  renderChrome();
 }
 
 function renderPaneSelection() {
