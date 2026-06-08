@@ -108,6 +108,9 @@ fn rename_images(request: RenameRequest) -> Result<Vec<RenameResult>, String> {
         let Some(stem) = source.file_stem().and_then(|value| value.to_str()) else {
             continue;
         };
+        let old_metadata = fs::metadata(&source).map_err(|error| error.to_string())?;
+        let old_size = old_metadata.len();
+        let old_modified_at = modified_at_millis(&old_metadata);
         let extension = source
             .extension()
             .and_then(|value| value.to_str())
@@ -115,6 +118,14 @@ fn rename_images(request: RenameRequest) -> Result<Vec<RenameResult>, String> {
 
         let target = available_renamed_path(parent, stem, extension.as_deref(), &species_name);
         fs::rename(&source, &target).map_err(|error| error.to_string())?;
+        migrate_thumbnail_cache_after_rename(
+            &source,
+            &path,
+            &target,
+            &target.to_string_lossy(),
+            old_size,
+            old_modified_at,
+        );
         rename_raw_sidecars(
             parent,
             stem,
@@ -548,6 +559,76 @@ fn thumbnail_cache_key(path: &str, size: u64, modified_at: u128, max_edge: u32) 
         hash = hash.wrapping_mul(0x100000001b3);
     }
     format!("{hash:016x}")
+}
+
+fn migrate_thumbnail_cache_after_rename(
+    old_source: &Path,
+    old_path: &str,
+    new_source: &Path,
+    new_path: &str,
+    size: u64,
+    modified_at: u128,
+) {
+    for max_edge in thumbnail_cache_sizes_for_rename(old_source) {
+        let old_key = thumbnail_cache_key(old_path, size, modified_at, max_edge);
+        let new_key = thumbnail_cache_key(new_path, size, modified_at, max_edge);
+        let old_filename = thumbnail_cache_filename(old_source, &old_key);
+        let new_filename = thumbnail_cache_filename(new_source, &new_key);
+
+        migrate_thumbnail_cache_file(
+            &thumbnail_cache_dir().join(&old_filename),
+            &thumbnail_cache_dir().join(&new_filename),
+        );
+
+        if let (Some(old_dir), Some(new_dir)) = (
+            folder_thumbnail_cache_dir(old_source, max_edge),
+            folder_thumbnail_cache_dir(new_source, max_edge),
+        ) {
+            migrate_thumbnail_cache_file(
+                &old_dir.join(&old_filename),
+                &new_dir.join(&new_filename),
+            );
+        }
+    }
+}
+
+fn thumbnail_cache_sizes_for_rename(source: &Path) -> Vec<u32> {
+    let mut sizes = std::collections::BTreeSet::from([192_u32]);
+    if let Some(parent) = source.parent() {
+        let root = parent.join(".digiviewer").join("thumbs");
+        if let Ok(entries) = fs::read_dir(root) {
+            for entry in entries.flatten() {
+                if !entry
+                    .file_type()
+                    .map(|file_type| file_type.is_dir())
+                    .unwrap_or(false)
+                {
+                    continue;
+                }
+                if let Some(size) = entry
+                    .file_name()
+                    .to_str()
+                    .and_then(|value| value.parse::<u32>().ok())
+                {
+                    sizes.insert(size.clamp(64, 512));
+                }
+            }
+        }
+    }
+    sizes.into_iter().collect()
+}
+
+fn migrate_thumbnail_cache_file(old_path: &Path, new_path: &Path) {
+    if !old_path.is_file() || new_path.is_file() {
+        return;
+    }
+    if let Some(parent) = new_path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+    let _ = fs::rename(old_path, new_path).or_else(|_| {
+        fs::copy(old_path, new_path)?;
+        fs::remove_file(old_path)
+    });
 }
 
 fn create_thumbnail_file(source: &Path, cache_path: &Path, max_edge: u32) -> Result<(), String> {
