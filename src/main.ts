@@ -64,6 +64,11 @@ type RenameResult = {
   modified_at: number;
 };
 
+type MoveToDeletedResult = {
+  old_path: string;
+  deleted_path: string;
+};
+
 type ThumbnailCacheResult = {
   total: number;
   created: number;
@@ -277,6 +282,7 @@ const elements = {
   selectionCount: document.querySelector<HTMLElement>("#selection-count"),
   appendSpeciesButton: document.querySelector<HTMLButtonElement>("#append-species"),
   copyFilesButton: document.querySelector<HTMLButtonElement>("#copy-files"),
+  moveDeletedButton: document.querySelector<HTMLButtonElement>("#move-deleted"),
   clearSelectionButton: document.querySelector<HTMLButtonElement>("#clear-file-selection"),
   buildThumbCacheButton: document.querySelector<HTMLButtonElement>("#build-thumb-cache"),
   cleanThumbCacheButton: document.querySelector<HTMLButtonElement>("#clean-thumb-cache"),
@@ -402,6 +408,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
   elements.appendSpeciesButton?.addEventListener("click", appendSpeciesNameToCheckedImages);
   elements.copyFilesButton?.addEventListener("click", copyCheckedFiles);
+  elements.moveDeletedButton?.addEventListener("click", moveCheckedImagesToDeleted);
   elements.buildThumbCacheButton?.addEventListener("click", buildAllThumbnailCache);
   elements.cleanThumbCacheButton?.addEventListener("click", cleanThumbnailCache);
   elements.clearThumbCacheButton?.addEventListener("click", clearThumbnailCache);
@@ -433,9 +440,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   for (const button of elements.modeButtons) {
     button.addEventListener("click", () => {
-      state.compareCount = Number(button.dataset.compareCount ?? 1);
-      state.activeSlot = Math.min(state.activeSlot, state.compareCount - 1);
-      refillEmptySlots();
+      setCompareCount(Number(button.dataset.compareCount ?? 1));
       fitView();
       render();
     });
@@ -818,9 +823,7 @@ function handleKeyDown(event: KeyboardEvent) {
     moveActive(10);
   } else if (["1", "2", "3", "4"].includes(event.key)) {
     event.preventDefault();
-    state.compareCount = Number(event.key);
-    state.activeSlot = Math.min(state.activeSlot, state.compareCount - 1);
-    refillEmptySlots();
+    setCompareCount(Number(event.key));
     fitView();
     render();
   } else if (event.key.toLowerCase() === "f") {
@@ -1296,6 +1299,31 @@ function applyRenameResults(results: RenameResult[]) {
   resetThumbnailQueue();
 }
 
+function applyMoveToDeletedResults(results: MoveToDeletedResult[]) {
+  const removedPaths = new Set(results.map((result) => result.old_path));
+  if (!removedPaths.size) return;
+  const activePath = state.images[state.activeIndex]?.path ?? "";
+
+  for (const image of state.images) {
+    if (removedPaths.has(image.path) && image.file && image.url.startsWith("blob:")) {
+      URL.revokeObjectURL(image.url);
+    }
+  }
+
+  state.images = state.images.filter((image) => !removedPaths.has(image.path));
+  clearCheckedImages();
+  updateFilteredIndexes();
+  const visible = visibleIndexes();
+  const activeByPath = activePath
+    ? state.images.findIndex((image) => image.path === activePath)
+    : -1;
+  const nextActive = activeByPath >= 0 ? activeByPath : (visible[0] ?? 0);
+  state.activeIndex = nextActive;
+  state.compareSlots = [visible.length ? nextActive : null, null, null, null];
+  state.activeSlot = 0;
+  resetThumbnailQueue();
+}
+
 async function copyCheckedFiles() {
   const images = checkedImages();
   if (!images.length) return;
@@ -1314,6 +1342,34 @@ async function copyCheckedFiles() {
   } catch (error) {
     console.error(error);
     window.alert(`ファイルコピーに失敗しました。\n${String(error)}`);
+  }
+}
+
+async function moveCheckedImagesToDeleted() {
+  const images = checkedImages();
+  if (!images.length) return;
+  if (!isTauriRuntime() || !state.currentDirectory) {
+    window.alert("画像の除外はフォルダを開いたTauri版のみ対応です。");
+    return;
+  }
+
+  const ok = window.confirm(
+    `${images.length}枚の画像を現在のフォルダ内の deleted フォルダへ移動し、一覧から除外します。`,
+  );
+  if (!ok) return;
+
+  try {
+    const results = await invoke<MoveToDeletedResult[]>("move_images_to_deleted", {
+      request: {
+        directory: state.currentDirectory,
+        paths: images.map((image) => image.path),
+      },
+    });
+    applyMoveToDeletedResults(results);
+    render();
+  } catch (error) {
+    console.error(error);
+    window.alert(`画像の除外に失敗しました。\n${String(error)}`);
   }
 }
 
@@ -1359,6 +1415,29 @@ function toggleSyncView() {
   } else {
     state.slotViews = state.slotViews.map(() => ({ ...state.view }));
   }
+}
+
+function setCompareCount(count: number) {
+  const indexes = visibleIndexes();
+  const currentImageIndex = state.compareSlots[state.activeSlot] ?? state.activeIndex;
+  const nextActiveIndex = indexes.includes(currentImageIndex)
+    ? currentImageIndex
+    : (indexes[0] ?? 0);
+
+  state.compareCount = clamp(count, 1, 4);
+  state.activeIndex = nextActiveIndex;
+
+  if (state.compareCount === 1) {
+    state.activeSlot = 0;
+    state.compareSlots = [indexes.length ? nextActiveIndex : null, null, null, null];
+    return;
+  }
+
+  state.activeSlot = Math.min(state.activeSlot, state.compareCount - 1);
+  if (!indexes.includes(state.compareSlots[state.activeSlot] ?? -1)) {
+    state.compareSlots[state.activeSlot] = nextActiveIndex;
+  }
+  refillEmptySlots();
 }
 
 function refillEmptySlots() {
@@ -1717,6 +1796,10 @@ function renderChrome() {
   }
   elements.appendSpeciesButton?.toggleAttribute("disabled", checkedCount === 0);
   elements.copyFilesButton?.toggleAttribute("disabled", checkedCount === 0);
+  elements.moveDeletedButton?.toggleAttribute(
+    "disabled",
+    checkedCount === 0 || !isTauriRuntime() || !state.currentDirectory,
+  );
   elements.clearSelectionButton?.toggleAttribute("disabled", checkedCount === 0);
   const canManageThumbCache = isTauriRuntime() && hasImages && Boolean(state.currentDirectory);
   elements.buildThumbCacheButton?.toggleAttribute("disabled", !canManageThumbCache || state.isBuildingThumbCache);

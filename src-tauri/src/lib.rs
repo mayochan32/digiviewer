@@ -80,6 +80,19 @@ struct RenameResult {
     modified_at: u128,
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct MoveToDeletedRequest {
+    directory: String,
+    paths: Vec<String>,
+}
+
+#[derive(Serialize)]
+struct MoveToDeletedResult {
+    old_path: String,
+    deleted_path: String,
+}
+
 #[tauri::command]
 fn scan_images(directory: String) -> Result<Vec<ImageFile>, String> {
     let root = PathBuf::from(directory);
@@ -146,6 +159,66 @@ fn rename_images(request: RenameRequest) -> Result<Vec<RenameResult>, String> {
                 .to_owned(),
             size: metadata.len(),
             modified_at: modified_at_millis(&metadata),
+        });
+    }
+
+    Ok(results)
+}
+
+#[tauri::command]
+fn move_images_to_deleted(
+    request: MoveToDeletedRequest,
+) -> Result<Vec<MoveToDeletedResult>, String> {
+    let root = PathBuf::from(&request.directory);
+    if !root.is_dir() {
+        return Err("フォルダが見つかりません。".to_owned());
+    }
+
+    let root_canonical = root.canonicalize().map_err(|error| error.to_string())?;
+    let deleted_dir = root.join("deleted");
+    fs::create_dir_all(&deleted_dir).map_err(|error| error.to_string())?;
+    let deleted_canonical = deleted_dir
+        .canonicalize()
+        .map_err(|error| error.to_string())?;
+
+    let mut results = Vec::new();
+    for path in request.paths {
+        let source = PathBuf::from(&path);
+        if !source.is_file() {
+            continue;
+        }
+        let source_canonical = source.canonicalize().map_err(|error| error.to_string())?;
+        if !source_canonical.starts_with(&root_canonical)
+            || source_canonical.starts_with(&deleted_canonical)
+        {
+            continue;
+        }
+
+        let Some(parent) = source.parent() else {
+            continue;
+        };
+        let Some(stem) = source.file_stem().and_then(|value| value.to_str()) else {
+            continue;
+        };
+        let Some(file_name) = source.file_name().and_then(|value| value.to_str()) else {
+            continue;
+        };
+
+        let target = available_moved_path(&deleted_dir, file_name);
+        fs::rename(&source, &target).map_err(|error| error.to_string())?;
+        move_raw_sidecars_to_deleted(
+            parent,
+            stem,
+            &deleted_dir,
+            target
+                .file_stem()
+                .and_then(|value| value.to_str())
+                .unwrap_or(stem),
+        );
+
+        results.push(MoveToDeletedResult {
+            old_path: path,
+            deleted_path: target.to_string_lossy().into_owned(),
         });
     }
 
@@ -344,6 +417,33 @@ fn available_renamed_path(
     unreachable!("suffix loop always returns an available path")
 }
 
+fn available_moved_path(parent: &Path, file_name: &str) -> PathBuf {
+    let source_name = Path::new(file_name);
+    let stem = source_name
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .unwrap_or(file_name);
+    let extension = source_name.extension().and_then(|value| value.to_str());
+
+    for suffix in 0.. {
+        let candidate_name = if suffix == 0 {
+            file_name.to_owned()
+        } else {
+            match extension {
+                Some(extension) if !extension.is_empty() => {
+                    format!("{stem}_{suffix}.{extension}")
+                }
+                _ => format!("{stem}_{suffix}"),
+            }
+        };
+        let candidate = parent.join(candidate_name);
+        if !candidate.exists() {
+            return candidate;
+        }
+    }
+    unreachable!("suffix loop always returns an available path")
+}
+
 fn rename_raw_sidecars(parent: &Path, old_stem: &str, new_stem: &str) {
     for extension in [
         "cr2", "cr3", "nef", "nrw", "arw", "orf", "raf", "rw2", "pef", "dng",
@@ -357,6 +457,21 @@ fn rename_raw_sidecars(parent: &Path, old_stem: &str, new_stem: &str) {
             if !target.exists() {
                 let _ = fs::rename(source, target);
             }
+        }
+    }
+}
+
+fn move_raw_sidecars_to_deleted(parent: &Path, old_stem: &str, deleted_dir: &Path, new_stem: &str) {
+    for extension in [
+        "cr2", "cr3", "nef", "nrw", "arw", "orf", "raf", "rw2", "pef", "dng",
+    ] {
+        for raw_extension in [extension.to_owned(), extension.to_ascii_uppercase()] {
+            let source = parent.join(format!("{old_stem}.{raw_extension}"));
+            if !source.is_file() {
+                continue;
+            }
+            let target = available_moved_path(deleted_dir, &format!("{new_stem}.{raw_extension}"));
+            let _ = fs::rename(source, target);
         }
     }
 }
@@ -893,7 +1008,7 @@ fn visit_directory(directory: &Path, images: &mut Vec<ImageFile>) -> Result<(), 
         let file_type = entry.file_type().map_err(|error| error.to_string())?;
 
         if file_type.is_dir() {
-            if is_digiviewer_cache_dir(&path) {
+            if is_digiviewer_cache_dir(&path) || is_deleted_dir(&path) {
                 continue;
             }
             visit_directory(&path, images)?;
@@ -934,6 +1049,13 @@ fn is_digiviewer_cache_dir(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
+fn is_deleted_dir(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .map(|name| name.eq_ignore_ascii_case("deleted"))
+        .unwrap_or(false)
+}
+
 fn is_raw_image(path: &Path) -> bool {
     path.extension()
         .and_then(|extension| extension.to_str())
@@ -970,6 +1092,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             scan_images,
             rename_images,
+            move_images_to_deleted,
             copy_files_to_clipboard,
             app_version,
             get_thumbnail,
