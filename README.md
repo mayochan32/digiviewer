@@ -82,7 +82,7 @@ RAWは表示対象ではなく、同じベース名のRAWファイルがある�
 
 DigiViewerはTauri + Rust + TypeScriptで作っています。
 
-macOSでのMVPを先に作り、操作感と速度を確認しながら、将来的にWindows対応も進める方針です。
+macOSでのMVPを先に作り、現在はWindows向けのビルドと基本操作の対応も進めています。
 
 ```sh
 npm install
@@ -100,6 +100,18 @@ npm run dev
 ```sh
 npm run tauri build -- --bundles app
 ```
+
+Windows向けのビルド確認はGitHub Actionsの `Windows Check` で行います。成功すると、実行ファイル、NSISインストーラー、MSIインストーラーがArtifactsに出力されます。
+
+Windows実機では次を確認します。
+
+- 日本語名、空白入り、OneDrive配下のフォルダを開ける
+- 画像表示、サムネイル作成、サムネイル整理/削除が動く
+- 選択画像のコピーをエクスプローラーなどへ貼り付けられる
+- 選択画像を `deleted` フォルダへ除外できる
+- 種名付加で画像とRAWサイドカーが一緒にリネームされる
+- クロップ保存で元画像フォルダにJPEGが作られる
+- 外付けドライブや別ドライブの画像表示可否を確認する
 
 ## ランディングページ
 
