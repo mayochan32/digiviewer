@@ -736,13 +736,90 @@ button:disabled {
   border: 2px solid var(--accent);
   background: rgba(122, 199, 183, 0.16);
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.18);
-  pointer-events: none;
+  pointer-events: auto;
+}
+
+.selection-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: 2px solid #101214;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px rgba(122, 199, 183, 0.82);
+}
+
+.viewer.is-selecting .selection-handle {
+  display: none;
+}
+
+.selection-handle-n,
+.selection-handle-s {
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.selection-handle-e,
+.selection-handle-w {
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.selection-handle-n {
+  top: -7px;
+}
+
+.selection-handle-s {
+  bottom: -7px;
+}
+
+.selection-handle-e {
+  right: -7px;
+}
+
+.selection-handle-w {
+  left: -7px;
+}
+
+.selection-handle-nw,
+.selection-handle-ne,
+.selection-handle-se,
+.selection-handle-sw {
+  transform: none;
+}
+
+.selection-handle-nw {
+  top: -7px;
+  left: -7px;
+  cursor: nwse-resize;
+}
+
+.selection-handle-ne {
+  top: -7px;
+  right: -7px;
+  cursor: nesw-resize;
+}
+
+.selection-handle-se {
+  right: -7px;
+  bottom: -7px;
+  cursor: nwse-resize;
+}
+
+.selection-handle-sw {
+  bottom: -7px;
+  left: -7px;
+  cursor: nesw-resize;
 }
 
 .crop-actions {
   position: absolute;
   z-index: 9;
   display: flex;
+  align-items: center;
   gap: 6px;
   padding: 6px;
   border: 1px solid var(--line);
@@ -751,19 +828,41 @@ button:disabled {
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
 }
 
-.crop-actions button {
+.crop-actions button,
+.crop-actions select,
+.crop-toggle {
   min-height: 30px;
   padding: 0 10px;
   border: 1px solid var(--line);
   border-radius: 7px;
   background: var(--panel-2);
   color: var(--ink);
-  cursor: pointer;
   font: inherit;
   font-weight: 800;
 }
 
-.crop-actions button:hover {
+.crop-actions button,
+.crop-actions select,
+.crop-toggle input {
+  cursor: pointer;
+}
+
+.crop-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.crop-toggle input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+
+.crop-actions button:hover,
+.crop-actions select:hover,
+.crop-toggle:hover {
   border-color: #52616d;
 }
 

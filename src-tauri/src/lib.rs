@@ -29,6 +29,17 @@ struct CropImage {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+struct SaveCropToSourceRequest {
+    source_path: String,
+    left: u32,
+    top: u32,
+    width: u32,
+    height: u32,
+    upscale2x: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct ThumbnailRequest {
     path: String,
     size: u64,
@@ -357,6 +368,52 @@ fn save_crop_image(image: CropImage) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn save_crop_to_source_folder(request: SaveCropToSourceRequest) -> Result<ImageFile, String> {
+    let source = PathBuf::from(&request.source_path);
+    if !source.is_file() {
+        return Err("元画像が見つかりません。".to_owned());
+    }
+    let Some(parent) = source.parent() else {
+        return Err("保存先フォルダが見つかりません。".to_owned());
+    };
+    let Some(stem) = source.file_stem().and_then(|value| value.to_str()) else {
+        return Err("元画像のファイル名を取得できません。".to_owned());
+    };
+
+    let target = available_crop_path(parent, stem);
+    let reader = image::ImageReader::open(&source).map_err(|error| error.to_string())?;
+    let image = reader.decode().map_err(|error| error.to_string())?;
+    let image_width = image.width();
+    let image_height = image.height();
+    if image_width == 0 || image_height == 0 {
+        return Err("画像サイズを取得できません。".to_owned());
+    }
+
+    let left = request.left.min(image_width.saturating_sub(1));
+    let top = request.top.min(image_height.saturating_sub(1));
+    let width = request.width.max(1).min(image_width - left);
+    let height = request.height.max(1).min(image_height - top);
+    let cropped = image.crop_imm(left, top, width, height);
+    let output = if request.upscale2x {
+        cropped.resize_exact(
+            width.saturating_mul(2),
+            height.saturating_mul(2),
+            image::imageops::FilterType::Lanczos3,
+        )
+    } else {
+        cropped
+    };
+    let rgb = output.to_rgb8();
+    let file = File::create(&target).map_err(|error| error.to_string())?;
+    let writer = BufWriter::new(file);
+    let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(writer, 97);
+    encoder
+        .encode_image(&rgb)
+        .map_err(|error| error.to_string())?;
+    image_file_from_path(&target, FileKind::Image)
+}
+
+#[tauri::command]
 fn ensure_crop_directory() -> Result<String, String> {
     let directory = crop_output_dir();
     fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
@@ -417,6 +474,22 @@ fn available_renamed_path(
     unreachable!("suffix loop always returns an available path")
 }
 
+fn available_crop_path(parent: &Path, stem: &str) -> PathBuf {
+    let base = format!("{stem}_crop");
+    for suffix in 0.. {
+        let candidate_stem = if suffix == 0 {
+            base.clone()
+        } else {
+            format!("{base}_{suffix}")
+        };
+        let candidate = parent.join(format!("{candidate_stem}.jpg"));
+        if !candidate.exists() {
+            return candidate;
+        }
+    }
+    unreachable!("suffix loop always returns an available path")
+}
+
 fn available_moved_path(parent: &Path, file_name: &str) -> PathBuf {
     let source_name = Path::new(file_name);
     let stem = source_name
@@ -442,6 +515,21 @@ fn available_moved_path(parent: &Path, file_name: &str) -> PathBuf {
         }
     }
     unreachable!("suffix loop always returns an available path")
+}
+
+fn image_file_from_path(path: &Path, kind: FileKind) -> Result<ImageFile, String> {
+    let metadata = fs::metadata(path).map_err(|error| error.to_string())?;
+    Ok(ImageFile {
+        path: path.to_string_lossy().into_owned(),
+        name: path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("")
+            .to_owned(),
+        size: metadata.len(),
+        modified_at: modified_at_millis(&metadata),
+        kind,
+    })
 }
 
 fn rename_raw_sidecars(parent: &Path, old_stem: &str, new_stem: &str) {
@@ -1100,6 +1188,7 @@ pub fn run() {
             clean_thumbnail_cache,
             clear_thumbnail_cache,
             save_crop_image,
+            save_crop_to_source_folder,
             ensure_crop_directory,
             open_external_url,
             reveal_file,
