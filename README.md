@@ -103,6 +103,8 @@ npm run tauri build -- --bundles app
 
 Windows向けのビルド確認はGitHub Actionsの `Windows Check` で行います。成功すると、実行ファイル、NSISインストーラー、MSIインストーラーがArtifactsに出力されます。
 
+フォルダ内に作る `.digiviewer/thumbs/` のサムネイルキャッシュは、macOSとWindowsで同じ写真フォルダを行き来しても再利用しやすいように、OSごとの絶対パスではなくフォルダ内のファイル名を基準にします。古い絶対パス形式のフォルダキャッシュも、同じファイル名のサムネイルが1件だけ見つかる場合は新しい形式へ移行して使います。
+
 Windows実機では次を確認します。
 
 - 日本語名、空白入り、OneDrive配下のフォルダを開ける

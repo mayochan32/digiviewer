@@ -288,7 +288,7 @@ fn get_thumbnail(request: ThumbnailRequest) -> Result<Option<String>, String> {
     }
 
     let existed = cache_path.is_file();
-    if !existed {
+    if !existed && !try_migrate_legacy_folder_thumbnail(&source, &cache_path, max_edge) {
         create_thumbnail_file(&source, &cache_path, max_edge)?;
     }
 
@@ -329,6 +329,10 @@ fn build_thumbnail_cache(request: ThumbnailCacheRequest) -> Result<ThumbnailCach
             request.cache_scope.as_ref(),
         )?;
         if cache_path.is_file() {
+            result.reused += 1;
+            continue;
+        }
+        if try_migrate_legacy_folder_thumbnail(&source, &cache_path, max_edge) {
             result.reused += 1;
             continue;
         }
@@ -728,10 +732,15 @@ fn thumbnail_cache_path_for(
     max_edge: u32,
     scope: Option<&ThumbnailCacheScope>,
 ) -> Result<PathBuf, String> {
-    let cache_key = thumbnail_cache_key(path, size, modified_at, max_edge);
-    let filename = thumbnail_cache_filename(source, &cache_key);
     match scope {
         Some(ThumbnailCacheScope::Folder) => {
+            let cache_key = thumbnail_cache_key(
+                &folder_thumbnail_cache_identity(source),
+                size,
+                modified_at,
+                max_edge,
+            );
+            let filename = thumbnail_cache_filename(source, &cache_key);
             let Some(cache_dir) = folder_thumbnail_cache_dir(source, max_edge) else {
                 return Ok(thumbnail_cache_dir().join(filename));
             };
@@ -740,8 +749,20 @@ fn thumbnail_cache_path_for(
                 Err(_) => Ok(thumbnail_cache_dir().join(filename)),
             }
         }
-        _ => Ok(thumbnail_cache_dir().join(filename)),
+        _ => {
+            let cache_key = thumbnail_cache_key(path, size, modified_at, max_edge);
+            let filename = thumbnail_cache_filename(source, &cache_key);
+            Ok(thumbnail_cache_dir().join(filename))
+        }
     }
+}
+
+fn folder_thumbnail_cache_identity(source: &Path) -> String {
+    source
+        .file_name()
+        .and_then(|value| value.to_str())
+        .map(|value| value.to_lowercase())
+        .unwrap_or_else(|| source.to_string_lossy().to_lowercase())
 }
 
 fn thumbnail_cache_filename(source: &Path, cache_key: &str) -> String {
@@ -787,12 +808,86 @@ fn migrate_thumbnail_cache_after_rename(
             folder_thumbnail_cache_dir(old_source, max_edge),
             folder_thumbnail_cache_dir(new_source, max_edge),
         ) {
-            migrate_thumbnail_cache_file(
-                &old_dir.join(&old_filename),
-                &new_dir.join(&new_filename),
+            let old_folder_key = thumbnail_cache_key(
+                &folder_thumbnail_cache_identity(old_source),
+                size,
+                modified_at,
+                max_edge,
             );
+            let new_folder_key = thumbnail_cache_key(
+                &folder_thumbnail_cache_identity(new_source),
+                size,
+                modified_at,
+                max_edge,
+            );
+            let old_folder_filename = thumbnail_cache_filename(old_source, &old_folder_key);
+            let new_folder_filename = thumbnail_cache_filename(new_source, &new_folder_key);
+            migrate_thumbnail_cache_file(
+                &old_dir.join(&old_folder_filename),
+                &new_dir.join(&new_folder_filename),
+            );
+            migrate_thumbnail_cache_file(&old_dir.join(&old_filename), &new_dir.join(new_filename));
         }
     }
+}
+
+fn try_migrate_legacy_folder_thumbnail(source: &Path, new_path: &Path, max_edge: u32) -> bool {
+    if new_path.is_file() {
+        return true;
+    }
+    let Some(cache_dir) = folder_thumbnail_cache_dir(source, max_edge) else {
+        return false;
+    };
+    if new_path.parent() != Some(cache_dir.as_path()) {
+        return false;
+    }
+    let Some(stem) = source
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .map(sanitize_filename_part)
+        .filter(|value| !value.is_empty())
+    else {
+        return false;
+    };
+    let prefix = format!("{stem}__");
+    let Ok(entries) = fs::read_dir(cache_dir) else {
+        return false;
+    };
+
+    let mut candidates = Vec::new();
+    let source_modified_at = fs::metadata(source)
+        .ok()
+        .and_then(|metadata| metadata.modified().ok());
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path == new_path || !path.is_file() {
+            continue;
+        }
+        let filename = path
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or("");
+        if !filename.starts_with(&prefix) || !filename.ends_with(".jpg") {
+            continue;
+        }
+        let Ok(metadata) = entry.metadata() else {
+            continue;
+        };
+        if let (Some(source_modified_at), Ok(cache_modified_at)) =
+            (source_modified_at, metadata.modified())
+        {
+            if cache_modified_at < source_modified_at {
+                continue;
+            }
+        }
+        candidates.push(path);
+    }
+
+    if candidates.len() != 1 {
+        return false;
+    }
+    migrate_thumbnail_cache_file(&candidates[0], new_path);
+    new_path.is_file()
 }
 
 fn thumbnail_cache_sizes_for_rename(source: &Path) -> Vec<u32> {
