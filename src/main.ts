@@ -850,9 +850,7 @@ function handleKeyDown(event: KeyboardEvent) {
     return;
   }
 
-  if (target instanceof HTMLButtonElement) {
-    return;
-  } else if (event.key === "ArrowRight") {
+  if (event.key === "ArrowRight") {
     event.preventDefault();
     moveActive(1);
   } else if (event.key === "ArrowLeft") {
