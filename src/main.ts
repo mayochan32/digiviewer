@@ -274,6 +274,7 @@ const state = {
 
 const elements = {
   chooseFolderButton: document.querySelector<HTMLButtonElement>("#choose-folder"),
+  reloadFolderButton: document.querySelector<HTMLButtonElement>("#reload-folder"),
   chooseFilesButton: document.querySelector<HTMLButtonElement>("#choose-files"),
   openInput: document.querySelector<HTMLInputElement>("#open-folder"),
   fileInput: document.querySelector<HTMLInputElement>("#open-files"),
@@ -338,6 +339,7 @@ window.addEventListener("DOMContentLoaded", () => {
   ensureCropDirectory();
   loadAppVersion();
   elements.chooseFolderButton?.addEventListener("click", openFolder);
+  elements.reloadFolderButton?.addEventListener("click", reloadCurrentFolder);
   elements.chooseFilesButton?.addEventListener("click", openFiles);
   elements.openInput?.addEventListener("change", handleFileSelection);
   elements.fileInput?.addEventListener("change", handleFileSelection);
@@ -540,6 +542,8 @@ async function openFiles() {
         ],
       });
       const paths = Array.isArray(selected) ? selected : selected ? [selected] : [];
+      state.currentDirectory = "";
+      state.thumbCacheStatus = "";
       loadNativeImages(paths.map((path) => nativeFileFromPath(path)));
     } catch (error) {
       console.error(error);
@@ -631,6 +635,76 @@ function loadNativeImages(nativeImages: NativeImageFile[]) {
   state.filenameFilter = "";
   if (elements.filenameFilterInput) elements.filenameFilterInput.value = "";
   clearObjectUrls();
+  state.images = nativeImagesToImageItems(nativeImages);
+  updateFilteredIndexes();
+  state.activeIndex = 0;
+  state.activeSlot = 0;
+  state.compareSlots = [0, null, null, null];
+  clearCheckedImages();
+  resetThumbnailQueue();
+  refillEmptySlots();
+  fitView();
+  perf.listMs = performance.now() - listStart;
+  render();
+}
+
+async function reloadCurrentFolder() {
+  if (!state.currentDirectory || !isTauriRuntime() || state.isBuildingThumbCache) return;
+
+  const listStart = performance.now();
+  const activePath = activeImage()?.path ?? state.images[state.activeIndex]?.path ?? "";
+  const checkedPaths = new Set(checkedImages().map((image) => image.path));
+  const slotPaths = state.compareSlots.map((index) => index === null ? null : state.images[index]?.path ?? null);
+  const existingPaths = new Set(state.images.map((image) => image.path));
+
+  try {
+    state.thumbCacheStatus = "リロード中";
+    renderChrome();
+    const scanStart = performance.now();
+    const nativeImages = await invoke<NativeImageFile[]>("scan_images", { directory: state.currentDirectory });
+    perf.scanMs = performance.now() - scanStart;
+
+    const scannedImages = nativeImagesToImageItems(nativeImages);
+    const addedImages = scannedImages.filter((image) => !existingPaths.has(image.path));
+    if (!addedImages.length) {
+      state.thumbCacheStatus = "リロード 追加 0";
+      perf.listMs = performance.now() - listStart;
+      render();
+      return;
+    }
+
+    state.images = [...state.images, ...addedImages].sort((a, b) => compareImagePaths(a.path, b.path));
+    updateFilteredIndexes();
+    restoreCheckedImages(checkedPaths);
+    restoreCompareSlots(slotPaths, activePath);
+    resetThumbnailQueue();
+    refillEmptySlots();
+    perf.listMs = performance.now() - listStart;
+    state.thumbCacheStatus = `リロード 追加 ${addedImages.length}`;
+    render();
+
+    const cacheBuilt = await buildThumbnailCacheForImages(
+      addedImages,
+      "追加サムネ",
+      `リロード 追加 ${addedImages.length}`,
+    );
+    if (cacheBuilt) {
+      for (const image of addedImages) {
+        image.thumbnailLoaded = false;
+        image.thumbnailRequested = false;
+      }
+    }
+    resetThumbnailQueue();
+    preloadVisibleThumbnails();
+    scheduleThumbnailPreload();
+  } catch (error) {
+    console.error(error);
+    state.thumbCacheStatus = `リロード失敗 ${String(error)}`;
+    renderChrome();
+  }
+}
+
+function nativeImagesToImageItems(nativeImages: NativeImageFile[]) {
   const rawByBase = rawExtensionsByBase(nativeImages.map((image) => image.path));
   const images = nativeImages.filter((image) =>
     (image.kind ?? "image") === "image"
@@ -639,7 +713,7 @@ function loadNativeImages(nativeImages: NativeImageFile[]) {
   );
   images.sort((a, b) => compareImagePaths(a.path, b.path));
 
-  state.images = images.map((image, index) => ({
+  return images.map((image, index) => ({
     id: `${image.path}-${image.size}-${image.modified_at}-${index}`,
     name: image.name,
     path: image.path,
@@ -652,16 +726,33 @@ function loadNativeImages(nativeImages: NativeImageFile[]) {
     exifLoaded: false,
     rawExtensions: rawByBase.get(baseKeyForPath(image.path)) ?? [],
   }));
-  updateFilteredIndexes();
-  state.activeIndex = 0;
-  state.activeSlot = 0;
-  state.compareSlots = [0, null, null, null];
-  clearCheckedImages();
-  resetThumbnailQueue();
-  refillEmptySlots();
-  fitView();
-  perf.listMs = performance.now() - listStart;
-  render();
+}
+
+function restoreCheckedImages(checkedPaths: Set<string>) {
+  state.checkedIndexes.clear();
+  state.images.forEach((image, index) => {
+    if (checkedPaths.has(image.path)) state.checkedIndexes.add(index);
+  });
+  state.lastCheckedIndex = null;
+}
+
+function restoreCompareSlots(slotPaths: Array<string | null>, activePath: string) {
+  state.compareSlots = slotPaths.map((path) => {
+    if (!path) return null;
+    const index = state.images.findIndex((image) => image.path === path);
+    return index >= 0 ? index : null;
+  });
+  const activeIndex = activePath
+    ? state.images.findIndex((image) => image.path === activePath)
+    : -1;
+  if (activeIndex >= 0) {
+    state.activeIndex = activeIndex;
+    if (state.compareSlots[state.activeSlot] === null) {
+      state.compareSlots[state.activeSlot] = activeIndex;
+    }
+  } else {
+    state.activeIndex = visibleIndexes()[0] ?? 0;
+  }
 }
 
 function nativeFileFromPath(path: string): NativeImageFile {
@@ -1958,8 +2049,26 @@ async function loadThumbnail(index: number, image: ImageItem) {
 async function buildAllThumbnailCache() {
   if (!state.images.length || !isTauriRuntime()) return;
   const cacheTargets = state.images.filter((image) => !isDigiViewerCachePath(image.path));
+  const cacheBuilt = await buildThumbnailCacheForImages(cacheTargets, "", "完了");
+  if (!cacheBuilt) return;
+  for (const image of state.images) {
+    image.thumbnailLoaded = false;
+    image.thumbnailRequested = false;
+  }
+  resetThumbnailQueue();
+  preloadVisibleThumbnails();
+}
+
+async function buildThumbnailCacheForImages(cacheTargets: ImageItem[], label: string, finalLabel: string) {
+  if (!cacheTargets.length || !isTauriRuntime()) return false;
+  const targets = [...new Map(
+    cacheTargets
+      .filter((image) => !isDigiViewerCachePath(image.path))
+      .map((image) => [image.path, image]),
+  ).values()];
+  if (!targets.length) return false;
   state.isBuildingThumbCache = true;
-  state.thumbCacheStatus = `0 / ${cacheTargets.length}`;
+  state.thumbCacheStatus = label ? `${label} 0 / ${targets.length}` : `0 / ${targets.length}`;
   resetThumbnailQueue();
   renderChrome();
 
@@ -1968,8 +2077,8 @@ async function buildAllThumbnailCache() {
   let reused = 0;
   let failed = 0;
   try {
-    for (let start = 0; start < cacheTargets.length; start += chunkSize) {
-      const chunk = cacheTargets.slice(start, start + chunkSize);
+    for (let start = 0; start < targets.length; start += chunkSize) {
+      const chunk = targets.slice(start, start + chunkSize);
       const result = await invoke<ThumbnailCacheResult>("build_thumbnail_cache", {
         request: {
           paths: chunk.map((image) => image.path),
@@ -1980,23 +2089,20 @@ async function buildAllThumbnailCache() {
       created += result.created;
       reused += result.reused;
       failed += result.failed;
+      const progress = `${Math.min(start + chunk.length, targets.length)} / ${targets.length} 作成 ${created} 再利用 ${reused} 失敗 ${failed}`;
       state.thumbCacheStatus =
-        `${Math.min(start + chunk.length, cacheTargets.length)} / ${cacheTargets.length} 作成 ${created} 再利用 ${reused} 失敗 ${failed}`;
+        label ? `${label} ${progress}` : progress;
       renderThumbCacheStatus();
       renderPerfMeter();
       await idlePause();
     }
-    state.thumbCacheStatus = `完了 作成 ${created} 再利用 ${reused} 失敗 ${failed}`;
-    for (const image of state.images) {
-      image.thumbnailLoaded = false;
-      image.thumbnailRequested = false;
-    }
-    resetThumbnailQueue();
-    preloadVisibleThumbnails();
+    state.thumbCacheStatus = `${finalLabel} 作成 ${created} 再利用 ${reused} 失敗 ${failed}`;
+    return true;
   } catch (error) {
     console.error(error);
     state.thumbCacheStatus = `作成失敗 ${String(error)}`;
     renderThumbCacheStatus();
+    return false;
   } finally {
     state.isBuildingThumbCache = false;
     renderChrome();
@@ -2097,6 +2203,10 @@ function renderChrome() {
   );
   elements.clearSelectionButton?.toggleAttribute("disabled", checkedCount === 0);
   const canManageThumbCache = isTauriRuntime() && hasImages && Boolean(state.currentDirectory);
+  elements.reloadFolderButton?.toggleAttribute(
+    "disabled",
+    !isTauriRuntime() || !state.currentDirectory || state.isBuildingThumbCache,
+  );
   elements.buildThumbCacheButton?.toggleAttribute("disabled", !canManageThumbCache || state.isBuildingThumbCache);
   if (elements.buildThumbCacheButton) {
     elements.buildThumbCacheButton.textContent = state.isBuildingThumbCache ? "作成中..." : "サムネ作成";
