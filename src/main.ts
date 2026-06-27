@@ -236,10 +236,14 @@ const state = {
   activeSlot: 0,
   isDragging: false,
   isSelecting: false,
+  isMovingSelection: false,
   isResizingSelection: false,
   selectionStartX: 0,
   selectionStartY: 0,
   selectionRect: null as CropRect | null,
+  selectionMoveStartRect: null as CropRect | null,
+  selectionMoveStartX: 0,
+  selectionMoveStartY: 0,
   selectionResizeHandle: null as SelectionResizeHandle | null,
   selectionResizeStartRect: null as CropRect | null,
   selectionResizeStartX: 0,
@@ -388,6 +392,7 @@ window.addEventListener("DOMContentLoaded", () => {
   elements.viewport?.addEventListener("pointermove", handlePointerMove);
   elements.viewport?.addEventListener("pointerup", endDrag);
   elements.viewport?.addEventListener("pointercancel", endDrag);
+  elements.selectionBox?.addEventListener("pointerdown", startSelectionMove);
   elements.cropActions?.addEventListener("pointerdown", (event) => event.stopPropagation());
   elements.cropSaveButton?.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -958,6 +963,10 @@ function handlePointerMove(event: PointerEvent) {
     updateSelectionResize(event);
     return;
   }
+  if (state.isMovingSelection) {
+    updateSelectionMove(event);
+    return;
+  }
   if (state.isSelecting) {
     updateSelection(event);
     return;
@@ -974,6 +983,10 @@ function handlePointerMove(event: PointerEvent) {
 function endDrag(event: PointerEvent) {
   if (state.isResizingSelection) {
     finishSelectionResize(event);
+    return;
+  }
+  if (state.isMovingSelection) {
+    finishSelectionMove(event);
     return;
   }
   if (state.isSelecting) {
@@ -1215,6 +1228,59 @@ function finishSelection(event: PointerEvent) {
   renderSelection();
 }
 
+function startSelectionMove(event: PointerEvent) {
+  if (!elements.viewport || !state.selectionRect) return;
+  if ((event.target as Element | null)?.closest(".selection-handle")) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const bounds = elements.viewport.getBoundingClientRect();
+  state.isMovingSelection = true;
+  state.selectionMoveStartRect = { ...state.selectionRect };
+  state.selectionMoveStartX = event.clientX - bounds.left;
+  state.selectionMoveStartY = event.clientY - bounds.top;
+  elements.viewport.setPointerCapture(event.pointerId);
+}
+
+function updateSelectionMove(event: PointerEvent) {
+  if (!elements.viewport || !state.selectionMoveStartRect) return;
+  const bounds = elements.viewport.getBoundingClientRect();
+  const currentX = clamp(event.clientX - bounds.left, 0, bounds.width);
+  const currentY = clamp(event.clientY - bounds.top, 0, bounds.height);
+  state.selectionRect = selectionRectFromMove(
+    state.selectionMoveStartRect,
+    currentX - state.selectionMoveStartX,
+    currentY - state.selectionMoveStartY,
+    bounds.width,
+    bounds.height,
+  );
+  renderSelection();
+}
+
+function selectionRectFromMove(
+  rect: CropRect,
+  deltaX: number,
+  deltaY: number,
+  maxWidth: number,
+  maxHeight: number,
+): CropRect {
+  return {
+    left: clamp(rect.left + deltaX, 0, Math.max(0, maxWidth - rect.width)),
+    top: clamp(rect.top + deltaY, 0, Math.max(0, maxHeight - rect.height)),
+    width: rect.width,
+    height: rect.height,
+  };
+}
+
+function finishSelectionMove(event: PointerEvent) {
+  if (!elements.viewport) return;
+  state.isMovingSelection = false;
+  state.selectionMoveStartRect = null;
+  if (elements.viewport.hasPointerCapture(event.pointerId)) {
+    elements.viewport.releasePointerCapture(event.pointerId);
+  }
+  renderSelection();
+}
+
 function startSelectionResize(event: PointerEvent, handle: SelectionResizeHandle) {
   if (!elements.viewport || !state.selectionRect) return;
   event.preventDefault();
@@ -1303,8 +1369,10 @@ function renderSelectionHandles() {
 
 function clearSelection() {
   state.isSelecting = false;
+  state.isMovingSelection = false;
   state.isResizingSelection = false;
   state.selectionRect = null;
+  state.selectionMoveStartRect = null;
   state.selectionResizeHandle = null;
   state.selectionResizeStartRect = null;
   elements.viewport?.classList.remove("is-selecting");

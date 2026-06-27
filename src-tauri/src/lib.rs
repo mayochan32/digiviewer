@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{self, File},
-    io::BufWriter,
+    io::{BufWriter, Cursor},
     path::{Path, PathBuf},
     time::UNIX_EPOCH,
 };
@@ -408,12 +408,17 @@ fn save_crop_to_source_folder(request: SaveCropToSourceRequest) -> Result<ImageF
         cropped
     };
     let rgb = output.to_rgb8();
-    let file = File::create(&target).map_err(|error| error.to_string())?;
-    let writer = BufWriter::new(file);
+    let mut jpeg_bytes = Vec::new();
+    let writer = Cursor::new(&mut jpeg_bytes);
     let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(writer, 97);
     encoder
         .encode_image(&rgb)
         .map_err(|error| error.to_string())?;
+    if let Ok(source_bytes) = fs::read(&source) {
+        jpeg_bytes = preserve_jpeg_metadata(&source_bytes, &jpeg_bytes);
+    }
+    fs::write(&target, jpeg_bytes).map_err(|error| error.to_string())?;
+    preserve_file_modified_time(&source, &target);
     image_file_from_path(&target, FileKind::Image)
 }
 
@@ -534,6 +539,84 @@ fn image_file_from_path(path: &Path, kind: FileKind) -> Result<ImageFile, String
         modified_at: modified_at_millis(&metadata),
         kind,
     })
+}
+
+fn preserve_jpeg_metadata(source: &[u8], encoded: &[u8]) -> Vec<u8> {
+    let metadata_segments = jpeg_metadata_segments(source);
+    if metadata_segments.is_empty() || encoded.len() < 2 || encoded[0..2] != [0xff, 0xd8] {
+        return encoded.to_vec();
+    }
+
+    let mut result =
+        Vec::with_capacity(encoded.len() + metadata_segments.iter().map(Vec::len).sum::<usize>());
+    result.extend_from_slice(&encoded[0..2]);
+    for segment in metadata_segments {
+        result.extend_from_slice(&segment);
+    }
+    result.extend_from_slice(&encoded[2..]);
+    result
+}
+
+fn preserve_file_modified_time(source: &Path, target: &Path) {
+    let Ok(metadata) = fs::metadata(source) else {
+        return;
+    };
+    let modified = filetime::FileTime::from_last_modification_time(&metadata);
+    let accessed = filetime::FileTime::from_last_access_time(&metadata);
+    let _ = filetime::set_file_times(target, accessed, modified);
+}
+
+fn jpeg_metadata_segments(source: &[u8]) -> Vec<Vec<u8>> {
+    if source.len() < 4 || source[0..2] != [0xff, 0xd8] {
+        return Vec::new();
+    }
+
+    let mut segments = Vec::new();
+    let mut index = 2;
+    while index + 4 <= source.len() {
+        if source[index] != 0xff {
+            break;
+        }
+        while index < source.len() && source[index] == 0xff {
+            index += 1;
+        }
+        if index >= source.len() {
+            break;
+        }
+        let marker = source[index];
+        index += 1;
+        if marker == 0xda || marker == 0xd9 {
+            break;
+        }
+        if marker == 0x01 || (0xd0..=0xd7).contains(&marker) {
+            continue;
+        }
+        if index + 2 > source.len() {
+            break;
+        }
+        let length = u16::from_be_bytes([source[index], source[index + 1]]) as usize;
+        if length < 2 || index + length > source.len() {
+            break;
+        }
+        let segment_start = index - 2;
+        let segment_end = index + length;
+        if is_preserved_jpeg_metadata_marker(marker, &source[index + 2..segment_end]) {
+            segments.push(source[segment_start..segment_end].to_vec());
+        }
+        index = segment_end;
+    }
+    segments
+}
+
+fn is_preserved_jpeg_metadata_marker(marker: u8, payload: &[u8]) -> bool {
+    match marker {
+        0xe1 => {
+            payload.starts_with(b"Exif\0\0")
+                || payload.starts_with(b"http://ns.adobe.com/xap/1.0/\0")
+        }
+        0xe2 => payload.starts_with(b"ICC_PROFILE\0"),
+        _ => false,
+    }
 }
 
 fn rename_raw_sidecars(parent: &Path, old_stem: &str, new_stem: &str) {
