@@ -196,6 +196,7 @@ const exifDelayMs = 900;
 const thumbItemWidth = 102;
 let thumbnailQueue: number[] = [];
 let activeThumbnailJobs = 0;
+let thumbnailQueueGeneration = 0;
 let thumbnailScrollFrame = 0;
 let thumbnailPreloadTimer = 0;
 let thumbnailRequestsSincePrune = 0;
@@ -847,9 +848,13 @@ function clearObjectUrls() {
 }
 
 function resetThumbnailQueue() {
+  thumbnailQueueGeneration += 1;
   thumbnailQueue = [];
   activeThumbnailJobs = 0;
   thumbnailRequestsSincePrune = 0;
+  for (const image of state.images) {
+    if (!image.thumbnailLoaded) image.thumbnailRequested = false;
+  }
   if (exifTimer) {
     window.clearTimeout(exifTimer);
     exifTimer = 0;
@@ -1074,7 +1079,6 @@ function reconcileVisibleImages() {
     state.compareSlots[0] = state.activeIndex;
   }
   refillEmptySlots();
-  resetThumbnailQueue();
   fitView();
 }
 
@@ -2316,13 +2320,16 @@ function pumpThumbnailQueue() {
     const image = state.images[index];
     if (!image || image.thumbnailLoaded) continue;
 
+    const generation = thumbnailQueueGeneration;
     activeThumbnailJobs += 1;
-    loadThumbnail(index, image)
+    loadThumbnail(index, image, generation)
       .catch((error) => {
+        if (generation !== thumbnailQueueGeneration) return;
         image.thumbnailLoaded = true;
         console.warn("Thumbnail generation failed", error);
       })
       .finally(() => {
+        if (generation !== thumbnailQueueGeneration) return;
         activeThumbnailJobs = Math.max(0, activeThumbnailJobs - 1);
         renderThumbCacheStatus();
         pumpThumbnailQueue();
@@ -2330,7 +2337,7 @@ function pumpThumbnailQueue() {
   }
 }
 
-async function loadThumbnail(index: number, image: ImageItem) {
+async function loadThumbnail(index: number, image: ImageItem, generation: number) {
   const start = performance.now();
   const pruneCache = state.thumbCacheLimitMb > 0
     && thumbnailRequestsSincePrune++ % thumbnailPruneInterval === 0;
@@ -2345,6 +2352,7 @@ async function loadThumbnail(index: number, image: ImageItem) {
       cacheScope: state.currentDirectory ? "folder" : "app",
     },
   });
+  if (generation !== thumbnailQueueGeneration) return;
   const elapsed = performance.now() - start;
   perf.thumbLastMs = elapsed;
   perf.thumbCount += 1;
