@@ -1005,6 +1005,7 @@ function toggleSimilarityMode() {
     ));
     activateSimilarityGroup(groupIndex);
   } else {
+    setCompareCount(1);
     reconcileVisibleImages();
     render();
   }
