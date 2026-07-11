@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::{
+    collections::BTreeMap,
     fs::{self, File},
     io::{BufWriter, Cursor},
     path::{Path, PathBuf},
@@ -74,6 +75,77 @@ struct ThumbnailCacheResult {
     reused: usize,
     failed: usize,
     deleted: usize,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SimilarityRequest {
+    directory: String,
+    paths: Vec<String>,
+    threshold: u32,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SimilarityResult {
+    groups: Vec<SimilarityGroup>,
+    analyzed: usize,
+    reused: usize,
+    failed: usize,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SimilarityGroup {
+    id: String,
+    paths: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct SimilarityCache {
+    version: u32,
+    images: BTreeMap<String, SimilarityCacheEntry>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SimilarityCacheEntry {
+    size: u64,
+    modified_at: u128,
+    dhash: String,
+    #[serde(default)]
+    average_color: [u8; 3],
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+enum ReviewStatus {
+    Keep,
+    Hold,
+    Exclude,
+    Unreviewed,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ReviewEntry {
+    path: String,
+    status: ReviewStatus,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct ReviewFile {
+    version: u32,
+    images: BTreeMap<String, ReviewStatus>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SaveReviewRequest {
+    directory: String,
+    entries: Vec<ReviewEntry>,
 }
 
 #[derive(Deserialize)]
@@ -357,6 +429,260 @@ fn clean_thumbnail_cache(directory: String) -> Result<ThumbnailCacheResult, Stri
 #[tauri::command]
 fn clear_thumbnail_cache(directory: String) -> Result<ThumbnailCacheResult, String> {
     clean_folder_thumbnail_cache(&PathBuf::from(directory), true)
+}
+
+#[tauri::command]
+fn analyze_similar_images(request: SimilarityRequest) -> Result<SimilarityResult, String> {
+    let root = PathBuf::from(&request.directory)
+        .canonicalize()
+        .map_err(|error| error.to_string())?;
+    let cache_path = root.join(".digiviewer").join("similarity-v1.json");
+    let mut cache = read_similarity_cache(&cache_path);
+    cache.version = 1;
+    let mut features = Vec::new();
+    let mut analyzed = 0;
+    let mut reused = 0;
+    let mut failed = 0;
+
+    for path in request.paths {
+        let original = PathBuf::from(&path);
+        let Ok(source) = original.canonicalize() else {
+            failed += 1;
+            continue;
+        };
+        if !source.starts_with(&root) || !source.is_file() || !is_supported_image(&source) {
+            failed += 1;
+            continue;
+        }
+        let Some(relative_path) = portable_relative_path(&root, &source) else {
+            failed += 1;
+            continue;
+        };
+        let metadata = fs::metadata(&source).map_err(|error| error.to_string())?;
+        let modified_at = modified_at_millis(&metadata);
+        let cached_signature = cache.images.get(&relative_path).and_then(|entry| {
+            (entry.size == metadata.len() && entry.modified_at == modified_at)
+                .then(|| {
+                    u64::from_str_radix(&entry.dhash, 16)
+                        .ok()
+                        .map(|hash| (hash, entry.average_color))
+                })
+                .flatten()
+        });
+        let (hash, average_color) = match cached_signature {
+            Some(signature) => {
+                reused += 1;
+                signature
+            }
+            None => match image_similarity_signature(&source) {
+                Ok((hash, average_color)) => {
+                    analyzed += 1;
+                    cache.images.insert(
+                        relative_path.clone(),
+                        SimilarityCacheEntry {
+                            size: metadata.len(),
+                            modified_at,
+                            dhash: format!("{hash:016x}"),
+                            average_color,
+                        },
+                    );
+                    (hash, average_color)
+                }
+                Err(_) => {
+                    failed += 1;
+                    continue;
+                }
+            },
+        };
+        features.push(SimilarityFeature {
+            path,
+            source,
+            hash,
+            average_color,
+        });
+    }
+
+    write_json_file(&cache_path, &cache)?;
+    let threshold = request.threshold.clamp(1, 32);
+    let groups = build_similarity_groups(&features, threshold);
+    Ok(SimilarityResult {
+        groups,
+        analyzed,
+        reused,
+        failed,
+    })
+}
+
+#[tauri::command]
+fn load_review_state(directory: String) -> Result<Vec<ReviewEntry>, String> {
+    let display_root = PathBuf::from(&directory);
+    let root = display_root
+        .canonicalize()
+        .map_err(|error| error.to_string())?;
+    let review_path = root.join(".digiviewer").join("review.json");
+    let review = read_review_file(&review_path);
+    Ok(review
+        .images
+        .into_iter()
+        .map(|(relative_path, status)| ReviewEntry {
+            path: display_root
+                .join(relative_path.replace('/', std::path::MAIN_SEPARATOR_STR))
+                .to_string_lossy()
+                .into_owned(),
+            status,
+        })
+        .collect())
+}
+
+#[tauri::command]
+fn save_review_state(request: SaveReviewRequest) -> Result<(), String> {
+    let root = PathBuf::from(&request.directory)
+        .canonicalize()
+        .map_err(|error| error.to_string())?;
+    let mut images = BTreeMap::new();
+    for entry in request.entries {
+        if entry.status == ReviewStatus::Unreviewed {
+            continue;
+        }
+        let Ok(source) = PathBuf::from(&entry.path).canonicalize() else {
+            continue;
+        };
+        if !source.starts_with(&root) || !source.is_file() {
+            continue;
+        }
+        if let Some(relative_path) = portable_relative_path(&root, &source) {
+            images.insert(relative_path, entry.status);
+        }
+    }
+    let review_path = root.join(".digiviewer").join("review.json");
+    write_json_file(&review_path, &ReviewFile { version: 1, images })
+}
+
+struct SimilarityFeature {
+    path: String,
+    source: PathBuf,
+    hash: u64,
+    average_color: [u8; 3],
+}
+
+fn image_similarity_signature(path: &Path) -> Result<(u64, [u8; 3]), String> {
+    let image = image::open(path).map_err(|error| error.to_string())?;
+    let grayscale = image
+        .resize_exact(9, 8, image::imageops::FilterType::Triangle)
+        .to_luma8();
+    let mut hash = 0_u64;
+    let mut bit = 0;
+    for y in 0..8 {
+        for x in 0..8 {
+            if grayscale.get_pixel(x, y)[0] > grayscale.get_pixel(x + 1, y)[0] {
+                hash |= 1_u64 << bit;
+            }
+            bit += 1;
+        }
+    }
+    let colors = image
+        .resize_exact(8, 8, image::imageops::FilterType::Triangle)
+        .to_rgb8();
+    let mut totals = [0_u32; 3];
+    for pixel in colors.pixels() {
+        for channel in 0..3 {
+            totals[channel] += u32::from(pixel[channel]);
+        }
+    }
+    let average_color = [
+        (totals[0] / 64) as u8,
+        (totals[1] / 64) as u8,
+        (totals[2] / 64) as u8,
+    ];
+    Ok((hash, average_color))
+}
+
+fn build_similarity_groups(features: &[SimilarityFeature], threshold: u32) -> Vec<SimilarityGroup> {
+    const CANDIDATE_WINDOW: usize = 18;
+    let mut parents: Vec<usize> = (0..features.len()).collect();
+    for left in 0..features.len() {
+        let end = (left + CANDIDATE_WINDOW + 1).min(features.len());
+        for right in (left + 1)..end {
+            if features[left].source.parent() != features[right].source.parent() {
+                continue;
+            }
+            let color_distance: u32 = features[left]
+                .average_color
+                .iter()
+                .zip(features[right].average_color.iter())
+                .map(|(left, right)| u32::from(left.abs_diff(*right)))
+                .sum();
+            if (features[left].hash ^ features[right].hash).count_ones() <= threshold
+                && color_distance <= 120
+            {
+                union_similarity_sets(&mut parents, left, right);
+            }
+        }
+    }
+
+    let mut by_root: BTreeMap<usize, Vec<String>> = BTreeMap::new();
+    for (index, feature) in features.iter().enumerate() {
+        let root = find_similarity_root(&mut parents, index);
+        by_root.entry(root).or_default().push(feature.path.clone());
+    }
+    by_root
+        .into_values()
+        .filter(|paths| paths.len() >= 2)
+        .enumerate()
+        .map(|(index, paths)| SimilarityGroup {
+            id: format!("group-{}", index + 1),
+            paths,
+        })
+        .collect()
+}
+
+fn find_similarity_root(parents: &mut [usize], index: usize) -> usize {
+    if parents[index] != index {
+        parents[index] = find_similarity_root(parents, parents[index]);
+    }
+    parents[index]
+}
+
+fn union_similarity_sets(parents: &mut [usize], left: usize, right: usize) {
+    let left_root = find_similarity_root(parents, left);
+    let right_root = find_similarity_root(parents, right);
+    if left_root != right_root {
+        parents[right_root] = left_root;
+    }
+}
+
+fn portable_relative_path(root: &Path, path: &Path) -> Option<String> {
+    let relative = path.strip_prefix(root).ok()?;
+    let parts: Vec<String> = relative
+        .components()
+        .filter_map(|component| match component {
+            std::path::Component::Normal(value) => Some(value.to_string_lossy().into_owned()),
+            _ => None,
+        })
+        .collect();
+    (!parts.is_empty()).then(|| parts.join("/"))
+}
+
+fn read_similarity_cache(path: &Path) -> SimilarityCache {
+    fs::read(path)
+        .ok()
+        .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+        .unwrap_or_default()
+}
+
+fn read_review_file(path: &Path) -> ReviewFile {
+    fs::read(path)
+        .ok()
+        .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+        .unwrap_or_default()
+}
+
+fn write_json_file(path: &Path, value: &impl Serialize) -> Result<(), String> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+    }
+    let bytes = serde_json::to_vec_pretty(value).map_err(|error| error.to_string())?;
+    fs::write(path, bytes).map_err(|error| error.to_string())
 }
 
 #[tauri::command]
@@ -1334,6 +1660,136 @@ mod tests {
 
         fs::remove_dir_all(directory).unwrap();
     }
+
+    #[test]
+    fn groups_visually_similar_neighboring_images() {
+        let directory = std::env::temp_dir().join(format!(
+            "digiviewer-similarity-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&directory).unwrap();
+        let first = directory.join("IMG_0001.png");
+        let second = directory.join("IMG_0002.png");
+        let different = directory.join("IMG_0003.png");
+        let gradient = image::GrayImage::from_fn(32, 24, |x, _| image::Luma([(x * 8) as u8]));
+        gradient.save(&first).unwrap();
+        gradient.save(&second).unwrap();
+        image::GrayImage::from_fn(32, 24, |x, _| image::Luma([255 - (x * 8) as u8]))
+            .save(&different)
+            .unwrap();
+
+        let features = vec![
+            SimilarityFeature {
+                path: first.to_string_lossy().into_owned(),
+                source: first.clone(),
+                hash: image_similarity_signature(&first).unwrap().0,
+                average_color: image_similarity_signature(&first).unwrap().1,
+            },
+            SimilarityFeature {
+                path: second.to_string_lossy().into_owned(),
+                source: second.clone(),
+                hash: image_similarity_signature(&second).unwrap().0,
+                average_color: image_similarity_signature(&second).unwrap().1,
+            },
+            SimilarityFeature {
+                path: different.to_string_lossy().into_owned(),
+                source: different.clone(),
+                hash: image_similarity_signature(&different).unwrap().0,
+                average_color: image_similarity_signature(&different).unwrap().1,
+            },
+        ];
+        let groups = build_similarity_groups(&features, 6);
+
+        assert_eq!(groups.len(), 1);
+        assert_eq!(groups[0].paths.len(), 2);
+        assert!(groups[0].paths.contains(&features[0].path));
+        assert!(groups[0].paths.contains(&features[1].path));
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn creates_portable_relative_paths() {
+        assert_eq!(
+            portable_relative_path(
+                Path::new("/photos"),
+                Path::new("/photos/2026/Observation.JPG")
+            ),
+            Some("2026/Observation.JPG".to_owned())
+        );
+    }
+
+    #[test]
+    fn color_signature_separates_flat_images() {
+        let directory = std::env::temp_dir().join(format!(
+            "digiviewer-color-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&directory).unwrap();
+        let red = directory.join("IMG_0001.png");
+        let blue = directory.join("IMG_0002.png");
+        image::RgbImage::from_pixel(24, 24, image::Rgb([240, 20, 20]))
+            .save(&red)
+            .unwrap();
+        image::RgbImage::from_pixel(24, 24, image::Rgb([20, 20, 240]))
+            .save(&blue)
+            .unwrap();
+        let red_signature = image_similarity_signature(&red).unwrap();
+        let blue_signature = image_similarity_signature(&blue).unwrap();
+        let features = vec![
+            SimilarityFeature {
+                path: red.to_string_lossy().into_owned(),
+                source: red.clone(),
+                hash: red_signature.0,
+                average_color: red_signature.1,
+            },
+            SimilarityFeature {
+                path: blue.to_string_lossy().into_owned(),
+                source: blue.clone(),
+                hash: blue_signature.0,
+                average_color: blue_signature.1,
+            },
+        ];
+
+        assert!(build_similarity_groups(&features, 32).is_empty());
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn review_state_round_trips_with_display_paths() {
+        let directory = std::env::temp_dir().join(format!(
+            "digiviewer-review-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&directory).unwrap();
+        let image_path = directory.join("Observation.JPG");
+        fs::write(&image_path, b"review state test").unwrap();
+        save_review_state(SaveReviewRequest {
+            directory: directory.to_string_lossy().into_owned(),
+            entries: vec![ReviewEntry {
+                path: image_path.to_string_lossy().into_owned(),
+                status: ReviewStatus::Keep,
+            }],
+        })
+        .unwrap();
+
+        let entries = load_review_state(directory.to_string_lossy().into_owned()).unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].path, image_path.to_string_lossy().into_owned());
+        assert!(entries[0].status == ReviewStatus::Keep);
+        fs::remove_dir_all(directory).unwrap();
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -1351,6 +1807,9 @@ pub fn run() {
             build_thumbnail_cache,
             clean_thumbnail_cache,
             clear_thumbnail_cache,
+            analyze_similar_images,
+            load_review_state,
+            save_review_state,
             save_crop_image,
             save_crop_to_source_folder,
             ensure_crop_directory,

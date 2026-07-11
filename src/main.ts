@@ -20,6 +20,7 @@ type ImageItem = {
   exif?: ExifSummary | null;
   exifLoaded: boolean;
   rawExtensions: string[];
+  reviewStatus: ReviewStatus;
 };
 
 type ExifSummary = {
@@ -75,6 +76,30 @@ type ThumbnailCacheResult = {
   reused: number;
   failed: number;
   deleted: number;
+};
+
+type ReviewStatus = "keep" | "hold" | "exclude" | "unreviewed";
+
+type ReviewEntry = {
+  path: string;
+  status: ReviewStatus;
+};
+
+type NativeSimilarityGroup = {
+  id: string;
+  paths: string[];
+};
+
+type SimilarityResult = {
+  groups: NativeSimilarityGroup[];
+  analyzed: number;
+  reused: number;
+  failed: number;
+};
+
+type SimilarityGroup = {
+  id: string;
+  indexes: number[];
 };
 
 type FontSizeMode = "small" | "medium" | "large";
@@ -258,6 +283,11 @@ const state = {
   checkedIndexes: new Set<number>(),
   lastCheckedIndex: null as number | null,
   currentDirectory: "",
+  similarityGroups: [] as SimilarityGroup[],
+  similarityMode: false,
+  isAnalyzingSimilarity: false,
+  similarityStatus: "未解析",
+  hideExcluded: false,
   isBuildingThumbCache: false,
   thumbCacheStatus: "",
   view: {
@@ -313,6 +343,15 @@ const elements = {
   cleanThumbCacheButton: document.querySelector<HTMLButtonElement>("#clean-thumb-cache"),
   clearThumbCacheButton: document.querySelector<HTMLButtonElement>("#clear-thumb-cache"),
   thumbCacheStatus: document.querySelector<HTMLElement>("#thumb-cache-status"),
+  analyzeSimilarityButton: document.querySelector<HTMLButtonElement>("#analyze-similarity"),
+  similarityThresholdSelect: document.querySelector<HTMLSelectElement>("#similarity-threshold"),
+  similarityToggleButton: document.querySelector<HTMLButtonElement>("#similarity-toggle"),
+  previousGroupButton: document.querySelector<HTMLButtonElement>("#previous-group"),
+  nextGroupButton: document.querySelector<HTMLButtonElement>("#next-group"),
+  similarityStatus: document.querySelector<HTMLElement>("#similarity-status"),
+  reviewTarget: document.querySelector<HTMLElement>("#review-target"),
+  reviewButtons: document.querySelectorAll<HTMLButtonElement>("[data-review-status]"),
+  hideExcludedButton: document.querySelector<HTMLButtonElement>("#hide-excluded"),
   settingsButton: document.querySelector<HTMLButtonElement>("#settings-button"),
   settingsDialog: document.querySelector<HTMLElement>("#settings-dialog"),
   settingsCloseButton: document.querySelector<HTMLButtonElement>("#settings-close"),
@@ -437,6 +476,17 @@ window.addEventListener("DOMContentLoaded", () => {
   elements.buildThumbCacheButton?.addEventListener("click", buildAllThumbnailCache);
   elements.cleanThumbCacheButton?.addEventListener("click", cleanThumbnailCache);
   elements.clearThumbCacheButton?.addEventListener("click", clearThumbnailCache);
+  elements.analyzeSimilarityButton?.addEventListener("click", analyzeSimilarity);
+  elements.similarityToggleButton?.addEventListener("click", toggleSimilarityMode);
+  elements.previousGroupButton?.addEventListener("click", () => showSimilarityGroup(-1));
+  elements.nextGroupButton?.addEventListener("click", () => showSimilarityGroup(1));
+  elements.hideExcludedButton?.addEventListener("click", toggleHideExcluded);
+  for (const button of elements.reviewButtons) {
+    button.addEventListener("click", () => {
+      const status = normalizeReviewStatus(button.dataset.reviewStatus);
+      applyReviewStatus(status);
+    });
+  }
   elements.settingsButton?.addEventListener("click", openSettings);
   elements.settingsCloseButton?.addEventListener("click", closeSettings);
   elements.settingsDialog?.addEventListener("click", (event) => {
@@ -616,7 +666,9 @@ function loadPickedFiles(pickedFiles: PickedFile[]) {
     cacheLoaded: false,
     exifLoaded: false,
     rawExtensions: rawByBase.get(baseKeyForPath(path)) ?? [],
+    reviewStatus: "unreviewed",
   }));
+  resetSimilarityAnalysis();
   updateFilteredIndexes();
   state.activeIndex = 0;
   state.activeSlot = 0;
@@ -636,6 +688,7 @@ function loadNativeImages(nativeImages: NativeImageFile[]) {
   if (elements.filenameFilterInput) elements.filenameFilterInput.value = "";
   clearObjectUrls();
   state.images = nativeImagesToImageItems(nativeImages);
+  resetSimilarityAnalysis();
   updateFilteredIndexes();
   state.activeIndex = 0;
   state.activeSlot = 0;
@@ -646,6 +699,7 @@ function loadNativeImages(nativeImages: NativeImageFile[]) {
   fitView();
   perf.listMs = performance.now() - listStart;
   render();
+  void loadReviewState();
 }
 
 async function reloadCurrentFolder() {
@@ -674,6 +728,7 @@ async function reloadCurrentFolder() {
     }
 
     state.images = [...state.images, ...addedImages].sort((a, b) => compareImagePaths(a.path, b.path));
+    resetSimilarityAnalysis();
     updateFilteredIndexes();
     restoreCheckedImages(checkedPaths);
     restoreCompareSlots(slotPaths, activePath);
@@ -682,6 +737,7 @@ async function reloadCurrentFolder() {
     perf.listMs = performance.now() - listStart;
     state.thumbCacheStatus = `リロード 追加 ${addedImages.length}`;
     render();
+    void loadReviewState();
 
     const cacheBuilt = await buildThumbnailCacheForImages(
       addedImages,
@@ -725,6 +781,7 @@ function nativeImagesToImageItems(nativeImages: NativeImageFile[]) {
     cacheLoaded: false,
     exifLoaded: false,
     rawExtensions: rawByBase.get(baseKeyForPath(image.path)) ?? [],
+    reviewStatus: "unreviewed" as ReviewStatus,
   }));
 }
 
@@ -832,9 +889,16 @@ function updateFilteredIndexes() {
 }
 
 function visibleIndexes() {
-  return state.filteredIndexes.length || state.filenameFilter.trim()
+  const filenameIndexes = state.filteredIndexes.length || state.filenameFilter.trim()
     ? state.filteredIndexes
     : state.images.map((_, index) => index);
+  const allowed = new Set(filenameIndexes.filter((index) =>
+    !state.hideExcluded || state.images[index].reviewStatus !== "exclude"
+  ));
+  if (!state.similarityMode) return [...allowed];
+  return state.similarityGroups.flatMap((group) =>
+    group.indexes.filter((index) => allowed.has(index))
+  );
 }
 
 function visiblePositionForIndex(imageIndex: number) {
@@ -852,6 +916,226 @@ function applyFilenameFilter() {
   refillEmptySlots();
   fitView();
   render();
+}
+
+function normalizeReviewStatus(value: string | undefined): ReviewStatus {
+  return value === "keep" || value === "hold" || value === "exclude" ? value : "unreviewed";
+}
+
+function resetSimilarityAnalysis() {
+  state.similarityGroups = [];
+  state.similarityMode = false;
+  state.isAnalyzingSimilarity = false;
+  state.similarityStatus = "未解析";
+}
+
+async function analyzeSimilarity() {
+  if (!isTauriRuntime() || !state.currentDirectory || !state.images.length || state.isAnalyzingSimilarity) {
+    return;
+  }
+  state.isAnalyzingSimilarity = true;
+  state.similarityStatus = "解析中...";
+  renderChrome();
+  try {
+    const threshold = Number(elements.similarityThresholdSelect?.value ?? 10);
+    const result = await invoke<SimilarityResult>("analyze_similar_images", {
+      request: {
+        directory: state.currentDirectory,
+        paths: state.images.map((image) => image.path),
+        threshold,
+      },
+    });
+    const indexByPath = new Map(
+      state.images.map((image, index) => [portablePathKey(image.path), index]),
+    );
+    state.similarityGroups = result.groups
+      .map((group) => ({
+        id: group.id,
+        indexes: [...new Set(group.paths
+          .map((path) => indexByPath.get(portablePathKey(path)))
+          .filter((index): index is number => index !== undefined))],
+      }))
+      .filter((group) => group.indexes.length >= 2);
+    state.similarityMode = state.similarityGroups.length > 0;
+    state.similarityStatus = state.similarityGroups.length
+      ? `${state.similarityGroups.length}グループ / 新規${result.analyzed} 再利用${result.reused}${result.failed ? ` 失敗${result.failed}` : ""}`
+      : `類似グループなし${result.failed ? ` / 失敗${result.failed}` : ""}`;
+    if (state.similarityMode) {
+      activateSimilarityGroup(0);
+    } else {
+      reconcileVisibleImages();
+      render();
+    }
+  } catch (error) {
+    console.error(error);
+    state.similarityStatus = `解析失敗: ${String(error)}`;
+    state.similarityMode = false;
+    render();
+  } finally {
+    state.isAnalyzingSimilarity = false;
+    renderChrome();
+  }
+}
+
+function toggleSimilarityMode() {
+  if (!state.similarityGroups.length) return;
+  state.similarityMode = !state.similarityMode;
+  if (state.similarityMode) {
+    const groupIndex = Math.max(0, state.similarityGroups.findIndex((group) =>
+      group.indexes.includes(state.activeIndex)
+    ));
+    activateSimilarityGroup(groupIndex);
+  } else {
+    reconcileVisibleImages();
+    render();
+  }
+}
+
+function showSimilarityGroup(delta: number) {
+  if (!state.similarityGroups.length) return;
+  state.similarityMode = true;
+  const navigable = navigableSimilarityGroups();
+  if (!navigable.length) return;
+  const current = navigable.findIndex(({ group }) => group.indexes.includes(state.activeIndex));
+  const next = current < 0
+    ? 0
+    : (current + delta + navigable.length) % navigable.length;
+  activateSimilarityGroup(navigable[next].position);
+}
+
+function navigableSimilarityGroups() {
+  const filenameAllowed = new Set(
+    state.filteredIndexes.length || state.filenameFilter.trim()
+      ? state.filteredIndexes
+      : state.images.map((_, index) => index),
+  );
+  return state.similarityGroups
+    .map((group, position) => ({ group, position }))
+    .filter(({ group }) => group.indexes.some((index) =>
+      filenameAllowed.has(index)
+      && (!state.hideExcluded || state.images[index].reviewStatus !== "exclude")
+    ));
+}
+
+function activateSimilarityGroup(position: number) {
+  const group = state.similarityGroups[position];
+  if (!group) return;
+  const visibleSet = new Set(visibleIndexes());
+  const indexes = group.indexes.filter((index) => visibleSet.has(index));
+  if (!indexes.length) {
+    showSimilarityGroup(1);
+    return;
+  }
+  const compareCount = Math.min(4, indexes.length);
+  state.compareCount = compareCount;
+  state.activeIndex = indexes[0];
+  state.activeSlot = 0;
+  state.compareSlots = [
+    indexes[0] ?? null,
+    indexes[1] ?? null,
+    indexes[2] ?? null,
+    indexes[3] ?? null,
+  ];
+  clearCheckedImages();
+  fitView();
+  render();
+}
+
+function toggleHideExcluded() {
+  state.hideExcluded = !state.hideExcluded;
+  reconcileVisibleImages();
+  render();
+}
+
+function reconcileVisibleImages() {
+  const indexes = visibleIndexes();
+  if (!indexes.includes(state.activeIndex)) {
+    state.activeIndex = indexes[0] ?? 0;
+    state.activeSlot = 0;
+  }
+  state.compareSlots = state.compareSlots.map((index) =>
+    index !== null && indexes.includes(index) ? index : null
+  );
+  if (!state.compareSlots.some((index) => index !== null) && indexes.length) {
+    state.compareSlots[0] = state.activeIndex;
+  }
+  refillEmptySlots();
+  resetThumbnailQueue();
+  fitView();
+}
+
+function reviewTargetIndexes() {
+  if (state.checkedIndexes.size) {
+    return [...state.checkedIndexes].filter((index) => state.images[index]);
+  }
+  const slotIndex = Math.min(state.activeSlot, state.compareCount - 1);
+  const index = state.compareSlots[slotIndex] ?? state.activeIndex;
+  return state.images[index] ? [index] : [];
+}
+
+function applyReviewStatus(status: ReviewStatus) {
+  const indexes = reviewTargetIndexes();
+  if (!indexes.length) return;
+  for (const index of indexes) {
+    state.images[index].reviewStatus = status;
+  }
+  void persistReviewState();
+  reconcileVisibleImages();
+  render();
+}
+
+async function loadReviewState() {
+  const directory = state.currentDirectory;
+  if (!directory || !isTauriRuntime()) return;
+  try {
+    const entries = await invoke<ReviewEntry[]>("load_review_state", { directory });
+    if (state.currentDirectory !== directory) return;
+    const statusByPath = new Map(entries.map((entry) => [
+      portablePathKey(entry.path),
+      normalizeReviewStatus(entry.status),
+    ]));
+    for (const image of state.images) {
+      image.reviewStatus = statusByPath.get(portablePathKey(image.path)) ?? "unreviewed";
+    }
+    reconcileVisibleImages();
+    render();
+  } catch (error) {
+    console.warn("Failed to load review state", error);
+  }
+}
+
+let reviewSaveQueue = Promise.resolve();
+
+function persistReviewState() {
+  const directory = state.currentDirectory;
+  if (!directory || !isTauriRuntime()) return Promise.resolve();
+  const entries: ReviewEntry[] = state.images.map((image) => ({
+    path: image.path,
+    status: image.reviewStatus,
+  }));
+  reviewSaveQueue = reviewSaveQueue
+    .then(async () => {
+      await invoke("save_review_state", { request: { directory, entries } });
+    })
+    .catch((error) => console.warn("Failed to save review state", error));
+  return reviewSaveQueue;
+}
+
+function portablePathKey(path: string) {
+  return path.replace(/\\/g, "/").toLocaleLowerCase();
+}
+
+function reviewStatusLabel(status: ReviewStatus) {
+  switch (status) {
+    case "keep":
+      return "✓ 採用";
+    case "hold":
+      return "● 保留";
+    case "exclude":
+      return "× 除外";
+    default:
+      return "未判定";
+  }
 }
 
 function isRawImagePath(path: string) {
@@ -943,6 +1227,18 @@ function handleKeyDown(event: KeyboardEvent) {
     event.stopPropagation();
     if (event.repeat) return;
     toggleActiveCheck();
+    return;
+  }
+
+  const reviewShortcut = ({
+    k: "keep",
+    h: "hold",
+    x: "exclude",
+    u: "unreviewed",
+  } as const)[event.key.toLowerCase() as "k" | "h" | "x" | "u"];
+  if (reviewShortcut) {
+    event.preventDefault();
+    if (!event.repeat) applyReviewStatus(reviewShortcut);
     return;
   }
 
@@ -1529,12 +1825,14 @@ function addNativeImage(nativeImage: NativeImageFile) {
     cacheLoaded: false,
     exifLoaded: false,
     rawExtensions: [],
+    reviewStatus: "unreviewed",
   } satisfies ImageItem;
 
   state.images = state.images
     .filter((current) => current.path !== nativeImage.path)
     .concat(image)
     .sort((a, b) => compareImagePaths(a.path, b.path));
+  resetSimilarityAnalysis();
   updateFilteredIndexes();
   const savedIndex = state.images.findIndex((current) => current.path === nativeImage.path);
   if (savedIndex >= 0) {
@@ -1677,6 +1975,7 @@ function applyRenameResults(results: RenameResult[]) {
     image.thumbnailLoaded = false;
     image.thumbnailRequested = false;
   }
+  void persistReviewState();
   updateFilteredIndexes();
   if (!visibleIndexes().includes(state.activeIndex)) {
     state.activeIndex = visibleIndexes()[0] ?? 0;
@@ -1697,6 +1996,8 @@ function applyMoveToDeletedResults(results: MoveToDeletedResult[]) {
   }
 
   state.images = state.images.filter((image) => !removedPaths.has(image.path));
+  resetSimilarityAnalysis();
+  void persistReviewState();
   clearCheckedImages();
   updateFilteredIndexes();
   const visible = visibleIndexes();
@@ -2181,6 +2482,22 @@ function render() {
   scheduleExifLoad();
 }
 
+function activeSimilarityGroupInfo() {
+  const position = state.similarityGroups.findIndex((group) => group.indexes.includes(state.activeIndex));
+  return position >= 0 ? { group: state.similarityGroups[position], position } : null;
+}
+
+function similarityStatusText() {
+  const info = activeSimilarityGroupInfo();
+  if (!state.similarityMode || !info) return state.similarityStatus;
+  const counts = { keep: 0, hold: 0, exclude: 0, unreviewed: 0 };
+  for (const index of info.group.indexes) {
+    counts[state.images[index]?.reviewStatus ?? "unreviewed"] += 1;
+  }
+  return `G${info.position + 1}/${state.similarityGroups.length}・${info.group.indexes.length}枚 `
+    + `採用${counts.keep} 保留${counts.hold} 除外${counts.exclude} 未判定${counts.unreviewed}`;
+}
+
 function renderChrome() {
   const visible = visibleIndexes();
   const hasImages = visible.length > 0;
@@ -2213,6 +2530,36 @@ function renderChrome() {
   }
   elements.cleanThumbCacheButton?.toggleAttribute("disabled", !canManageThumbCache || state.isBuildingThumbCache);
   elements.clearThumbCacheButton?.toggleAttribute("disabled", !canManageThumbCache || state.isBuildingThumbCache);
+  elements.analyzeSimilarityButton?.toggleAttribute(
+    "disabled",
+    !canManageThumbCache || state.isAnalyzingSimilarity,
+  );
+  if (elements.analyzeSimilarityButton) {
+    elements.analyzeSimilarityButton.textContent = state.isAnalyzingSimilarity ? "解析中..." : "類似解析";
+  }
+  elements.similarityThresholdSelect?.toggleAttribute("disabled", state.isAnalyzingSimilarity);
+  elements.similarityToggleButton?.toggleAttribute("disabled", state.similarityGroups.length === 0);
+  elements.similarityToggleButton?.setAttribute("aria-pressed", String(state.similarityMode));
+  if (elements.similarityToggleButton) {
+    elements.similarityToggleButton.textContent = state.similarityMode ? "グループ表示 ON" : "グループ表示";
+  }
+  const canMoveGroup = state.similarityMode && navigableSimilarityGroups().length > 1;
+  elements.previousGroupButton?.toggleAttribute("disabled", !canMoveGroup);
+  elements.nextGroupButton?.toggleAttribute("disabled", !canMoveGroup);
+  if (elements.similarityStatus) elements.similarityStatus.textContent = similarityStatusText();
+  elements.hideExcludedButton?.setAttribute("aria-pressed", String(state.hideExcluded));
+  if (elements.hideExcludedButton) {
+    elements.hideExcludedButton.textContent = state.hideExcluded ? "除外を表示" : "除外を隠す";
+  }
+  const reviewTargets = reviewTargetIndexes();
+  for (const button of elements.reviewButtons) {
+    button.toggleAttribute("disabled", reviewTargets.length === 0);
+  }
+  if (elements.reviewTarget) {
+    elements.reviewTarget.textContent = state.checkedIndexes.size
+      ? `対象: 選択${state.checkedIndexes.size}枚`
+      : `対象: ${activeImage()?.name ?? "なし"}`;
+  }
 
   for (const button of elements.modeButtons) {
     const count = Number(button.dataset.compareCount ?? 1);
@@ -2333,7 +2680,12 @@ function createPane(slotIndex: number) {
   name.className = "pane-name";
   name.textContent = image.name;
 
-  pane.append(img, badge, name);
+  const reviewStatus = document.createElement("div");
+  reviewStatus.className = "pane-review-status";
+  reviewStatus.dataset.status = image.reviewStatus;
+  reviewStatus.textContent = reviewStatusLabel(image.reviewStatus);
+
+  pane.append(img, badge, name, reviewStatus);
   return pane;
 }
 
@@ -2353,14 +2705,29 @@ function handlePaneDrop(event: DragEvent, slotIndex: number) {
 function renderThumbs() {
   if (!elements.thumbs) return;
   const fragment = document.createDocumentFragment();
+  const visible = visibleIndexes();
+  const visibleSet = new Set(visible);
+  const groupByIndex = new Map<number, { position: number; member: number; size: number; firstVisible: boolean }>();
+  state.similarityGroups.forEach((group, position) => {
+    const visibleMembers = group.indexes.filter((index) => visibleSet.has(index));
+    visibleMembers.forEach((index, member) => groupByIndex.set(index, {
+      position,
+      member,
+      size: group.indexes.length,
+      firstVisible: member === 0,
+    }));
+  });
 
-  visibleIndexes().forEach((index, visiblePosition) => {
+  visible.forEach((index, visiblePosition) => {
     const image = state.images[index];
+    const groupInfo = groupByIndex.get(index);
     const button = document.createElement("button");
     button.type = "button";
     button.className = "thumb";
+    if (state.similarityMode && groupInfo?.firstVisible) button.classList.add("group-start");
     button.draggable = true;
     button.dataset.index = String(index);
+    button.dataset.reviewStatus = image.reviewStatus;
     button.setAttribute("aria-current", String(index === state.activeIndex));
     button.setAttribute("aria-checked", String(state.checkedIndexes.has(index)));
     button.title = image.path;
@@ -2396,6 +2763,13 @@ function renderThumbs() {
     });
     button.append(check);
 
+    if (state.similarityMode && groupInfo) {
+      const groupBadge = document.createElement("span");
+      groupBadge.className = "thumb-group";
+      groupBadge.textContent = `G${groupInfo.position + 1} ${groupInfo.member + 1}/${groupInfo.size}`;
+      button.append(groupBadge);
+    }
+
     if (image.thumbnailUrl) {
       const img = document.createElement("img");
       img.src = image.thumbnailUrl;
@@ -2409,6 +2783,14 @@ function renderThumbs() {
     indexLabel.className = "thumb-index";
     indexLabel.textContent = String(visiblePosition + 1);
     button.append(indexLabel);
+
+    if (image.reviewStatus !== "unreviewed") {
+      const reviewBadge = document.createElement("span");
+      reviewBadge.className = "thumb-review-status";
+      reviewBadge.dataset.status = image.reviewStatus;
+      reviewBadge.textContent = reviewStatusLabel(image.reviewStatus);
+      button.append(reviewBadge);
+    }
     fragment.append(button);
   });
 
@@ -2479,7 +2861,7 @@ function renderMeta() {
   }
   if (elements.activeMeta) {
     elements.activeMeta.textContent = active
-      ? `${formatBytes(active.size)} / ${new Date(active.modifiedAt).toLocaleString()}`
+      ? `${formatBytes(active.size)} / ${new Date(active.modifiedAt).toLocaleString()} / ${reviewStatusLabel(active.reviewStatus)}`
       : "画像を読み込むとここにファイル情報が表示されます。";
   }
   if (elements.zoomValue) {
