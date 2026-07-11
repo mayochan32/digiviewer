@@ -5,6 +5,7 @@ use std::{
     path::{Path, PathBuf},
     time::UNIX_EPOCH,
 };
+use tauri::Manager;
 
 #[derive(Serialize)]
 struct ImageFile {
@@ -359,8 +360,8 @@ fn clear_thumbnail_cache(directory: String) -> Result<ThumbnailCacheResult, Stri
 }
 
 #[tauri::command]
-fn save_crop_image(image: CropImage) -> Result<String, String> {
-    let directory = crop_output_dir();
+fn save_crop_image(app: tauri::AppHandle, image: CropImage) -> Result<String, String> {
+    let directory = crop_output_dir(&app);
     fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
     let timestamp = std::time::SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -423,39 +424,30 @@ fn save_crop_to_source_folder(request: SaveCropToSourceRequest) -> Result<ImageF
 }
 
 #[tauri::command]
-fn ensure_crop_directory() -> Result<String, String> {
-    let directory = crop_output_dir();
+fn ensure_crop_directory(app: tauri::AppHandle) -> Result<String, String> {
+    let directory = crop_output_dir(&app);
     fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
     Ok(directory.to_string_lossy().into_owned())
 }
 
-#[cfg(not(target_os = "windows"))]
-fn crop_output_dir() -> PathBuf {
-    std::env::var("HOME")
-        .map(PathBuf::from)
+fn crop_output_dir(app: &tauri::AppHandle) -> PathBuf {
+    app.path()
+        .picture_dir()
         .unwrap_or_else(|_| std::env::temp_dir())
-        .join("Pictures")
-        .join("DigiViewer Crops")
-}
-
-#[cfg(target_os = "windows")]
-fn crop_output_dir() -> PathBuf {
-    std::env::var("USERPROFILE")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| std::env::temp_dir())
-        .join("Pictures")
         .join("DigiViewer Crops")
 }
 
 fn sanitize_filename_part(value: &str) -> String {
-    value
+    let sanitized = value
         .trim()
         .chars()
         .map(|character| match character {
-            '/' | '\\' | ':' | '\0' => '_',
+            '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*' | '\0' => '_',
+            character if character.is_control() => '_',
             _ => character,
         })
-        .collect::<String>()
+        .collect::<String>();
+    sanitized.trim_end_matches([' ', '.']).to_owned()
 }
 
 fn available_renamed_path(
@@ -1177,93 +1169,20 @@ fn open_external_url(url: String) -> Result<(), String> {
         return Err("unsupported url".to_owned());
     }
 
-    #[cfg(target_os = "macos")]
-    {
-        std::process::Command::new("open")
-            .arg(url)
-            .spawn()
-            .map_err(|error| error.to_string())?;
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        std::process::Command::new("cmd")
-            .args(["/C", "start", "", &url])
-            .spawn()
-            .map_err(|error| error.to_string())?;
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        std::process::Command::new("xdg-open")
-            .arg(url)
-            .spawn()
-            .map_err(|error| error.to_string())?;
-    }
-
-    Ok(())
+    tauri_plugin_opener::open_url(url, None::<&str>).map_err(|error| error.to_string())
 }
 
 #[tauri::command]
 fn reveal_file(path: String) -> Result<(), String> {
-    #[cfg(target_os = "macos")]
-    {
-        std::process::Command::new("open")
-            .args(["-R", &path])
-            .spawn()
-            .map_err(|error| error.to_string())?;
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        std::process::Command::new("explorer")
-            .arg(format!("/select,{path}"))
-            .spawn()
-            .map_err(|error| error.to_string())?;
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        if let Some(parent) = Path::new(&path).parent() {
-            std::process::Command::new("xdg-open")
-                .arg(parent)
-                .spawn()
-                .map_err(|error| error.to_string())?;
-        }
-    }
-
-    Ok(())
+    tauri_plugin_opener::reveal_item_in_dir(path).map_err(|error| error.to_string())
 }
 
 #[tauri::command]
-fn open_crop_directory() -> Result<String, String> {
-    let directory = crop_output_dir();
+fn open_crop_directory(app: tauri::AppHandle) -> Result<String, String> {
+    let directory = crop_output_dir(&app);
     fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
-
-    #[cfg(target_os = "macos")]
-    {
-        std::process::Command::new("open")
-            .arg(&directory)
-            .spawn()
-            .map_err(|error| error.to_string())?;
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        std::process::Command::new("explorer")
-            .arg(&directory)
-            .spawn()
-            .map_err(|error| error.to_string())?;
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        std::process::Command::new("xdg-open")
-            .arg(&directory)
-            .spawn()
-            .map_err(|error| error.to_string())?;
-    }
-
+    tauri_plugin_opener::open_path(&directory, None::<&str>)
+        .map_err(|error| error.to_string())?;
     Ok(directory.to_string_lossy().into_owned())
 }
 
@@ -1348,6 +1267,73 @@ fn is_supported_image(path: &Path) -> bool {
 
 fn natordish(value: &str) -> String {
     value.to_lowercase()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sanitizes_cross_platform_filename_characters() {
+        assert_eq!(sanitize_filename_part("  bird<name>:?*.  "), "bird_name____");
+        assert_eq!(sanitize_filename_part("line\nname"), "line_name");
+    }
+
+    #[test]
+    fn folder_thumbnail_identity_ignores_absolute_parent_path() {
+        let first = folder_thumbnail_cache_identity(Path::new("/Volumes/Photos/Observation.JPG"));
+        let second = folder_thumbnail_cache_identity(Path::new("/mnt/shared/Observation.JPG"));
+
+        assert_eq!(first, second);
+        assert_eq!(first, "observation.jpg");
+    }
+
+    #[test]
+    fn scans_thumbnails_and_renames_images_with_raw_sidecars() {
+        let directory = std::env::temp_dir().join(format!(
+            "digiviewer-image-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&directory).unwrap();
+        let image_path = directory.join("observation 01.png");
+        let raw_path = directory.join("observation 01.CR3");
+        image::RgbImage::from_pixel(32, 24, image::Rgb([20, 120, 220]))
+            .save(&image_path)
+            .unwrap();
+        fs::write(&raw_path, b"RAW sidecar test").unwrap();
+
+        let scanned = scan_images(directory.to_string_lossy().into_owned()).unwrap();
+        assert_eq!(scanned.len(), 2);
+
+        let metadata = fs::metadata(&image_path).unwrap();
+        let thumbnail = get_thumbnail(ThumbnailRequest {
+            path: image_path.to_string_lossy().into_owned(),
+            size: metadata.len(),
+            modified_at: modified_at_millis(&metadata),
+            max_edge: 128,
+            cache_limit_mb: 64,
+            prune_cache: false,
+            cache_scope: Some(ThumbnailCacheScope::Folder),
+        })
+        .unwrap()
+        .unwrap();
+        assert!(Path::new(&thumbnail).is_file());
+
+        let renamed = rename_images(RenameRequest {
+            paths: vec![image_path.to_string_lossy().into_owned()],
+            species_name: "bird:sample?".to_owned(),
+        })
+        .unwrap();
+        assert_eq!(renamed.len(), 1);
+        assert!(Path::new(&renamed[0].path).is_file());
+        assert!(directory.join("observation 01_bird_sample_.CR3").is_file());
+
+        fs::remove_dir_all(directory).unwrap();
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
