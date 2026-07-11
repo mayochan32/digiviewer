@@ -92,6 +92,7 @@ struct SimilarityResult {
     analyzed: usize,
     reused: usize,
     failed: usize,
+    skipped: usize,
 }
 
 #[derive(Serialize)]
@@ -443,6 +444,7 @@ fn analyze_similar_images(request: SimilarityRequest) -> Result<SimilarityResult
     let mut analyzed = 0;
     let mut reused = 0;
     let mut failed = 0;
+    let mut skipped = 0;
 
     for path in request.paths {
         let original = PathBuf::from(&path);
@@ -452,6 +454,10 @@ fn analyze_similar_images(request: SimilarityRequest) -> Result<SimilarityResult
         };
         if !source.starts_with(&root) || !source.is_file() || !is_supported_image(&source) {
             failed += 1;
+            continue;
+        }
+        if source.parent() != Some(root.as_path()) {
+            skipped += 1;
             continue;
         }
         let Some(relative_path) = portable_relative_path(&root, &source) else {
@@ -510,6 +516,7 @@ fn analyze_similar_images(request: SimilarityRequest) -> Result<SimilarityResult
         analyzed,
         reused,
         failed,
+        skipped,
     })
 }
 
@@ -567,9 +574,8 @@ struct SimilarityFeature {
 
 fn image_similarity_signature(path: &Path) -> Result<(u64, [u8; 3]), String> {
     let image = image::open(path).map_err(|error| error.to_string())?;
-    let grayscale = image
-        .resize_exact(9, 8, image::imageops::FilterType::Triangle)
-        .to_luma8();
+    let thumbnail = image.resize_exact(9, 8, image::imageops::FilterType::Triangle);
+    let grayscale = thumbnail.to_luma8();
     let mut hash = 0_u64;
     let mut bit = 0;
     for y in 0..8 {
@@ -580,19 +586,18 @@ fn image_similarity_signature(path: &Path) -> Result<(u64, [u8; 3]), String> {
             bit += 1;
         }
     }
-    let colors = image
-        .resize_exact(8, 8, image::imageops::FilterType::Triangle)
-        .to_rgb8();
+    let colors = thumbnail.to_rgb8();
     let mut totals = [0_u32; 3];
     for pixel in colors.pixels() {
         for channel in 0..3 {
             totals[channel] += u32::from(pixel[channel]);
         }
     }
+    let pixel_count = colors.width() * colors.height();
     let average_color = [
-        (totals[0] / 64) as u8,
-        (totals[1] / 64) as u8,
-        (totals[2] / 64) as u8,
+        (totals[0] / pixel_count) as u8,
+        (totals[1] / pixel_count) as u8,
+        (totals[2] / pixel_count) as u8,
     ];
     Ok((hash, average_color))
 }
@@ -1759,6 +1764,47 @@ mod tests {
         ];
 
         assert!(build_similarity_groups(&features, 32).is_empty());
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn similarity_analysis_skips_nested_images() {
+        let directory = std::env::temp_dir().join(format!(
+            "digiviewer-direct-child-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let nested = directory.join("nested");
+        fs::create_dir_all(&nested).unwrap();
+        let first = directory.join("IMG_0001.png");
+        let second = directory.join("IMG_0002.png");
+        let nested_image = nested.join("IMG_0003.png");
+        let image = image::RgbImage::from_fn(32, 24, |x, y| {
+            image::Rgb([(x * 6) as u8, (y * 8) as u8, 90])
+        });
+        image.save(&first).unwrap();
+        image.save(&second).unwrap();
+        image.save(&nested_image).unwrap();
+
+        let result = analyze_similar_images(SimilarityRequest {
+            directory: directory.to_string_lossy().into_owned(),
+            paths: vec![
+                first.to_string_lossy().into_owned(),
+                second.to_string_lossy().into_owned(),
+                nested_image.to_string_lossy().into_owned(),
+            ],
+            threshold: 6,
+        })
+        .unwrap();
+
+        assert_eq!(result.analyzed, 2);
+        assert_eq!(result.skipped, 1);
+        assert_eq!(result.failed, 0);
+        assert_eq!(result.groups.len(), 1);
+        assert_eq!(result.groups[0].paths.len(), 2);
         fs::remove_dir_all(directory).unwrap();
     }
 

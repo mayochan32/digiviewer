@@ -95,6 +95,7 @@ type SimilarityResult = {
   analyzed: number;
   reused: number;
   failed: number;
+  skipped: number;
 };
 
 type SimilarityGroup = {
@@ -958,8 +959,8 @@ async function analyzeSimilarity() {
       .filter((group) => group.indexes.length >= 2);
     state.similarityMode = state.similarityGroups.length > 0;
     state.similarityStatus = state.similarityGroups.length
-      ? `${state.similarityGroups.length}グループ / 新規${result.analyzed} 再利用${result.reused}${result.failed ? ` 失敗${result.failed}` : ""}`
-      : `類似グループなし${result.failed ? ` / 失敗${result.failed}` : ""}`;
+      ? `${state.similarityGroups.length}グループ / 新規${result.analyzed} 再利用${result.reused}${result.skipped ? ` 子フォルダ除外${result.skipped}` : ""}${result.failed ? ` 失敗${result.failed}` : ""}`
+      : `類似グループなし${result.skipped ? ` / 子フォルダ除外${result.skipped}` : ""}${result.failed ? ` / 失敗${result.failed}` : ""}`;
     if (state.similarityMode) {
       activateSimilarityGroup(0);
     } else {
