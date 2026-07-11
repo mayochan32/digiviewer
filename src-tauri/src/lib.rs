@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
     time::UNIX_EPOCH,
 };
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 #[derive(Serialize)]
 struct ImageFile {
@@ -93,6 +93,13 @@ struct SimilarityResult {
     reused: usize,
     failed: usize,
     skipped: usize,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SimilarityProgress {
+    completed: usize,
+    total: usize,
 }
 
 #[derive(Serialize)]
@@ -433,7 +440,22 @@ fn clear_thumbnail_cache(directory: String) -> Result<ThumbnailCacheResult, Stri
 }
 
 #[tauri::command]
-fn analyze_similar_images(request: SimilarityRequest) -> Result<SimilarityResult, String> {
+fn analyze_similar_images(
+    app: tauri::AppHandle,
+    request: SimilarityRequest,
+) -> Result<SimilarityResult, String> {
+    analyze_similar_images_with_progress(request, |completed, total| {
+        let _ = app.emit(
+            "similarity-progress",
+            SimilarityProgress { completed, total },
+        );
+    })
+}
+
+fn analyze_similar_images_with_progress(
+    request: SimilarityRequest,
+    mut report_progress: impl FnMut(usize, usize),
+) -> Result<SimilarityResult, String> {
     let root = PathBuf::from(&request.directory)
         .canonicalize()
         .map_err(|error| error.to_string())?;
@@ -445,8 +467,9 @@ fn analyze_similar_images(request: SimilarityRequest) -> Result<SimilarityResult
     let mut reused = 0;
     let mut failed = 0;
     let mut skipped = 0;
+    let mut tasks = Vec::new();
 
-    for path in request.paths {
+    for (position, path) in request.paths.into_iter().enumerate() {
         let original = PathBuf::from(&path);
         let Ok(source) = original.canonicalize() else {
             failed += 1;
@@ -475,40 +498,87 @@ fn analyze_similar_images(request: SimilarityRequest) -> Result<SimilarityResult
                 })
                 .flatten()
         });
-        let (hash, average_color) = match cached_signature {
+        match cached_signature {
             Some(signature) => {
                 reused += 1;
-                signature
+                features.push(SimilarityFeature {
+                    position,
+                    path,
+                    source,
+                    hash: signature.0,
+                    average_color: signature.1,
+                });
             }
-            None => match image_similarity_signature(&source) {
+            None => tasks.push(SimilarityTask {
+                position,
+                path,
+                source,
+                relative_path,
+                size: metadata.len(),
+                modified_at,
+            }),
+        }
+    }
+
+    let total = reused + tasks.len();
+    let worker_count = std::thread::available_parallelism()
+        .map(|count| count.get())
+        .unwrap_or(1)
+        .min(4)
+        .max(1);
+    let mut completed = reused;
+    report_progress(completed, total);
+
+    for batch in tasks.chunks(worker_count) {
+        let results = std::thread::scope(|scope| {
+            let handles: Vec<_> = batch
+                .iter()
+                .map(|task| {
+                    scope.spawn(move || SimilarityTaskResult {
+                        task,
+                        signature: image_similarity_signature(&task.source),
+                    })
+                })
+                .collect();
+            handles
+                .into_iter()
+                .map(|handle| handle.join().expect("similarity worker panicked"))
+                .collect::<Vec<_>>()
+        });
+
+        for result in results {
+            match result.signature {
                 Ok((hash, average_color)) => {
                     analyzed += 1;
                     cache.images.insert(
-                        relative_path.clone(),
+                        result.task.relative_path.clone(),
                         SimilarityCacheEntry {
-                            size: metadata.len(),
-                            modified_at,
+                            size: result.task.size,
+                            modified_at: result.task.modified_at,
                             dhash: format!("{hash:016x}"),
                             average_color,
                         },
                     );
-                    (hash, average_color)
+                    features.push(SimilarityFeature {
+                        position: result.task.position,
+                        path: result.task.path.clone(),
+                        source: result.task.source.clone(),
+                        hash,
+                        average_color,
+                    });
                 }
-                Err(_) => {
-                    failed += 1;
-                    continue;
-                }
-            },
-        };
-        features.push(SimilarityFeature {
-            path,
-            source,
-            hash,
-            average_color,
-        });
+                Err(_) => failed += 1,
+            }
+        }
+        completed += batch.len();
+        write_json_file(&cache_path, &cache)?;
+        report_progress(completed, total);
     }
 
-    write_json_file(&cache_path, &cache)?;
+    if tasks.is_empty() {
+        write_json_file(&cache_path, &cache)?;
+    }
+    features.sort_by_key(|feature| feature.position);
     let threshold = request.threshold.clamp(1, 32);
     let groups = build_similarity_groups(&features, threshold);
     Ok(SimilarityResult {
@@ -518,6 +588,20 @@ fn analyze_similar_images(request: SimilarityRequest) -> Result<SimilarityResult
         failed,
         skipped,
     })
+}
+
+struct SimilarityTask {
+    position: usize,
+    path: String,
+    source: PathBuf,
+    relative_path: String,
+    size: u64,
+    modified_at: u128,
+}
+
+struct SimilarityTaskResult<'a> {
+    task: &'a SimilarityTask,
+    signature: Result<(u64, [u8; 3]), String>,
 }
 
 #[tauri::command]
@@ -566,6 +650,7 @@ fn save_review_state(request: SaveReviewRequest) -> Result<(), String> {
 }
 
 struct SimilarityFeature {
+    position: usize,
     path: String,
     source: PathBuf,
     hash: u64,
@@ -1689,18 +1774,21 @@ mod tests {
 
         let features = vec![
             SimilarityFeature {
+                position: 0,
                 path: first.to_string_lossy().into_owned(),
                 source: first.clone(),
                 hash: image_similarity_signature(&first).unwrap().0,
                 average_color: image_similarity_signature(&first).unwrap().1,
             },
             SimilarityFeature {
+                position: 1,
                 path: second.to_string_lossy().into_owned(),
                 source: second.clone(),
                 hash: image_similarity_signature(&second).unwrap().0,
                 average_color: image_similarity_signature(&second).unwrap().1,
             },
             SimilarityFeature {
+                position: 2,
                 path: different.to_string_lossy().into_owned(),
                 source: different.clone(),
                 hash: image_similarity_signature(&different).unwrap().0,
@@ -1750,12 +1838,14 @@ mod tests {
         let blue_signature = image_similarity_signature(&blue).unwrap();
         let features = vec![
             SimilarityFeature {
+                position: 0,
                 path: red.to_string_lossy().into_owned(),
                 source: red.clone(),
                 hash: red_signature.0,
                 average_color: red_signature.1,
             },
             SimilarityFeature {
+                position: 1,
                 path: blue.to_string_lossy().into_owned(),
                 source: blue.clone(),
                 hash: blue_signature.0,
@@ -1789,15 +1879,19 @@ mod tests {
         image.save(&second).unwrap();
         image.save(&nested_image).unwrap();
 
-        let result = analyze_similar_images(SimilarityRequest {
-            directory: directory.to_string_lossy().into_owned(),
-            paths: vec![
-                first.to_string_lossy().into_owned(),
-                second.to_string_lossy().into_owned(),
-                nested_image.to_string_lossy().into_owned(),
-            ],
-            threshold: 6,
-        })
+        let mut progress = Vec::new();
+        let result = analyze_similar_images_with_progress(
+            SimilarityRequest {
+                directory: directory.to_string_lossy().into_owned(),
+                paths: vec![
+                    first.to_string_lossy().into_owned(),
+                    second.to_string_lossy().into_owned(),
+                    nested_image.to_string_lossy().into_owned(),
+                ],
+                threshold: 6,
+            },
+            |completed, total| progress.push((completed, total)),
+        )
         .unwrap();
 
         assert_eq!(result.analyzed, 2);
@@ -1805,6 +1899,11 @@ mod tests {
         assert_eq!(result.failed, 0);
         assert_eq!(result.groups.len(), 1);
         assert_eq!(result.groups[0].paths.len(), 2);
+        assert_eq!(progress.last(), Some(&(2, 2)));
+        assert!(directory
+            .join(".digiviewer")
+            .join("similarity-v1.json")
+            .is_file());
         fs::remove_dir_all(directory).unwrap();
     }
 

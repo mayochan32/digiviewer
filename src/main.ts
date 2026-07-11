@@ -1,5 +1,6 @@
 import exifr from "exifr";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 
 type ImageItem = {
@@ -96,6 +97,11 @@ type SimilarityResult = {
   reused: number;
   failed: number;
   skipped: number;
+};
+
+type SimilarityProgress = {
+  completed: number;
+  total: number;
 };
 
 type SimilarityGroup = {
@@ -378,6 +384,13 @@ window.addEventListener("DOMContentLoaded", () => {
   applyFontSizeMode();
   ensureCropDirectory();
   loadAppVersion();
+  if (isTauriRuntime()) {
+    void listen<SimilarityProgress>("similarity-progress", ({ payload }) => {
+      if (!state.isAnalyzingSimilarity) return;
+      state.similarityStatus = `解析中 ${payload.completed} / ${payload.total}`;
+      renderChrome();
+    });
+  }
   elements.chooseFolderButton?.addEventListener("click", openFolder);
   elements.reloadFolderButton?.addEventListener("click", reloadCurrentFolder);
   elements.chooseFilesButton?.addEventListener("click", openFiles);
