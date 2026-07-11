@@ -12,12 +12,13 @@
       <header class="topbar">
         <div class="brand">
           <strong>DigiViewer</strong>
-          <span id="app-version" class="app-version">v0.1.0</span>
+          <span id="app-version" class="app-version">v0.4.0</span>
           <span id="image-count">0 / 0</span>
           <div id="perf-meter" class="perf-meter" aria-label="処理時間">計測: -</div>
         </div>
         <div class="topbar-actions">
           <button id="choose-folder" type="button" class="file-button">フォルダ</button>
+          <button id="reload-folder" type="button" class="file-button" disabled>リロード</button>
           <button id="choose-files" type="button" class="file-button">画像</button>
           <input id="open-folder" class="hidden-file-input" type="file" webkitdirectory multiple />
           <input id="open-files" class="hidden-file-input" type="file" accept="image/*,.heic,.heif" multiple />
@@ -55,6 +56,7 @@
             <button id="sync-toggle" type="button" class="tool-button" aria-pressed="true">同期 ON</button>
             <button id="append-species" type="button" class="tool-button" disabled>種名付加</button>
             <button id="copy-files" type="button" class="tool-button" disabled>コピー</button>
+            <button id="move-deleted" type="button" class="tool-button" disabled>除外</button>
             <button id="clear-file-selection" type="button" class="tool-button" disabled>選択解除</button>
             <input id="filename-filter" class="filename-filter" type="search" placeholder="ファイル名フィルタ" autocomplete="off" />
             <div class="active-file">
@@ -80,10 +82,17 @@
             </section>
             <div id="selection-box" class="selection-box" hidden></div>
             <div id="crop-actions" class="crop-actions" hidden>
-              <button id="crop-lens" type="button">Google Lens</button>
-              <button id="crop-ai" type="button">AI Mode</button>
-              <button id="crop-copy" type="button">コピー</button>
-              <button id="crop-reveal" type="button">Finder</button>
+              <button id="crop-save" type="button">保存</button>
+              <select id="crop-aspect" aria-label="crop縦横比">
+                <option value="free">任意</option>
+                <option value="1:1">1:1</option>
+                <option value="3:2">3:2</option>
+                <option value="4:3">4:3</option>
+              </select>
+              <label class="crop-toggle">
+                <input id="crop-upscale" type="checkbox" />
+                <span>2倍</span>
+              </label>
               <button id="crop-cancel" type="button">取消</button>
               <span id="crop-status" class="crop-status"></span>
             </div>

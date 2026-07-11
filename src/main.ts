@@ -64,6 +64,11 @@ type RenameResult = {
   modified_at: number;
 };
 
+type MoveToDeletedResult = {
+  old_path: string;
+  deleted_path: string;
+};
+
 type ThumbnailCacheResult = {
   total: number;
   created: number;
@@ -81,11 +86,8 @@ type CropRect = {
   height: number;
 };
 
-type SavedCrop = {
-  blob: Blob;
-  bytes: Uint8Array;
-  path?: string;
-};
+type CropAspect = "free" | "1:1" | "3:2" | "4:3";
+type SelectionResizeHandle = "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw";
 
 type PerfStats = {
   scanMs: number | null;
@@ -185,6 +187,23 @@ function normalizeFontSizeMode(value: string | undefined): FontSizeMode {
   return value === "medium" || value === "large" ? value : "small";
 }
 
+function normalizeCropAspect(value: string | undefined): CropAspect {
+  return value === "1:1" || value === "3:2" || value === "4:3" ? value : "free";
+}
+
+function cropAspectRatio() {
+  switch (state.cropAspect) {
+    case "1:1":
+      return 1;
+    case "3:2":
+      return 3 / 2;
+    case "4:3":
+      return 4 / 3;
+    default:
+      return null;
+  }
+}
+
 function applyFontSizeMode() {
   const addPx = state.fontSizeMode === "large"
     ? 6
@@ -217,9 +236,20 @@ const state = {
   activeSlot: 0,
   isDragging: false,
   isSelecting: false,
+  isMovingSelection: false,
+  isResizingSelection: false,
   selectionStartX: 0,
   selectionStartY: 0,
   selectionRect: null as CropRect | null,
+  selectionMoveStartRect: null as CropRect | null,
+  selectionMoveStartX: 0,
+  selectionMoveStartY: 0,
+  selectionResizeHandle: null as SelectionResizeHandle | null,
+  selectionResizeStartRect: null as CropRect | null,
+  selectionResizeStartX: 0,
+  selectionResizeStartY: 0,
+  cropAspect: "free" as CropAspect,
+  cropUpscale2x: false,
   dragStartX: 0,
   dragStartY: 0,
   dragBaseX: 0,
@@ -244,6 +274,7 @@ const state = {
 
 const elements = {
   chooseFolderButton: document.querySelector<HTMLButtonElement>("#choose-folder"),
+  reloadFolderButton: document.querySelector<HTMLButtonElement>("#reload-folder"),
   chooseFilesButton: document.querySelector<HTMLButtonElement>("#choose-files"),
   openInput: document.querySelector<HTMLInputElement>("#open-folder"),
   fileInput: document.querySelector<HTMLInputElement>("#open-files"),
@@ -252,10 +283,9 @@ const elements = {
   selectionBox: document.querySelector<HTMLElement>("#selection-box"),
   cropActions: document.querySelector<HTMLElement>("#crop-actions"),
   cropStatus: document.querySelector<HTMLElement>("#crop-status"),
-  cropLensButton: document.querySelector<HTMLButtonElement>("#crop-lens"),
-  cropAiButton: document.querySelector<HTMLButtonElement>("#crop-ai"),
-  cropCopyButton: document.querySelector<HTMLButtonElement>("#crop-copy"),
-  cropRevealButton: document.querySelector<HTMLButtonElement>("#crop-reveal"),
+  cropSaveButton: document.querySelector<HTMLButtonElement>("#crop-save"),
+  cropAspectSelect: document.querySelector<HTMLSelectElement>("#crop-aspect"),
+  cropUpscaleInput: document.querySelector<HTMLInputElement>("#crop-upscale"),
   cropCancelButton: document.querySelector<HTMLButtonElement>("#crop-cancel"),
   thumbs: document.querySelector<HTMLElement>("#thumbs"),
   emptyState: document.querySelector<HTMLElement>("#empty-state"),
@@ -277,6 +307,7 @@ const elements = {
   selectionCount: document.querySelector<HTMLElement>("#selection-count"),
   appendSpeciesButton: document.querySelector<HTMLButtonElement>("#append-species"),
   copyFilesButton: document.querySelector<HTMLButtonElement>("#copy-files"),
+  moveDeletedButton: document.querySelector<HTMLButtonElement>("#move-deleted"),
   clearSelectionButton: document.querySelector<HTMLButtonElement>("#clear-file-selection"),
   buildThumbCacheButton: document.querySelector<HTMLButtonElement>("#build-thumb-cache"),
   cleanThumbCacheButton: document.querySelector<HTMLButtonElement>("#clean-thumb-cache"),
@@ -308,6 +339,7 @@ window.addEventListener("DOMContentLoaded", () => {
   ensureCropDirectory();
   loadAppVersion();
   elements.chooseFolderButton?.addEventListener("click", openFolder);
+  elements.reloadFolderButton?.addEventListener("click", reloadCurrentFolder);
   elements.chooseFilesButton?.addEventListener("click", openFiles);
   elements.openInput?.addEventListener("change", handleFileSelection);
   elements.fileInput?.addEventListener("change", handleFileSelection);
@@ -362,22 +394,21 @@ window.addEventListener("DOMContentLoaded", () => {
   elements.viewport?.addEventListener("pointermove", handlePointerMove);
   elements.viewport?.addEventListener("pointerup", endDrag);
   elements.viewport?.addEventListener("pointercancel", endDrag);
+  elements.selectionBox?.addEventListener("pointerdown", startSelectionMove);
   elements.cropActions?.addEventListener("pointerdown", (event) => event.stopPropagation());
-  elements.cropLensButton?.addEventListener("click", (event) => {
+  elements.cropSaveButton?.addEventListener("click", (event) => {
     event.stopPropagation();
-    openCropSearch("lens");
+    saveCropToSourceFolder();
   });
-  elements.cropAiButton?.addEventListener("click", (event) => {
-    event.stopPropagation();
-    openCropSearch("ai");
+  elements.cropAspectSelect?.addEventListener("change", () => {
+    state.cropAspect = normalizeCropAspect(elements.cropAspectSelect?.value);
+    if (state.selectionRect && !state.isSelecting) {
+      applyCropAspectToSelection();
+      renderSelection();
+    }
   });
-  elements.cropCopyButton?.addEventListener("click", (event) => {
-    event.stopPropagation();
-    copyCropToClipboard();
-  });
-  elements.cropRevealButton?.addEventListener("click", (event) => {
-    event.stopPropagation();
-    revealCropInFinder();
+  elements.cropUpscaleInput?.addEventListener("change", () => {
+    state.cropUpscale2x = Boolean(elements.cropUpscaleInput?.checked);
   });
   elements.cropCancelButton?.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -402,6 +433,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
   elements.appendSpeciesButton?.addEventListener("click", appendSpeciesNameToCheckedImages);
   elements.copyFilesButton?.addEventListener("click", copyCheckedFiles);
+  elements.moveDeletedButton?.addEventListener("click", moveCheckedImagesToDeleted);
   elements.buildThumbCacheButton?.addEventListener("click", buildAllThumbnailCache);
   elements.cleanThumbCacheButton?.addEventListener("click", cleanThumbnailCache);
   elements.clearThumbCacheButton?.addEventListener("click", clearThumbnailCache);
@@ -433,9 +465,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   for (const button of elements.modeButtons) {
     button.addEventListener("click", () => {
-      state.compareCount = Number(button.dataset.compareCount ?? 1);
-      state.activeSlot = Math.min(state.activeSlot, state.compareCount - 1);
-      refillEmptySlots();
+      setCompareCount(Number(button.dataset.compareCount ?? 1));
       fitView();
       render();
     });
@@ -512,6 +542,8 @@ async function openFiles() {
         ],
       });
       const paths = Array.isArray(selected) ? selected : selected ? [selected] : [];
+      state.currentDirectory = "";
+      state.thumbCacheStatus = "";
       loadNativeImages(paths.map((path) => nativeFileFromPath(path)));
     } catch (error) {
       console.error(error);
@@ -603,15 +635,85 @@ function loadNativeImages(nativeImages: NativeImageFile[]) {
   state.filenameFilter = "";
   if (elements.filenameFilterInput) elements.filenameFilterInput.value = "";
   clearObjectUrls();
+  state.images = nativeImagesToImageItems(nativeImages);
+  updateFilteredIndexes();
+  state.activeIndex = 0;
+  state.activeSlot = 0;
+  state.compareSlots = [0, null, null, null];
+  clearCheckedImages();
+  resetThumbnailQueue();
+  refillEmptySlots();
+  fitView();
+  perf.listMs = performance.now() - listStart;
+  render();
+}
+
+async function reloadCurrentFolder() {
+  if (!state.currentDirectory || !isTauriRuntime() || state.isBuildingThumbCache) return;
+
+  const listStart = performance.now();
+  const activePath = activeImage()?.path ?? state.images[state.activeIndex]?.path ?? "";
+  const checkedPaths = new Set(checkedImages().map((image) => image.path));
+  const slotPaths = state.compareSlots.map((index) => index === null ? null : state.images[index]?.path ?? null);
+  const existingPaths = new Set(state.images.map((image) => image.path));
+
+  try {
+    state.thumbCacheStatus = "リロード中";
+    renderChrome();
+    const scanStart = performance.now();
+    const nativeImages = await invoke<NativeImageFile[]>("scan_images", { directory: state.currentDirectory });
+    perf.scanMs = performance.now() - scanStart;
+
+    const scannedImages = nativeImagesToImageItems(nativeImages);
+    const addedImages = scannedImages.filter((image) => !existingPaths.has(image.path));
+    if (!addedImages.length) {
+      state.thumbCacheStatus = "リロード 追加 0";
+      perf.listMs = performance.now() - listStart;
+      render();
+      return;
+    }
+
+    state.images = [...state.images, ...addedImages].sort((a, b) => compareImagePaths(a.path, b.path));
+    updateFilteredIndexes();
+    restoreCheckedImages(checkedPaths);
+    restoreCompareSlots(slotPaths, activePath);
+    resetThumbnailQueue();
+    refillEmptySlots();
+    perf.listMs = performance.now() - listStart;
+    state.thumbCacheStatus = `リロード 追加 ${addedImages.length}`;
+    render();
+
+    const cacheBuilt = await buildThumbnailCacheForImages(
+      addedImages,
+      "追加サムネ",
+      `リロード 追加 ${addedImages.length}`,
+    );
+    if (cacheBuilt) {
+      for (const image of addedImages) {
+        image.thumbnailLoaded = false;
+        image.thumbnailRequested = false;
+      }
+    }
+    resetThumbnailQueue();
+    preloadVisibleThumbnails();
+    scheduleThumbnailPreload();
+  } catch (error) {
+    console.error(error);
+    state.thumbCacheStatus = `リロード失敗 ${String(error)}`;
+    renderChrome();
+  }
+}
+
+function nativeImagesToImageItems(nativeImages: NativeImageFile[]) {
   const rawByBase = rawExtensionsByBase(nativeImages.map((image) => image.path));
   const images = nativeImages.filter((image) =>
     (image.kind ?? "image") === "image"
     && isSupportedImagePath(image.path)
     && !isDigiViewerCachePath(image.path)
   );
-  images.sort((a, b) => a.path.localeCompare(b.path, undefined, { numeric: true, sensitivity: "base" }));
+  images.sort((a, b) => compareImagePaths(a.path, b.path));
 
-  state.images = images.map((image, index) => ({
+  return images.map((image, index) => ({
     id: `${image.path}-${image.size}-${image.modified_at}-${index}`,
     name: image.name,
     path: image.path,
@@ -624,16 +726,33 @@ function loadNativeImages(nativeImages: NativeImageFile[]) {
     exifLoaded: false,
     rawExtensions: rawByBase.get(baseKeyForPath(image.path)) ?? [],
   }));
-  updateFilteredIndexes();
-  state.activeIndex = 0;
-  state.activeSlot = 0;
-  state.compareSlots = [0, null, null, null];
-  clearCheckedImages();
-  resetThumbnailQueue();
-  refillEmptySlots();
-  fitView();
-  perf.listMs = performance.now() - listStart;
-  render();
+}
+
+function restoreCheckedImages(checkedPaths: Set<string>) {
+  state.checkedIndexes.clear();
+  state.images.forEach((image, index) => {
+    if (checkedPaths.has(image.path)) state.checkedIndexes.add(index);
+  });
+  state.lastCheckedIndex = null;
+}
+
+function restoreCompareSlots(slotPaths: Array<string | null>, activePath: string) {
+  state.compareSlots = slotPaths.map((path) => {
+    if (!path) return null;
+    const index = state.images.findIndex((image) => image.path === path);
+    return index >= 0 ? index : null;
+  });
+  const activeIndex = activePath
+    ? state.images.findIndex((image) => image.path === activePath)
+    : -1;
+  if (activeIndex >= 0) {
+    state.activeIndex = activeIndex;
+    if (state.compareSlots[state.activeSlot] === null) {
+      state.compareSlots[state.activeSlot] = activeIndex;
+    }
+  } else {
+    state.activeIndex = visibleIndexes()[0] ?? 0;
+  }
 }
 
 function nativeFileFromPath(path: string): NativeImageFile {
@@ -763,8 +882,33 @@ function baseKeyForPath(path: string) {
   return `${directory}${basename}`.toLowerCase();
 }
 
+function imageSortKey(path: string) {
+  const separatorIndex = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
+  const directory = separatorIndex >= 0 ? path.slice(0, separatorIndex + 1) : "";
+  const filename = separatorIndex >= 0 ? path.slice(separatorIndex + 1) : path;
+  const dotIndex = filename.lastIndexOf(".");
+  const basename = dotIndex >= 0 ? filename.slice(0, dotIndex) : filename;
+  const cropMatch = basename.match(/^(.*)_crop(?:_(\d+))?$/i);
+  return {
+    group: `${directory}${cropMatch?.[1] ?? basename}`.toLowerCase(),
+    cropRank: cropMatch ? 1 : 0,
+    cropIndex: cropMatch?.[2] ? Number(cropMatch[2]) : 0,
+    path,
+  };
+}
+
+function compareImagePaths(a: string, b: string) {
+  const left = imageSortKey(a);
+  const right = imageSortKey(b);
+  const groupCompare = left.group.localeCompare(right.group, undefined, { numeric: true, sensitivity: "base" });
+  if (groupCompare !== 0) return groupCompare;
+  if (left.cropRank !== right.cropRank) return left.cropRank - right.cropRank;
+  if (left.cropIndex !== right.cropIndex) return left.cropIndex - right.cropIndex;
+  return left.path.localeCompare(right.path, undefined, { numeric: true, sensitivity: "base" });
+}
+
 function comparePickedFiles(a: PickedFile, b: PickedFile) {
-  return a.path.localeCompare(b.path, undefined, { numeric: true, sensitivity: "base" });
+  return compareImagePaths(a.path, b.path);
 }
 
 async function collectImageFiles(
@@ -791,10 +935,16 @@ function isAbortError(error: unknown) {
 }
 
 function handleKeyDown(event: KeyboardEvent) {
-  if (
-    event.target instanceof HTMLInputElement ||
-    event.target instanceof HTMLButtonElement
-  ) return;
+  const target = event.target instanceof Element ? event.target : null;
+  if (isTextInputTarget(target)) return;
+
+  if (event.key.toLowerCase() === "m") {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.repeat) return;
+    toggleActiveCheck();
+    return;
+  }
 
   if (event.key === "ArrowRight") {
     event.preventDefault();
@@ -810,9 +960,7 @@ function handleKeyDown(event: KeyboardEvent) {
     moveActive(10);
   } else if (["1", "2", "3", "4"].includes(event.key)) {
     event.preventDefault();
-    state.compareCount = Number(event.key);
-    state.activeSlot = Math.min(state.activeSlot, state.compareCount - 1);
-    refillEmptySlots();
+    setCompareCount(Number(event.key));
     fitView();
     render();
   } else if (event.key.toLowerCase() === "f") {
@@ -839,6 +987,13 @@ function handleKeyDown(event: KeyboardEvent) {
     clearSelection();
     renderMap();
   }
+}
+
+function isTextInputTarget(target: Element | null) {
+  return target instanceof HTMLInputElement ||
+    target instanceof HTMLSelectElement ||
+    target instanceof HTMLTextAreaElement ||
+    Boolean(target?.closest("[contenteditable='true']"));
 }
 
 function handleGlobalKeyChange(event: KeyboardEvent) {
@@ -895,6 +1050,14 @@ function handlePointerDown(event: PointerEvent) {
 }
 
 function handlePointerMove(event: PointerEvent) {
+  if (state.isResizingSelection) {
+    updateSelectionResize(event);
+    return;
+  }
+  if (state.isMovingSelection) {
+    updateSelectionMove(event);
+    return;
+  }
   if (state.isSelecting) {
     updateSelection(event);
     return;
@@ -909,6 +1072,14 @@ function handlePointerMove(event: PointerEvent) {
 }
 
 function endDrag(event: PointerEvent) {
+  if (state.isResizingSelection) {
+    finishSelectionResize(event);
+    return;
+  }
+  if (state.isMovingSelection) {
+    finishSelectionMove(event);
+    return;
+  }
   if (state.isSelecting) {
     finishSelection(event);
     return;
@@ -944,15 +1115,194 @@ function updateSelection(event: PointerEvent) {
   const bounds = elements.viewport.getBoundingClientRect();
   const currentX = clamp(event.clientX - bounds.left, 0, bounds.width);
   const currentY = clamp(event.clientY - bounds.top, 0, bounds.height);
-  const left = Math.min(state.selectionStartX, currentX);
-  const top = Math.min(state.selectionStartY, currentY);
-  state.selectionRect = {
-    left,
-    top,
-    width: Math.abs(currentX - state.selectionStartX),
-    height: Math.abs(currentY - state.selectionStartY),
-  };
+  state.selectionRect = selectionRectFromDrag(
+    state.selectionStartX,
+    state.selectionStartY,
+    currentX,
+    currentY,
+    bounds.width,
+    bounds.height,
+    cropAspectRatio(),
+  );
   renderSelection();
+}
+
+function selectionRectFromDrag(
+  startX: number,
+  startY: number,
+  currentX: number,
+  currentY: number,
+  maxWidth: number,
+  maxHeight: number,
+  aspectRatio: number | null,
+): CropRect {
+  if (!aspectRatio) {
+    return {
+      left: Math.min(startX, currentX),
+      top: Math.min(startY, currentY),
+      width: Math.abs(currentX - startX),
+      height: Math.abs(currentY - startY),
+    };
+  }
+
+  const directionX = currentX >= startX ? 1 : -1;
+  const directionY = currentY >= startY ? 1 : -1;
+  const maxDragWidth = directionX > 0 ? maxWidth - startX : startX;
+  const maxDragHeight = directionY > 0 ? maxHeight - startY : startY;
+  let width = Math.abs(currentX - startX);
+  let height = Math.abs(currentY - startY);
+
+  if (width / Math.max(1, height) > aspectRatio) {
+    height = width / aspectRatio;
+  } else {
+    width = height * aspectRatio;
+  }
+
+  if (width > maxDragWidth) {
+    width = maxDragWidth;
+    height = width / aspectRatio;
+  }
+  if (height > maxDragHeight) {
+    height = maxDragHeight;
+    width = height * aspectRatio;
+  }
+
+  const endX = startX + width * directionX;
+  const endY = startY + height * directionY;
+  return {
+    left: Math.min(startX, endX),
+    top: Math.min(startY, endY),
+    width,
+    height,
+  };
+}
+
+function selectionRectFromResize(
+  rect: CropRect,
+  handle: SelectionResizeHandle,
+  deltaX: number,
+  deltaY: number,
+  maxWidth: number,
+  maxHeight: number,
+  aspectRatio: number | null,
+): CropRect {
+  if (!aspectRatio) {
+    let left = rect.left;
+    let top = rect.top;
+    let right = rect.left + rect.width;
+    let bottom = rect.top + rect.height;
+
+    if (handle.includes("w")) left += deltaX;
+    if (handle.includes("e")) right += deltaX;
+    if (handle.includes("n")) top += deltaY;
+    if (handle.includes("s")) bottom += deltaY;
+
+    left = clamp(left, 0, right - 8);
+    top = clamp(top, 0, bottom - 8);
+    right = clamp(right, left + 8, maxWidth);
+    bottom = clamp(bottom, top + 8, maxHeight);
+    return { left, top, width: right - left, height: bottom - top };
+  }
+
+  return resizeAspectRect(rect, handle, deltaX, deltaY, maxWidth, maxHeight, aspectRatio);
+}
+
+function resizeAspectRect(
+  rect: CropRect,
+  handle: SelectionResizeHandle,
+  deltaX: number,
+  deltaY: number,
+  maxWidth: number,
+  maxHeight: number,
+  aspectRatio: number,
+): CropRect {
+  const minSize = 8;
+  const right = rect.left + rect.width;
+  const bottom = rect.top + rect.height;
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  let width = rect.width;
+  let height = rect.height;
+  let left = rect.left;
+  let top = rect.top;
+
+  if (handle === "e" || handle === "w") {
+    width = handle === "e" ? rect.width + deltaX : rect.width - deltaX;
+    width = Math.max(minSize, width);
+    height = width / aspectRatio;
+    left = handle === "e" ? rect.left : right - width;
+    top = centerY - height / 2;
+  } else if (handle === "s" || handle === "n") {
+    height = handle === "s" ? rect.height + deltaY : rect.height - deltaY;
+    height = Math.max(minSize, height);
+    width = height * aspectRatio;
+    top = handle === "s" ? rect.top : bottom - height;
+    left = centerX - width / 2;
+  } else {
+    const anchorX = handle.includes("w") ? right : rect.left;
+    const anchorY = handle.includes("n") ? bottom : rect.top;
+    const pointerX = handle.includes("e") ? right + deltaX : rect.left + deltaX;
+    const pointerY = handle.includes("s") ? bottom + deltaY : rect.top + deltaY;
+    const directionX = handle.includes("e") ? 1 : -1;
+    const directionY = handle.includes("s") ? 1 : -1;
+    width = Math.max(minSize, Math.abs(pointerX - anchorX));
+    height = Math.max(minSize, Math.abs(pointerY - anchorY));
+    if (width / height > aspectRatio) {
+      height = width / aspectRatio;
+    } else {
+      width = height * aspectRatio;
+    }
+    left = directionX > 0 ? anchorX : anchorX - width;
+    top = directionY > 0 ? anchorY : anchorY - height;
+  }
+
+  return fitAspectRectToBounds({ left, top, width, height }, maxWidth, maxHeight, aspectRatio);
+}
+
+function fitAspectRectToBounds(
+  rect: CropRect,
+  maxWidth: number,
+  maxHeight: number,
+  aspectRatio: number,
+): CropRect {
+  let { left, top, width, height } = rect;
+  const minSize = 8;
+  width = Math.max(minSize, width);
+  height = Math.max(minSize, height);
+
+  if (left < 0) left = 0;
+  if (top < 0) top = 0;
+  if (left + width > maxWidth) {
+    width = Math.max(minSize, maxWidth - left);
+    height = width / aspectRatio;
+  }
+  if (top + height > maxHeight) {
+    height = Math.max(minSize, maxHeight - top);
+    width = height * aspectRatio;
+  }
+  if (left + width > maxWidth) left = Math.max(0, maxWidth - width);
+  if (top + height > maxHeight) top = Math.max(0, maxHeight - height);
+
+  return { left, top, width, height };
+}
+
+function applyCropAspectToSelection() {
+  const aspectRatio = cropAspectRatio();
+  if (!aspectRatio || !state.selectionRect || !elements.viewport) return;
+  const bounds = elements.viewport.getBoundingClientRect();
+  const rect = state.selectionRect;
+  let width = rect.height * aspectRatio;
+  let height = rect.height;
+  if (rect.left + width > bounds.width) {
+    width = Math.max(8, bounds.width - rect.left);
+    height = width / aspectRatio;
+  }
+  state.selectionRect = fitAspectRectToBounds(
+    { left: rect.left, top: rect.top, width, height },
+    bounds.width,
+    bounds.height,
+    aspectRatio,
+  );
 }
 
 function finishSelection(event: PointerEvent) {
@@ -962,6 +1312,104 @@ function finishSelection(event: PointerEvent) {
     elements.viewport.releasePointerCapture(event.pointerId);
   }
   elements.viewport.classList.remove("is-selecting");
+  if (!state.selectionRect || state.selectionRect.width < 8 || state.selectionRect.height < 8) {
+    clearSelection();
+    return;
+  }
+  renderSelection();
+}
+
+function startSelectionMove(event: PointerEvent) {
+  if (!elements.viewport || !state.selectionRect) return;
+  if ((event.target as Element | null)?.closest(".selection-handle")) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const bounds = elements.viewport.getBoundingClientRect();
+  state.isMovingSelection = true;
+  state.selectionMoveStartRect = { ...state.selectionRect };
+  state.selectionMoveStartX = event.clientX - bounds.left;
+  state.selectionMoveStartY = event.clientY - bounds.top;
+  elements.viewport.setPointerCapture(event.pointerId);
+}
+
+function updateSelectionMove(event: PointerEvent) {
+  if (!elements.viewport || !state.selectionMoveStartRect) return;
+  const bounds = elements.viewport.getBoundingClientRect();
+  const currentX = clamp(event.clientX - bounds.left, 0, bounds.width);
+  const currentY = clamp(event.clientY - bounds.top, 0, bounds.height);
+  state.selectionRect = selectionRectFromMove(
+    state.selectionMoveStartRect,
+    currentX - state.selectionMoveStartX,
+    currentY - state.selectionMoveStartY,
+    bounds.width,
+    bounds.height,
+  );
+  renderSelection();
+}
+
+function selectionRectFromMove(
+  rect: CropRect,
+  deltaX: number,
+  deltaY: number,
+  maxWidth: number,
+  maxHeight: number,
+): CropRect {
+  return {
+    left: clamp(rect.left + deltaX, 0, Math.max(0, maxWidth - rect.width)),
+    top: clamp(rect.top + deltaY, 0, Math.max(0, maxHeight - rect.height)),
+    width: rect.width,
+    height: rect.height,
+  };
+}
+
+function finishSelectionMove(event: PointerEvent) {
+  if (!elements.viewport) return;
+  state.isMovingSelection = false;
+  state.selectionMoveStartRect = null;
+  if (elements.viewport.hasPointerCapture(event.pointerId)) {
+    elements.viewport.releasePointerCapture(event.pointerId);
+  }
+  renderSelection();
+}
+
+function startSelectionResize(event: PointerEvent, handle: SelectionResizeHandle) {
+  if (!elements.viewport || !state.selectionRect) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const bounds = elements.viewport.getBoundingClientRect();
+  state.isResizingSelection = true;
+  state.selectionResizeHandle = handle;
+  state.selectionResizeStartRect = { ...state.selectionRect };
+  state.selectionResizeStartX = event.clientX - bounds.left;
+  state.selectionResizeStartY = event.clientY - bounds.top;
+  elements.viewport.setPointerCapture(event.pointerId);
+}
+
+function updateSelectionResize(event: PointerEvent) {
+  if (!elements.viewport || !state.selectionResizeStartRect || !state.selectionResizeHandle) return;
+  const bounds = elements.viewport.getBoundingClientRect();
+  const currentX = clamp(event.clientX - bounds.left, 0, bounds.width);
+  const currentY = clamp(event.clientY - bounds.top, 0, bounds.height);
+  state.selectionRect = selectionRectFromResize(
+    state.selectionResizeStartRect,
+    state.selectionResizeHandle,
+    currentX - state.selectionResizeStartX,
+    currentY - state.selectionResizeStartY,
+    bounds.width,
+    bounds.height,
+    cropAspectRatio(),
+  );
+  renderSelection();
+}
+
+function finishSelectionResize(event: PointerEvent) {
+  if (!elements.viewport) return;
+  state.isResizingSelection = false;
+  state.selectionResizeHandle = null;
+  state.selectionResizeStartRect = null;
+  if (elements.viewport.hasPointerCapture(event.pointerId)) {
+    elements.viewport.releasePointerCapture(event.pointerId);
+  }
   if (!state.selectionRect || state.selectionRect.width < 8 || state.selectionRect.height < 8) {
     clearSelection();
     return;
@@ -979,8 +1427,10 @@ function renderSelection() {
     width: `${rect.width}px`,
     height: `${rect.height}px`,
   });
+  renderSelectionHandles();
   elements.selectionBox.hidden = false;
 
+  const viewportWidth = elements.viewport?.getBoundingClientRect().width ?? window.innerWidth;
   const actionLeft = Math.max(8, rect.left);
   const actionTop = Math.max(8, rect.top - 44);
   Object.assign(elements.cropActions.style, {
@@ -988,73 +1438,72 @@ function renderSelection() {
     top: `${actionTop}px`,
   });
   elements.cropActions.hidden = state.isSelecting || rect.width < 8 || rect.height < 8;
+  if (!elements.cropActions.hidden) {
+    const maxLeft = Math.max(8, viewportWidth - elements.cropActions.offsetWidth - 8);
+    elements.cropActions.style.left = `${Math.min(actionLeft, maxLeft)}px`;
+  }
+}
+
+function renderSelectionHandles() {
+  if (!elements.selectionBox) return;
+  const handles: SelectionResizeHandle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
+  elements.selectionBox.replaceChildren(...handles.map((handle) => {
+    const node = document.createElement("button");
+    node.type = "button";
+    node.className = `selection-handle selection-handle-${handle}`;
+    node.dataset.handle = handle;
+    node.title = "範囲を調整";
+    node.addEventListener("pointerdown", (event) => startSelectionResize(event, handle));
+    return node;
+  }));
 }
 
 function clearSelection() {
   state.isSelecting = false;
+  state.isMovingSelection = false;
+  state.isResizingSelection = false;
   state.selectionRect = null;
+  state.selectionMoveStartRect = null;
+  state.selectionResizeHandle = null;
+  state.selectionResizeStartRect = null;
   elements.viewport?.classList.remove("is-selecting");
   if (elements.selectionBox) elements.selectionBox.hidden = true;
   if (elements.cropActions) elements.cropActions.hidden = true;
   setCropStatus("");
 }
 
-async function openCropSearch(target: "lens" | "ai") {
-  const url = target === "lens"
-    ? "https://lens.google.com/upload"
-    : "https://www.google.com/search?udm=50&q=%E3%81%93%E3%81%AE%E7%94%9F%E3%81%8D%E7%89%A9%E3%81%AE%E7%A8%AE%E5%90%8D%E3%82%92%E5%90%8C%E5%AE%9A%E3%81%97%E3%81%A6%E3%80%81%E5%80%99%E8%A3%9C%E3%81%A8%E6%A0%B9%E6%8B%A0%E3%82%92%E6%97%A5%E6%9C%AC%E8%AA%9E%E3%81%A7%E8%AA%AC%E6%98%8E%E3%81%97%E3%81%A6";
-  setCropStatus(target === "lens" ? "Lensを開きます" : "AI Modeを開きます");
-  openExternalUrl(url).catch((error) => {
-    console.error(error);
-    setCropStatus("ブラウザ起動失敗");
-  });
-
-  try {
-    setCropStatus("切り出し中");
-    const crop = await createCropImage();
-    const copied = await tryCopyBlobToClipboard(crop.blob);
-    setCropStatus(copied ? "コピー済み。⌘Vで貼付" : "一時保存済み。手動で選択");
-    if (!copied && crop.path) await revealSavedCrop(crop.path);
-    if (crop.path) console.info(`Saved crop: ${crop.path}`);
-  } catch (error) {
-    console.error(error);
-    setCropStatus("失敗");
-  }
-}
-
-async function revealCropInFinder() {
-  try {
-    setCropStatus("保存先を開きます");
-    const directory = await openCropDirectory();
-    setCropStatus(`保存先を表示: ${directory}`);
-  } catch (error) {
-    console.error(error);
-    setCropStatus("Finder表示失敗");
+async function saveCropToSourceFolder() {
+  const image = activeImage();
+  if (!image) return;
+  if (!isTauriRuntime() || !image.path) {
+    window.alert("crop保存はTauri版のみ対応です。");
     return;
   }
 
   try {
-    const crop = await createCropImage();
-    if (crop.path) setCropStatus(`保存済み: ${crop.path}`);
-  } catch (error) {
-    console.warn("Crop save failed after opening directory", error);
-  }
-}
-
-async function copyCropToClipboard() {
-  try {
-    setCropStatus("切り出し中");
-    const crop = await createCropImage();
-    await copyBlobToClipboard(crop.blob);
-    setCropStatus("コピー済み");
-    if (crop.path) console.info(`Saved crop: ${crop.path}`);
+    setCropStatus("JPEG保存中");
+    const crop = cropRectForActiveImage();
+    const saved = await invoke<NativeImageFile>("save_crop_to_source_folder", {
+      request: {
+        sourcePath: image.path,
+        left: Math.round(crop.left),
+        top: Math.round(crop.top),
+        width: Math.max(1, Math.round(crop.width)),
+        height: Math.max(1, Math.round(crop.height)),
+        upscale2x: state.cropUpscale2x,
+      },
+    });
+    addNativeImage(saved);
+    setCropStatus(`保存済み: ${saved.name}`);
+    clearSelection();
   } catch (error) {
     console.error(error);
-    setCropStatus("コピー失敗");
+    setCropStatus("保存失敗");
+    window.alert(`crop保存に失敗しました。\n${String(error)}`);
   }
 }
 
-async function createCropImage(): Promise<SavedCrop> {
+function cropRectForActiveImage() {
   const image = activeImage();
   const rect = state.selectionRect;
   const pane = document.querySelector<HTMLElement>(`.image-pane[data-slot="${state.activeSlot}"]`);
@@ -1062,37 +1511,41 @@ async function createCropImage(): Promise<SavedCrop> {
   if (!image || !image.width || !image.height) {
     throw new Error("切り出す画像がありません。");
   }
-
-  const source = await loadCanvasImage(image.url);
-  const crop = rect && pane && img
+  return rect && pane && img
     ? selectionToImageRect(rect, pane, image)
     : { left: 0, top: 0, width: image.width, height: image.height };
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(crop.width));
-  canvas.height = Math.max(1, Math.round(crop.height));
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("Canvasを作成できません。");
-  context.drawImage(
-    source,
-    crop.left,
-    crop.top,
-    crop.width,
-    crop.height,
-    0,
-    0,
-    canvas.width,
-    canvas.height,
-  );
+}
 
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((value) => value ? resolve(value) : reject(new Error("画像の切り出しに失敗しました。")), "image/png");
-  });
-  const bytes = new Uint8Array(await blob.arrayBuffer());
-  const path = isTauriRuntime()
-    ? await invoke<string>("save_crop_image", { image: { bytes: Array.from(bytes) } })
-    : undefined;
-  if (path) setCropStatus(`保存済み: ${path}`);
-  return { blob, bytes, path };
+function addNativeImage(nativeImage: NativeImageFile) {
+  const image = {
+    id: `${nativeImage.path}-${nativeImage.size}-${nativeImage.modified_at}`,
+    name: nativeImage.name,
+    path: nativeImage.path,
+    size: nativeImage.size,
+    modifiedAt: nativeImage.modified_at,
+    url: convertFileSrc(nativeImage.path),
+    thumbnailLoaded: false,
+    thumbnailRequested: false,
+    cacheLoaded: false,
+    exifLoaded: false,
+    rawExtensions: [],
+  } satisfies ImageItem;
+
+  state.images = state.images
+    .filter((current) => current.path !== nativeImage.path)
+    .concat(image)
+    .sort((a, b) => compareImagePaths(a.path, b.path));
+  updateFilteredIndexes();
+  const savedIndex = state.images.findIndex((current) => current.path === nativeImage.path);
+  if (savedIndex >= 0) {
+    const slotIndex = Math.min(state.activeSlot, state.compareCount - 1);
+    state.activeIndex = savedIndex;
+    state.activeSlot = slotIndex;
+    state.compareSlots[slotIndex] = savedIndex;
+  }
+  resetThumbnailQueue();
+  fitView();
+  render();
 }
 
 function selectionToImageRect(rect: CropRect, pane: HTMLElement, image: ImageItem) {
@@ -1120,57 +1573,8 @@ function selectionToImageRect(rect: CropRect, pane: HTMLElement, image: ImageIte
   };
 }
 
-function loadCanvasImage(url: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("画像を読み込めません。"));
-    img.src = url;
-  });
-}
-
-async function copyBlobToClipboard(blob: Blob) {
-  if (!navigator.clipboard || typeof ClipboardItem === "undefined") {
-    throw new Error("この環境では画像のクリップボードコピーに対応していません。");
-  }
-  await navigator.clipboard.write([
-    new ClipboardItem({ [blob.type]: blob }),
-  ]);
-}
-
-async function tryCopyBlobToClipboard(blob: Blob) {
-  try {
-    await copyBlobToClipboard(blob);
-    return true;
-  } catch (error) {
-    console.warn("Clipboard copy failed", error);
-    return false;
-  }
-}
-
 function setCropStatus(message: string) {
   if (elements.cropStatus) elements.cropStatus.textContent = message;
-}
-
-async function openExternalUrl(url: string) {
-  if (isTauriRuntime()) {
-    await invoke("open_external_url", { url });
-  } else {
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
-}
-
-async function revealSavedCrop(path: string) {
-  if (isTauriRuntime()) {
-    await invoke("reveal_file", { path });
-  }
-}
-
-async function openCropDirectory() {
-  if (isTauriRuntime()) {
-    return invoke<string>("open_crop_directory");
-  }
-  return "";
 }
 
 function openSettings() {
@@ -1281,6 +1685,31 @@ function applyRenameResults(results: RenameResult[]) {
   resetThumbnailQueue();
 }
 
+function applyMoveToDeletedResults(results: MoveToDeletedResult[]) {
+  const removedPaths = new Set(results.map((result) => result.old_path));
+  if (!removedPaths.size) return;
+  const activePath = state.images[state.activeIndex]?.path ?? "";
+
+  for (const image of state.images) {
+    if (removedPaths.has(image.path) && image.file && image.url.startsWith("blob:")) {
+      URL.revokeObjectURL(image.url);
+    }
+  }
+
+  state.images = state.images.filter((image) => !removedPaths.has(image.path));
+  clearCheckedImages();
+  updateFilteredIndexes();
+  const visible = visibleIndexes();
+  const activeByPath = activePath
+    ? state.images.findIndex((image) => image.path === activePath)
+    : -1;
+  const nextActive = activeByPath >= 0 ? activeByPath : (visible[0] ?? 0);
+  state.activeIndex = nextActive;
+  state.compareSlots = [visible.length ? nextActive : null, null, null, null];
+  state.activeSlot = 0;
+  resetThumbnailQueue();
+}
+
 async function copyCheckedFiles() {
   const images = checkedImages();
   if (!images.length) return;
@@ -1299,6 +1728,34 @@ async function copyCheckedFiles() {
   } catch (error) {
     console.error(error);
     window.alert(`ファイルコピーに失敗しました。\n${String(error)}`);
+  }
+}
+
+async function moveCheckedImagesToDeleted() {
+  const images = checkedImages();
+  if (!images.length) return;
+  if (!isTauriRuntime() || !state.currentDirectory) {
+    window.alert("画像の除外はフォルダを開いたTauri版のみ対応です。");
+    return;
+  }
+
+  const ok = window.confirm(
+    `${images.length}枚の画像を現在のフォルダ内の deleted フォルダへ移動し、一覧から除外します。`,
+  );
+  if (!ok) return;
+
+  try {
+    const results = await invoke<MoveToDeletedResult[]>("move_images_to_deleted", {
+      request: {
+        directory: state.currentDirectory,
+        paths: images.map((image) => image.path),
+      },
+    });
+    applyMoveToDeletedResults(results);
+    render();
+  } catch (error) {
+    console.error(error);
+    window.alert(`画像の除外に失敗しました。\n${String(error)}`);
   }
 }
 
@@ -1344,6 +1801,29 @@ function toggleSyncView() {
   } else {
     state.slotViews = state.slotViews.map(() => ({ ...state.view }));
   }
+}
+
+function setCompareCount(count: number) {
+  const indexes = visibleIndexes();
+  const currentImageIndex = state.compareSlots[state.activeSlot] ?? state.activeIndex;
+  const nextActiveIndex = indexes.includes(currentImageIndex)
+    ? currentImageIndex
+    : (indexes[0] ?? 0);
+
+  state.compareCount = clamp(count, 1, 4);
+  state.activeIndex = nextActiveIndex;
+
+  if (state.compareCount === 1) {
+    state.activeSlot = 0;
+    state.compareSlots = [indexes.length ? nextActiveIndex : null, null, null, null];
+    return;
+  }
+
+  state.activeSlot = Math.min(state.activeSlot, state.compareCount - 1);
+  if (!indexes.includes(state.compareSlots[state.activeSlot] ?? -1)) {
+    state.compareSlots[state.activeSlot] = nextActiveIndex;
+  }
+  refillEmptySlots();
 }
 
 function refillEmptySlots() {
@@ -1569,8 +2049,26 @@ async function loadThumbnail(index: number, image: ImageItem) {
 async function buildAllThumbnailCache() {
   if (!state.images.length || !isTauriRuntime()) return;
   const cacheTargets = state.images.filter((image) => !isDigiViewerCachePath(image.path));
+  const cacheBuilt = await buildThumbnailCacheForImages(cacheTargets, "", "完了");
+  if (!cacheBuilt) return;
+  for (const image of state.images) {
+    image.thumbnailLoaded = false;
+    image.thumbnailRequested = false;
+  }
+  resetThumbnailQueue();
+  preloadVisibleThumbnails();
+}
+
+async function buildThumbnailCacheForImages(cacheTargets: ImageItem[], label: string, finalLabel: string) {
+  if (!cacheTargets.length || !isTauriRuntime()) return false;
+  const targets = [...new Map(
+    cacheTargets
+      .filter((image) => !isDigiViewerCachePath(image.path))
+      .map((image) => [image.path, image]),
+  ).values()];
+  if (!targets.length) return false;
   state.isBuildingThumbCache = true;
-  state.thumbCacheStatus = `0 / ${cacheTargets.length}`;
+  state.thumbCacheStatus = label ? `${label} 0 / ${targets.length}` : `0 / ${targets.length}`;
   resetThumbnailQueue();
   renderChrome();
 
@@ -1579,8 +2077,8 @@ async function buildAllThumbnailCache() {
   let reused = 0;
   let failed = 0;
   try {
-    for (let start = 0; start < cacheTargets.length; start += chunkSize) {
-      const chunk = cacheTargets.slice(start, start + chunkSize);
+    for (let start = 0; start < targets.length; start += chunkSize) {
+      const chunk = targets.slice(start, start + chunkSize);
       const result = await invoke<ThumbnailCacheResult>("build_thumbnail_cache", {
         request: {
           paths: chunk.map((image) => image.path),
@@ -1591,23 +2089,20 @@ async function buildAllThumbnailCache() {
       created += result.created;
       reused += result.reused;
       failed += result.failed;
+      const progress = `${Math.min(start + chunk.length, targets.length)} / ${targets.length} 作成 ${created} 再利用 ${reused} 失敗 ${failed}`;
       state.thumbCacheStatus =
-        `${Math.min(start + chunk.length, cacheTargets.length)} / ${cacheTargets.length} 作成 ${created} 再利用 ${reused} 失敗 ${failed}`;
+        label ? `${label} ${progress}` : progress;
       renderThumbCacheStatus();
       renderPerfMeter();
       await idlePause();
     }
-    state.thumbCacheStatus = `完了 作成 ${created} 再利用 ${reused} 失敗 ${failed}`;
-    for (const image of state.images) {
-      image.thumbnailLoaded = false;
-      image.thumbnailRequested = false;
-    }
-    resetThumbnailQueue();
-    preloadVisibleThumbnails();
+    state.thumbCacheStatus = `${finalLabel} 作成 ${created} 再利用 ${reused} 失敗 ${failed}`;
+    return true;
   } catch (error) {
     console.error(error);
     state.thumbCacheStatus = `作成失敗 ${String(error)}`;
     renderThumbCacheStatus();
+    return false;
   } finally {
     state.isBuildingThumbCache = false;
     renderChrome();
@@ -1702,8 +2197,16 @@ function renderChrome() {
   }
   elements.appendSpeciesButton?.toggleAttribute("disabled", checkedCount === 0);
   elements.copyFilesButton?.toggleAttribute("disabled", checkedCount === 0);
+  elements.moveDeletedButton?.toggleAttribute(
+    "disabled",
+    checkedCount === 0 || !isTauriRuntime() || !state.currentDirectory,
+  );
   elements.clearSelectionButton?.toggleAttribute("disabled", checkedCount === 0);
   const canManageThumbCache = isTauriRuntime() && hasImages && Boolean(state.currentDirectory);
+  elements.reloadFolderButton?.toggleAttribute(
+    "disabled",
+    !isTauriRuntime() || !state.currentDirectory || state.isBuildingThumbCache,
+  );
   elements.buildThumbCacheButton?.toggleAttribute("disabled", !canManageThumbCache || state.isBuildingThumbCache);
   if (elements.buildThumbCacheButton) {
     elements.buildThumbCacheButton.textContent = state.isBuildingThumbCache ? "作成中..." : "サムネ作成";
@@ -1930,6 +2433,17 @@ function toggleThumbCheck(index: number, checked: boolean, useRange: boolean) {
     }
   }
   state.lastCheckedIndex = index;
+}
+
+function toggleActiveCheck() {
+  if (!state.images.length) return;
+  const slotIndex = Math.min(state.activeSlot, state.compareCount - 1);
+  const index = state.compareSlots[slotIndex] ?? state.activeIndex;
+  if (!Number.isInteger(index) || index < 0 || index >= state.images.length) return;
+
+  toggleThumbCheck(index, !state.checkedIndexes.has(index), false);
+  renderThumbs();
+  renderChrome();
 }
 
 function renderPaneSelection() {

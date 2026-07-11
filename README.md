@@ -78,11 +78,18 @@ RAWは表示対象ではなく、同じベース名のRAWファイルがある�
 
 複数枚表示中は、フォーカスされている枠だけが画像送りの対象になります。同期ON/OFFは拡大率と表示位置の同期に使います。
 
+## ダウンロード
+
+- [Windows x64 インストーラー v0.4.0](release/DigiViewer_0.4.0_windows_x64_setup.exe)
+- [Windows x64 SHA-256](release/DigiViewer_0.4.0_windows_x64_setup.exe.sha256)
+- [macOS Apple Silicon v0.1.0](release/DigiViewer_0.1.0_mac_aarch64.zip)
+- [macOS Apple Silicon SHA-256](release/DigiViewer_0.1.0_mac_aarch64.zip.sha256)
+
 ## 開発
 
 DigiViewerはTauri + Rust + TypeScriptで作っています。
 
-macOSでのMVPを先に作り、操作感と速度を確認しながら、将来的にWindows対応も進める方針です。
+macOSでのMVPを先に作り、現在はWindows向けのビルドと基本操作の対応も進めています。
 
 ```sh
 npm install
@@ -100,6 +107,20 @@ npm run dev
 ```sh
 npm run tauri build -- --bundles app
 ```
+
+Windows向けのビルド確認はGitHub Actionsの `Windows Check` で行います。成功すると、実行ファイル、NSISインストーラー、MSIインストーラーがArtifactsに出力されます。
+
+フォルダ内に作る `.digiviewer/thumbs/` のサムネイルキャッシュは、macOSとWindowsで同じ写真フォルダを行き来しても再利用しやすいように、OSごとの絶対パスではなくフォルダ内のファイル名を基準にします。古い絶対パス形式のフォルダキャッシュも、同じファイル名のサムネイルが1件だけ見つかる場合は新しい形式へ移行して使います。
+
+Windows実機では次を確認します。
+
+- 日本語名、空白入り、OneDrive配下のフォルダを開ける
+- 画像表示、サムネイル作成、サムネイル整理/削除が動く
+- 選択画像のコピーをエクスプローラーなどへ貼り付けられる
+- 選択画像を `deleted` フォルダへ除外できる
+- 種名付加で画像とRAWサイドカーが一緒にリネームされる
+- クロップ保存で元画像フォルダにJPEGが作られる
+- 外付けドライブや別ドライブの画像表示可否を確認する
 
 ## ランディングページ
 
