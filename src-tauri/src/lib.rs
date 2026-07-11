@@ -1287,6 +1287,53 @@ mod tests {
         assert_eq!(first, second);
         assert_eq!(first, "observation.jpg");
     }
+
+    #[test]
+    fn scans_thumbnails_and_renames_images_with_raw_sidecars() {
+        let directory = std::env::temp_dir().join(format!(
+            "digiviewer-image-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&directory).unwrap();
+        let image_path = directory.join("observation 01.png");
+        let raw_path = directory.join("observation 01.CR3");
+        image::RgbImage::from_pixel(32, 24, image::Rgb([20, 120, 220]))
+            .save(&image_path)
+            .unwrap();
+        fs::write(&raw_path, b"RAW sidecar test").unwrap();
+
+        let scanned = scan_images(directory.to_string_lossy().into_owned()).unwrap();
+        assert_eq!(scanned.len(), 2);
+
+        let metadata = fs::metadata(&image_path).unwrap();
+        let thumbnail = get_thumbnail(ThumbnailRequest {
+            path: image_path.to_string_lossy().into_owned(),
+            size: metadata.len(),
+            modified_at: modified_at_millis(&metadata),
+            max_edge: 128,
+            cache_limit_mb: 64,
+            prune_cache: false,
+            cache_scope: Some(ThumbnailCacheScope::Folder),
+        })
+        .unwrap()
+        .unwrap();
+        assert!(Path::new(&thumbnail).is_file());
+
+        let renamed = rename_images(RenameRequest {
+            paths: vec![image_path.to_string_lossy().into_owned()],
+            species_name: "bird:sample?".to_owned(),
+        })
+        .unwrap();
+        assert_eq!(renamed.len(), 1);
+        assert!(Path::new(&renamed[0].path).is_file());
+        assert!(directory.join("observation 01_bird_sample_.CR3").is_file());
+
+        fs::remove_dir_all(directory).unwrap();
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
