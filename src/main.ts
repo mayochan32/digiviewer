@@ -2252,8 +2252,6 @@ function preloadThumbnailsAroundActive() {
   const indexes = [];
   for (let position = start; position <= end; position += 1) indexes.push(visible[position]);
   indexes.sort((a, b) => Math.abs(a - state.activeIndex) - Math.abs(b - state.activeIndex));
-  const keepIndexes = new Set(indexes);
-  keepQueuedThumbnails((index) => keepIndexes.has(index));
   for (const index of indexes.slice(0, thumbnailBackgroundBatchLimit)) queueThumbnail(index, false);
 }
 
@@ -2272,8 +2270,9 @@ function preloadVisibleThumbnails() {
   const keepIndexes = new Set(indexes);
   keepQueuedThumbnails((index) => keepIndexes.has(index));
   for (let position = indexes.length - 1; position >= 0; position -= 1) {
-    queueThumbnail(indexes[position], true);
+    queueThumbnail(indexes[position], true, false);
   }
+  pumpThumbnailQueue();
 }
 
 function keepQueuedThumbnails(keep: (index: number) => boolean) {
@@ -2285,7 +2284,7 @@ function keepQueuedThumbnails(keep: (index: number) => boolean) {
   });
 }
 
-function queueThumbnail(index: number, priority: boolean) {
+function queueThumbnail(index: number, priority: boolean, pump = true) {
   const image = state.images[index];
   if (!image || image.thumbnailLoaded) return;
   if (!isTauriRuntime()) return;
@@ -2308,7 +2307,7 @@ function queueThumbnail(index: number, priority: boolean) {
     thumbnailQueue.push(index);
   }
   renderThumbCacheStatus();
-  pumpThumbnailQueue();
+  if (pump) pumpThumbnailQueue();
 }
 
 function pumpThumbnailQueue() {
