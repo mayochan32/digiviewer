@@ -40,6 +40,26 @@
             <div id="thumbs" class="thumbs"></div>
           </aside>
 
+          <div class="similarity-toolbar" aria-label="類似写真の整理">
+            <button id="analyze-similarity" type="button" class="tool-button" disabled>類似解析</button>
+            <select id="similarity-threshold" class="similarity-select" aria-label="類似度">
+              <option value="6">厳しい</option>
+              <option value="10" selected>標準</option>
+              <option value="16">ゆるい</option>
+            </select>
+            <button id="similarity-toggle" type="button" class="tool-button" aria-pressed="false" disabled>グループ表示</button>
+            <button id="previous-group" type="button" class="icon-button" title="前の類似グループ" disabled>‹</button>
+            <button id="next-group" type="button" class="icon-button" title="次の類似グループ" disabled>›</button>
+            <span id="similarity-status" class="similarity-status">未解析</span>
+            <span class="similarity-spacer"></span>
+            <span id="review-target" class="review-target">対象: 表示中</span>
+            <button type="button" class="review-button review-keep" data-review-status="keep">採用</button>
+            <button type="button" class="review-button review-hold" data-review-status="hold">保留</button>
+            <button type="button" class="review-button review-exclude" data-review-status="exclude">除外</button>
+            <button type="button" class="review-button" data-review-status="unreviewed">未判定</button>
+            <button id="hide-excluded" type="button" class="tool-button" aria-pressed="false">除外を隠す</button>
+          </div>
+
           <div class="viewer-toolbar">
             <button id="prev-button" type="button" class="icon-button" disabled title="前の画像">←</button>
             <button id="next-button" type="button" class="icon-button" disabled title="次の画像">→</button>
