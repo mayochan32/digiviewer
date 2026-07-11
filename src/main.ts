@@ -185,7 +185,7 @@ const rawExtensions = new Set([
 ]);
 
 const thumbnailMaxEdge = 192;
-const thumbnailConcurrency = 1;
+const thumbnailConcurrency = 2;
 const thumbnailBackgroundDelayMs = 900;
 const thumbnailPruneInterval = 64;
 const maxInitialImagePreloadRadius = 1;
@@ -2271,8 +2271,8 @@ function preloadVisibleThumbnails() {
   const indexes = visible.slice(visibleStart, visibleEnd + 1);
   const keepIndexes = new Set(indexes);
   keepQueuedThumbnails((index) => keepIndexes.has(index));
-  for (const index of indexes) {
-    queueThumbnail(index, true);
+  for (let position = indexes.length - 1; position >= 0; position -= 1) {
+    queueThumbnail(indexes[position], true);
   }
 }
 
@@ -2492,6 +2492,7 @@ function render() {
   renderPerfMeter();
   preloadAroundActive();
   preloadVisibleThumbnails();
+  window.requestAnimationFrame(preloadVisibleThumbnails);
   scheduleThumbnailPreload();
   scheduleExifLoad();
 }

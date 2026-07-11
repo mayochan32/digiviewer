@@ -440,16 +440,20 @@ fn clear_thumbnail_cache(directory: String) -> Result<ThumbnailCacheResult, Stri
 }
 
 #[tauri::command]
-fn analyze_similar_images(
+async fn analyze_similar_images(
     app: tauri::AppHandle,
     request: SimilarityRequest,
 ) -> Result<SimilarityResult, String> {
-    analyze_similar_images_with_progress(request, |completed, total| {
-        let _ = app.emit(
-            "similarity-progress",
-            SimilarityProgress { completed, total },
-        );
+    tauri::async_runtime::spawn_blocking(move || {
+        analyze_similar_images_with_progress(request, |completed, total| {
+            let _ = app.emit(
+                "similarity-progress",
+                SimilarityProgress { completed, total },
+            );
+        })
     })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 fn analyze_similar_images_with_progress(
@@ -459,9 +463,9 @@ fn analyze_similar_images_with_progress(
     let root = PathBuf::from(&request.directory)
         .canonicalize()
         .map_err(|error| error.to_string())?;
-    let cache_path = root.join(".digiviewer").join("similarity-v1.json");
+    let cache_path = root.join(".digiviewer").join("similarity-v2.json");
     let mut cache = read_similarity_cache(&cache_path);
-    cache.version = 1;
+    cache.version = 2;
     let mut features = Vec::new();
     let mut analyzed = 0;
     let mut reused = 0;
@@ -512,6 +516,11 @@ fn analyze_similar_images_with_progress(
             None => tasks.push(SimilarityTask {
                 position,
                 path,
+                analysis_source: similarity_analysis_source(
+                    &source,
+                    metadata.len(),
+                    modified_at,
+                ),
                 source,
                 relative_path,
                 size: metadata.len(),
@@ -536,7 +545,7 @@ fn analyze_similar_images_with_progress(
                 .map(|task| {
                     scope.spawn(move || SimilarityTaskResult {
                         task,
-                        signature: image_similarity_signature(&task.source),
+                        signature: image_similarity_signature(&task.analysis_source),
                     })
                 })
                 .collect();
@@ -594,9 +603,28 @@ struct SimilarityTask {
     position: usize,
     path: String,
     source: PathBuf,
+    analysis_source: PathBuf,
     relative_path: String,
     size: u64,
     modified_at: u128,
+}
+
+fn similarity_analysis_source(source: &Path, size: u64, modified_at: u128) -> PathBuf {
+    let scope = ThumbnailCacheScope::Folder;
+    let source_text = source.to_string_lossy();
+    if let Ok(cache_path) = thumbnail_cache_path_for(
+        source,
+        &source_text,
+        size,
+        modified_at,
+        192,
+        Some(&scope),
+    ) {
+        if cache_path.is_file() || try_migrate_legacy_folder_thumbnail(source, &cache_path, 192) {
+            return cache_path;
+        }
+    }
+    source.to_path_buf()
 }
 
 struct SimilarityTaskResult<'a> {
@@ -659,7 +687,7 @@ struct SimilarityFeature {
 
 fn image_similarity_signature(path: &Path) -> Result<(u64, [u8; 3]), String> {
     let image = image::open(path).map_err(|error| error.to_string())?;
-    let thumbnail = image.resize_exact(9, 8, image::imageops::FilterType::Triangle);
+    let thumbnail = image.thumbnail_exact(9, 8);
     let grayscale = thumbnail.to_luma8();
     let mut hash = 0_u64;
     let mut bit = 0;
@@ -1705,6 +1733,43 @@ mod tests {
     }
 
     #[test]
+    fn similarity_analysis_prefers_existing_folder_thumbnail() {
+        let directory = std::env::temp_dir().join(format!(
+            "digiviewer-similarity-source-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&directory).unwrap();
+        let source = directory.join("Observation.JPG");
+        image::RgbImage::from_pixel(32, 24, image::Rgb([40, 120, 200]))
+            .save(&source)
+            .unwrap();
+        let metadata = fs::metadata(&source).unwrap();
+        let modified_at = modified_at_millis(&metadata);
+        let scope = ThumbnailCacheScope::Folder;
+        let cache_path = thumbnail_cache_path_for(
+            &source,
+            &source.to_string_lossy(),
+            metadata.len(),
+            modified_at,
+            192,
+            Some(&scope),
+        )
+        .unwrap();
+        fs::create_dir_all(cache_path.parent().unwrap()).unwrap();
+        fs::write(&cache_path, b"cached thumbnail").unwrap();
+
+        assert_eq!(
+            similarity_analysis_source(&source, metadata.len(), modified_at),
+            cache_path
+        );
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
     fn scans_thumbnails_and_renames_images_with_raw_sidecars() {
         let directory = std::env::temp_dir().join(format!(
             "digiviewer-image-test-{}-{}",
@@ -1902,7 +1967,7 @@ mod tests {
         assert_eq!(progress.last(), Some(&(2, 2)));
         assert!(directory
             .join(".digiviewer")
-            .join("similarity-v1.json")
+            .join("similarity-v2.json")
             .is_file());
         fs::remove_dir_all(directory).unwrap();
     }
