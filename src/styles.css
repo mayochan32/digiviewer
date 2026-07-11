@@ -82,7 +82,8 @@ button {
 }
 
 .viewer-toolbar {
-  overflow: hidden;
+  flex-wrap: wrap;
+  align-content: center;
 }
 
 .brand strong {
@@ -237,7 +238,7 @@ button:disabled {
 
 .viewer-panel {
   display: grid;
-  grid-template-rows: 30px 92px 44px minmax(0, 1fr);
+  grid-template-rows: 30px 92px auto minmax(0, 1fr);
   min-width: 0;
   height: 100%;
   min-height: 0;
@@ -245,6 +246,7 @@ button:disabled {
 
 .viewer-toolbar {
   min-width: 0;
+  min-height: 44px;
   padding: 6px 10px;
   border-bottom: 1px solid var(--line);
   background: var(--panel);
