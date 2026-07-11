@@ -78,6 +78,13 @@ RAWは表示対象ではなく、同じベース名のRAWファイルがある�
 
 複数枚表示中は、フォーカスされている枠だけが画像送りの対象になります。同期ON/OFFは拡大率と表示位置の同期に使います。
 
+## ダウンロード
+
+- [Windows x64 インストーラー v0.4.0](release/DigiViewer_0.4.0_windows_x64_setup.exe)
+- [Windows x64 SHA-256](release/DigiViewer_0.4.0_windows_x64_setup.exe.sha256)
+- [macOS Apple Silicon v0.1.0](release/DigiViewer_0.1.0_mac_aarch64.zip)
+- [macOS Apple Silicon SHA-256](release/DigiViewer_0.1.0_mac_aarch64.zip.sha256)
+
 ## 開発
 
 DigiViewerはTauri + Rust + TypeScriptで作っています。
