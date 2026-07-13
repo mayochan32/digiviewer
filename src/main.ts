@@ -360,6 +360,7 @@ const elements = {
   reviewTarget: document.querySelector<HTMLElement>("#review-target"),
   reviewButtons: document.querySelectorAll<HTMLButtonElement>("[data-review-status]"),
   hideExcludedButton: document.querySelector<HTMLButtonElement>("#hide-excluded"),
+  moveExcludedDeletedButton: document.querySelector<HTMLButtonElement>("#move-excluded-deleted"),
   settingsButton: document.querySelector<HTMLButtonElement>("#settings-button"),
   settingsDialog: document.querySelector<HTMLElement>("#settings-dialog"),
   settingsCloseButton: document.querySelector<HTMLButtonElement>("#settings-close"),
@@ -496,6 +497,7 @@ window.addEventListener("DOMContentLoaded", () => {
   elements.previousGroupButton?.addEventListener("click", () => showSimilarityGroup(-1));
   elements.nextGroupButton?.addEventListener("click", () => showSimilarityGroup(1));
   elements.hideExcludedButton?.addEventListener("click", toggleHideExcluded);
+  elements.moveExcludedDeletedButton?.addEventListener("click", moveTemporaryExcludedImagesToDeleted);
   for (const button of elements.reviewButtons) {
     button.addEventListener("click", () => {
       const status = normalizeReviewStatus(button.dataset.reviewStatus);
@@ -1151,7 +1153,7 @@ function reviewStatusLabel(status: ReviewStatus) {
     case "hold":
       return "● 保留";
     case "exclude":
-      return "× 除外";
+      return "× 一時除外";
     default:
       return "未判定";
   }
@@ -2054,13 +2056,23 @@ async function copyCheckedFiles() {
 async function moveCheckedImagesToDeleted() {
   const images = checkedImages();
   if (!images.length) return;
+  await moveImagesToDeleted(images, "選択画像");
+}
+
+async function moveTemporaryExcludedImagesToDeleted() {
+  const images = state.images.filter((image) => image.reviewStatus === "exclude");
+  if (!images.length) return;
+  await moveImagesToDeleted(images, "一時除外の画像");
+}
+
+async function moveImagesToDeleted(images: ImageItem[], label: string) {
   if (!isTauriRuntime() || !state.currentDirectory) {
-    window.alert("画像の除外はフォルダを開いたTauri版のみ対応です。");
+    window.alert("deletedへの移動はフォルダを開いたTauri版のみ対応です。");
     return;
   }
 
   const ok = window.confirm(
-    `${images.length}枚の画像を現在のフォルダ内の deleted フォルダへ移動し、一覧から除外します。`,
+    `${label} ${images.length}枚を現在のフォルダ内の deleted フォルダへ移動し、一覧から外します。`,
   );
   if (!ok) return;
 
@@ -2075,7 +2087,7 @@ async function moveCheckedImagesToDeleted() {
     render();
   } catch (error) {
     console.error(error);
-    window.alert(`画像の除外に失敗しました。\n${String(error)}`);
+    window.alert(`deletedへの移動に失敗しました。\n${String(error)}`);
   }
 }
 
@@ -2518,7 +2530,7 @@ function similarityStatusText() {
     counts[state.images[index]?.reviewStatus ?? "unreviewed"] += 1;
   }
   return `G${info.position + 1}/${state.similarityGroups.length}・${info.group.indexes.length}枚 `
-    + `採用${counts.keep} 保留${counts.hold} 除外${counts.exclude} 未判定${counts.unreviewed}`;
+    + `採用${counts.keep} 保留${counts.hold} 一時除外${counts.exclude} 未判定${counts.unreviewed}`;
 }
 
 function renderChrome() {
@@ -2541,6 +2553,16 @@ function renderChrome() {
     "disabled",
     checkedCount === 0 || !isTauriRuntime() || !state.currentDirectory,
   );
+  const temporaryExcludedCount = state.images.filter((image) => image.reviewStatus === "exclude").length;
+  elements.moveExcludedDeletedButton?.toggleAttribute(
+    "disabled",
+    temporaryExcludedCount === 0 || !isTauriRuntime() || !state.currentDirectory,
+  );
+  if (elements.moveExcludedDeletedButton) {
+    elements.moveExcludedDeletedButton.textContent = temporaryExcludedCount
+      ? `一時除外${temporaryExcludedCount}枚をdeletedへ`
+      : "一時除外をdeletedへ";
+  }
   elements.clearSelectionButton?.toggleAttribute("disabled", checkedCount === 0);
   const canManageThumbCache = isTauriRuntime() && hasImages && Boolean(state.currentDirectory);
   elements.reloadFolderButton?.toggleAttribute(
@@ -2572,7 +2594,7 @@ function renderChrome() {
   if (elements.similarityStatus) elements.similarityStatus.textContent = similarityStatusText();
   elements.hideExcludedButton?.setAttribute("aria-pressed", String(state.hideExcluded));
   if (elements.hideExcludedButton) {
-    elements.hideExcludedButton.textContent = state.hideExcluded ? "除外を表示" : "除外を隠す";
+    elements.hideExcludedButton.textContent = state.hideExcluded ? "一時除外を表示" : "一時除外を隠す";
   }
   const reviewTargets = reviewTargetIndexes();
   for (const button of elements.reviewButtons) {

@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, HashMap},
     fs::{self, File},
     io::{BufWriter, Cursor},
     path::{Path, PathBuf},
+    sync::{Mutex, OnceLock},
     time::UNIX_EPOCH,
 };
 use tauri::{Emitter, Manager};
@@ -76,6 +77,14 @@ struct ThumbnailCacheResult {
     failed: usize,
     deleted: usize,
 }
+
+#[derive(Default)]
+struct LegacyThumbnailIndex {
+    candidates_by_stem: HashMap<String, Vec<PathBuf>>,
+}
+
+static LEGACY_THUMBNAIL_INDEXES: OnceLock<Mutex<HashMap<PathBuf, LegacyThumbnailIndex>>> =
+    OnceLock::new();
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -516,11 +525,7 @@ fn analyze_similar_images_with_progress(
             None => tasks.push(SimilarityTask {
                 position,
                 path,
-                analysis_source: similarity_analysis_source(
-                    &source,
-                    metadata.len(),
-                    modified_at,
-                ),
+                analysis_source: similarity_analysis_source(&source, metadata.len(), modified_at),
                 source,
                 relative_path,
                 size: metadata.len(),
@@ -612,14 +617,9 @@ struct SimilarityTask {
 fn similarity_analysis_source(source: &Path, size: u64, modified_at: u128) -> PathBuf {
     let scope = ThumbnailCacheScope::Folder;
     let source_text = source.to_string_lossy();
-    if let Ok(cache_path) = thumbnail_cache_path_for(
-        source,
-        &source_text,
-        size,
-        modified_at,
-        192,
-        Some(&scope),
-    ) {
+    if let Ok(cache_path) =
+        thumbnail_cache_path_for(source, &source_text, size, modified_at, 192, Some(&scope))
+    {
         if cache_path.is_file() || try_migrate_legacy_folder_thumbnail(source, &cache_path, 192) {
             return cache_path;
         }
@@ -1368,45 +1368,84 @@ fn try_migrate_legacy_folder_thumbnail(source: &Path, new_path: &Path, max_edge:
     else {
         return false;
     };
-    let prefix = format!("{stem}__");
-    let Ok(entries) = fs::read_dir(cache_dir) else {
+    let paths = legacy_thumbnail_candidates_for_stem(&cache_dir, &stem);
+    if paths.is_empty() {
         return false;
-    };
-
-    let mut candidates = Vec::new();
+    }
     let source_modified_at = fs::metadata(source)
         .ok()
         .and_then(|metadata| metadata.modified().ok());
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path == new_path || !path.is_file() {
-            continue;
-        }
-        let filename = path
-            .file_name()
-            .and_then(|value| value.to_str())
-            .unwrap_or("");
-        if !filename.starts_with(&prefix) || !filename.ends_with(".jpg") {
-            continue;
-        }
-        let Ok(metadata) = entry.metadata() else {
-            continue;
-        };
-        if let (Some(source_modified_at), Ok(cache_modified_at)) =
-            (source_modified_at, metadata.modified())
-        {
-            if cache_modified_at < source_modified_at {
-                continue;
+    let candidates: Vec<&PathBuf> = paths
+        .iter()
+        .filter(|path| {
+            if path.as_path() == new_path || !path.is_file() {
+                return false;
             }
-        }
-        candidates.push(path);
-    }
+            let Ok(metadata) = fs::metadata(path) else {
+                return false;
+            };
+            if let (Some(source_modified_at), Ok(cache_modified_at)) =
+                (source_modified_at, metadata.modified())
+            {
+                if cache_modified_at < source_modified_at {
+                    return false;
+                }
+            }
+            true
+        })
+        .collect();
 
     if candidates.len() != 1 {
         return false;
     }
-    migrate_thumbnail_cache_file(&candidates[0], new_path);
+    migrate_thumbnail_cache_file(candidates[0], new_path);
     new_path.is_file()
+}
+
+fn legacy_thumbnail_candidates_for_stem(cache_dir: &Path, stem: &str) -> Vec<PathBuf> {
+    let cache = LEGACY_THUMBNAIL_INDEXES.get_or_init(|| Mutex::new(HashMap::new()));
+    if let Ok(mut indexes) = cache.lock() {
+        return indexes
+            .entry(cache_dir.to_path_buf())
+            .or_insert_with(|| build_legacy_thumbnail_index(cache_dir))
+            .candidates_by_stem
+            .get(stem)
+            .cloned()
+            .unwrap_or_default();
+    }
+    build_legacy_thumbnail_index(cache_dir)
+        .candidates_by_stem
+        .get(stem)
+        .cloned()
+        .unwrap_or_default()
+}
+
+fn build_legacy_thumbnail_index(cache_dir: &Path) -> LegacyThumbnailIndex {
+    let Ok(entries) = fs::read_dir(cache_dir) else {
+        return LegacyThumbnailIndex::default();
+    };
+    let mut index = LegacyThumbnailIndex::default();
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        let Some(filename) = path.file_name().and_then(|value| value.to_str()) else {
+            continue;
+        };
+        let Some((stem, _)) = filename.split_once("__") else {
+            continue;
+        };
+        if stem.is_empty() || !filename.ends_with(".jpg") {
+            continue;
+        }
+        index
+            .candidates_by_stem
+            .entry(stem.to_owned())
+            .or_default()
+            .push(path);
+    }
+    index
 }
 
 fn thumbnail_cache_sizes_for_rename(source: &Path) -> Vec<u32> {
@@ -1625,8 +1664,7 @@ fn reveal_file(path: String) -> Result<(), String> {
 fn open_crop_directory(app: tauri::AppHandle) -> Result<String, String> {
     let directory = crop_output_dir(&app);
     fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
-    tauri_plugin_opener::open_path(&directory, None::<&str>)
-        .map_err(|error| error.to_string())?;
+    tauri_plugin_opener::open_path(&directory, None::<&str>).map_err(|error| error.to_string())?;
     Ok(directory.to_string_lossy().into_owned())
 }
 
@@ -1719,7 +1757,10 @@ mod tests {
 
     #[test]
     fn sanitizes_cross_platform_filename_characters() {
-        assert_eq!(sanitize_filename_part("  bird<name>:?*.  "), "bird_name____");
+        assert_eq!(
+            sanitize_filename_part("  bird<name>:?*.  "),
+            "bird_name____"
+        );
         assert_eq!(sanitize_filename_part("line\nname"), "line_name");
     }
 
@@ -1766,6 +1807,59 @@ mod tests {
             similarity_analysis_source(&source, metadata.len(), modified_at),
             cache_path
         );
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn migrates_legacy_folder_thumbnail_without_rescanning_each_file() {
+        let directory = std::env::temp_dir().join(format!(
+            "digiviewer-legacy-thumbnail-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&directory).unwrap();
+        let source = directory.join("Observation.JPG");
+        image::RgbImage::from_pixel(32, 24, image::Rgb([40, 120, 200]))
+            .save(&source)
+            .unwrap();
+        let metadata = fs::metadata(&source).unwrap();
+        let modified_at = modified_at_millis(&metadata);
+        let scope = ThumbnailCacheScope::Folder;
+        let new_cache_path = thumbnail_cache_path_for(
+            &source,
+            &source.to_string_lossy(),
+            metadata.len(),
+            modified_at,
+            192,
+            Some(&scope),
+        )
+        .unwrap();
+        let cache_dir = new_cache_path.parent().unwrap();
+        fs::create_dir_all(cache_dir).unwrap();
+        for index in 0..100 {
+            fs::write(
+                cache_dir.join(format!("other-{index}__legacy.jpg")),
+                b"noise",
+            )
+            .unwrap();
+        }
+
+        let legacy_key =
+            thumbnail_cache_key(&source.to_string_lossy(), metadata.len(), modified_at, 192);
+        let legacy_cache_path = cache_dir.join(thumbnail_cache_filename(&source, &legacy_key));
+        assert_ne!(legacy_cache_path, new_cache_path);
+        fs::write(&legacy_cache_path, b"cached thumbnail").unwrap();
+
+        assert!(try_migrate_legacy_folder_thumbnail(
+            &source,
+            &new_cache_path,
+            192
+        ));
+        assert!(new_cache_path.is_file());
+        assert!(!legacy_cache_path.is_file());
         fs::remove_dir_all(directory).unwrap();
     }
 
