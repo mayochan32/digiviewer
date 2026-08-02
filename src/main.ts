@@ -939,6 +939,10 @@ function applyFilenameFilter() {
   render();
 }
 
+type ReconcileOptions = {
+  preserveView?: boolean;
+};
+
 function normalizeReviewStatus(value: string | undefined): ReviewStatus {
   return value === "keep" || value === "hold" || value === "exclude" ? value : "unreviewed";
 }
@@ -1065,11 +1069,12 @@ function activateSimilarityGroup(position: number) {
 
 function toggleHideExcluded() {
   state.hideExcluded = !state.hideExcluded;
-  reconcileVisibleImages();
+  reconcileVisibleImages({ preserveView: true });
   render();
 }
 
-function reconcileVisibleImages() {
+function reconcileVisibleImages(options: ReconcileOptions = {}) {
+  const preserveView = options.preserveView === true;
   const indexes = visibleIndexes();
   if (!indexes.includes(state.activeIndex)) {
     state.activeIndex = indexes[0] ?? 0;
@@ -1082,7 +1087,7 @@ function reconcileVisibleImages() {
     state.compareSlots[0] = state.activeIndex;
   }
   refillEmptySlots();
-  fitView();
+  if (!preserveView) fitView();
 }
 
 function reviewTargetIndexes() {
@@ -1097,11 +1102,14 @@ function reviewTargetIndexes() {
 function applyReviewStatus(status: ReviewStatus) {
   const indexes = reviewTargetIndexes();
   if (!indexes.length) return;
+  const nextStatus = indexes.every((index) => state.images[index].reviewStatus === status)
+    ? "unreviewed"
+    : status;
   for (const index of indexes) {
-    state.images[index].reviewStatus = status;
+    state.images[index].reviewStatus = nextStatus;
   }
   void persistReviewState();
-  reconcileVisibleImages();
+  reconcileVisibleImages({ preserveView: true });
   render();
 }
 
