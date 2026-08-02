@@ -198,6 +198,8 @@ let thumbnailQueue: number[] = [];
 let activeThumbnailJobs = 0;
 let thumbnailQueueGeneration = 0;
 let thumbnailScrollFrame = 0;
+let thumbScrollbarFrame = 0;
+let thumbScrollbarDrag: { pointerId: number; startX: number; startScrollLeft: number } | null = null;
 let thumbnailPreloadTimer = 0;
 let thumbnailRequestsSincePrune = 0;
 let exifTimer = 0;
@@ -326,6 +328,8 @@ const elements = {
   cropUpscaleInput: document.querySelector<HTMLInputElement>("#crop-upscale"),
   cropCancelButton: document.querySelector<HTMLButtonElement>("#crop-cancel"),
   thumbs: document.querySelector<HTMLElement>("#thumbs"),
+  thumbScrollbar: document.querySelector<HTMLElement>("#thumb-scrollbar"),
+  thumbScrollbarThumb: document.querySelector<HTMLElement>("#thumb-scrollbar-thumb"),
   emptyState: document.querySelector<HTMLElement>("#empty-state"),
   appVersion: document.querySelector<HTMLElement>("#app-version"),
   imageCount: document.querySelector<HTMLElement>("#image-count"),
@@ -523,8 +527,14 @@ window.addEventListener("DOMContentLoaded", () => {
     thumbnailScrollFrame = window.requestAnimationFrame(() => {
       thumbnailScrollFrame = 0;
       preloadVisibleThumbnails();
+      updateThumbScrollbar();
     });
   });
+  elements.thumbScrollbar?.addEventListener("pointerdown", handleThumbScrollbarPointerDown);
+  elements.thumbScrollbar?.addEventListener("pointermove", handleThumbScrollbarPointerMove);
+  elements.thumbScrollbar?.addEventListener("pointerup", endThumbScrollbarDrag);
+  elements.thumbScrollbar?.addEventListener("pointercancel", endThumbScrollbarDrag);
+  window.addEventListener("resize", scheduleThumbScrollbarUpdate);
   elements.syncButton?.addEventListener("click", () => {
     toggleSyncView();
     render();
@@ -2300,6 +2310,114 @@ function preloadVisibleThumbnails() {
   pumpThumbnailQueue();
 }
 
+function scheduleThumbScrollbarUpdate() {
+  if (thumbScrollbarFrame) return;
+  thumbScrollbarFrame = window.requestAnimationFrame(() => {
+    thumbScrollbarFrame = 0;
+    updateThumbScrollbar();
+  });
+}
+
+function updateThumbScrollbar() {
+  const rail = elements.thumbs?.parentElement;
+  const track = elements.thumbScrollbar;
+  const thumb = elements.thumbScrollbarThumb;
+  if (!rail || !track || !thumb) return;
+
+  const maxScrollLeft = rail.scrollWidth - rail.clientWidth;
+  const trackWidth = track.clientWidth;
+  const canScroll = maxScrollLeft > 1 && trackWidth > 0;
+  track.classList.toggle("is-disabled", !canScroll);
+  track.setAttribute("aria-disabled", String(!canScroll));
+  if (!canScroll) {
+    thumb.style.width = `${Math.max(48, trackWidth)}px`;
+    thumb.style.transform = "translateX(0px)";
+    track.setAttribute("aria-valuemin", "0");
+    track.setAttribute("aria-valuemax", "0");
+    track.setAttribute("aria-valuenow", "0");
+    return;
+  }
+
+  const visibleRatio = rail.clientWidth / rail.scrollWidth;
+  const thumbWidth = clamp(Math.round(trackWidth * visibleRatio), 48, trackWidth);
+  const maxThumbLeft = Math.max(0, trackWidth - thumbWidth);
+  const thumbLeft = maxThumbLeft > 0
+    ? Math.round((rail.scrollLeft / maxScrollLeft) * maxThumbLeft)
+    : 0;
+
+  thumb.style.width = `${thumbWidth}px`;
+  thumb.style.transform = `translateX(${thumbLeft}px)`;
+  track.setAttribute("aria-valuemin", "0");
+  track.setAttribute("aria-valuemax", String(Math.round(maxScrollLeft)));
+  track.setAttribute("aria-valuenow", String(Math.round(rail.scrollLeft)));
+}
+
+function scrollThumbRailFromTrackPosition(trackX: number) {
+  const rail = elements.thumbs?.parentElement;
+  const track = elements.thumbScrollbar;
+  const thumb = elements.thumbScrollbarThumb;
+  if (!rail || !track || !thumb) return;
+
+  const maxScrollLeft = rail.scrollWidth - rail.clientWidth;
+  const trackWidth = track.clientWidth;
+  const thumbWidth = thumb.offsetWidth || 48;
+  const maxThumbLeft = Math.max(0, trackWidth - thumbWidth);
+  if (maxScrollLeft <= 1 || maxThumbLeft <= 0) return;
+
+  const thumbLeft = clamp(trackX - thumbWidth / 2, 0, maxThumbLeft);
+  rail.scrollLeft = (thumbLeft / maxThumbLeft) * maxScrollLeft;
+  updateThumbScrollbar();
+  preloadVisibleThumbnails();
+}
+
+function handleThumbScrollbarPointerDown(event: PointerEvent) {
+  const rail = elements.thumbs?.parentElement;
+  const track = elements.thumbScrollbar;
+  if (!rail || !track) return;
+  if (rail.scrollWidth - rail.clientWidth <= 1) return;
+
+  event.preventDefault();
+  const rect = track.getBoundingClientRect();
+  const pointerX = event.clientX - rect.left;
+  if (event.target !== elements.thumbScrollbarThumb) {
+    scrollThumbRailFromTrackPosition(pointerX);
+  }
+
+  thumbScrollbarDrag = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startScrollLeft: rail.scrollLeft,
+  };
+  track.classList.add("is-dragging");
+  track.setPointerCapture(event.pointerId);
+}
+
+function handleThumbScrollbarPointerMove(event: PointerEvent) {
+  const rail = elements.thumbs?.parentElement;
+  const track = elements.thumbScrollbar;
+  const thumb = elements.thumbScrollbarThumb;
+  if (!rail || !track || !thumb || !thumbScrollbarDrag || event.pointerId !== thumbScrollbarDrag.pointerId) return;
+
+  event.preventDefault();
+  const maxScrollLeft = rail.scrollWidth - rail.clientWidth;
+  const maxThumbLeft = Math.max(0, track.clientWidth - thumb.offsetWidth);
+  if (maxScrollLeft <= 1 || maxThumbLeft <= 0) return;
+
+  const deltaX = event.clientX - thumbScrollbarDrag.startX;
+  rail.scrollLeft = thumbScrollbarDrag.startScrollLeft + (deltaX / maxThumbLeft) * maxScrollLeft;
+  updateThumbScrollbar();
+  preloadVisibleThumbnails();
+}
+
+function endThumbScrollbarDrag(event: PointerEvent) {
+  if (!thumbScrollbarDrag || event.pointerId !== thumbScrollbarDrag.pointerId) return;
+  elements.thumbScrollbar?.classList.remove("is-dragging");
+  if (elements.thumbScrollbar?.hasPointerCapture(event.pointerId)) {
+    elements.thumbScrollbar.releasePointerCapture(event.pointerId);
+  }
+  thumbScrollbarDrag = null;
+}
+
 function keepQueuedThumbnails(keep: (index: number) => boolean) {
   thumbnailQueue = thumbnailQueue.filter((index) => {
     if (keep(index)) return true;
@@ -2521,6 +2639,7 @@ function render() {
   preloadAroundActive();
   preloadVisibleThumbnails();
   window.requestAnimationFrame(preloadVisibleThumbnails);
+  scheduleThumbScrollbarUpdate();
   scheduleThumbnailPreload();
   scheduleExifLoad();
 }
@@ -2850,6 +2969,7 @@ function renderThumbs() {
   elements.thumbs.replaceChildren(fragment);
   const activeThumb = elements.thumbs.querySelector<HTMLElement>('[aria-current="true"]');
   activeThumb?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  scheduleThumbScrollbarUpdate();
 }
 
 function toggleThumbCheck(index: number, checked: boolean, useRange: boolean) {

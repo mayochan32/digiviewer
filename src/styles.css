@@ -238,7 +238,7 @@ button:disabled {
 
 .viewer-panel {
   display: grid;
-  grid-template-rows: 30px 92px auto auto minmax(0, 1fr);
+  grid-template-rows: 30px 92px 14px auto auto minmax(0, 1fr);
   min-width: 0;
   height: 100%;
   min-height: 0;
@@ -555,15 +555,51 @@ button:disabled {
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  scrollbar-color: #7c8b95 #171a1d;
-  scrollbar-gutter: stable;
-  scrollbar-width: auto;
+  scrollbar-width: none;
   border-bottom: 1px solid var(--line);
   background: #0d0f11;
 }
 
+.thumb-scrollbar {
+  position: relative;
+  height: 14px;
+  border-bottom: 1px solid var(--line);
+  background: #111417;
+  cursor: pointer;
+  user-select: none;
+}
+
+.thumb-scrollbar.is-disabled {
+  cursor: default;
+}
+
+.thumb-scrollbar-thumb {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  height: 9px;
+  min-width: 48px;
+  border: 1px solid #98a8b2;
+  border-radius: 999px;
+  background: #7c8b95;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.thumb-scrollbar.is-disabled .thumb-scrollbar-thumb {
+  border-color: #3e4951;
+  background: #303840;
+  opacity: 0.65;
+}
+
+.thumb-scrollbar-thumb:hover,
+.thumb-scrollbar.is-dragging .thumb-scrollbar-thumb {
+  background: #a3b0b8;
+}
+
 .thumb-rail::-webkit-scrollbar {
-  height: 13px;
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .thumb-rail::-webkit-scrollbar-track {
