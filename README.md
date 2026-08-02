@@ -89,10 +89,10 @@ RAWは表示対象ではなく、同じベース名のRAWファイルがある�
 
 ## ダウンロード
 
-- [Windows x64 インストーラー v0.5.1](release/DigiViewer_0.5.1_windows_x64_setup.exe)
-- [Windows x64 SHA-256](release/DigiViewer_0.5.1_windows_x64_setup.exe.sha256)
-- [macOS Apple Silicon v0.5.1](release/DigiViewer_0.5.1_mac_aarch64.zip)
-- [macOS Apple Silicon SHA-256](release/DigiViewer_0.5.1_mac_aarch64.zip.sha256)
+- [Windows x64 インストーラー v0.5.5](release/DigiViewer_0.5.5_windows_x64_setup.exe)
+- [Windows x64 SHA-256](release/DigiViewer_0.5.5_windows_x64_setup.exe.sha256)
+- [macOS Apple Silicon v0.5.5](release/DigiViewer_0.5.5_mac_aarch64.zip)
+- [macOS Apple Silicon SHA-256](release/DigiViewer_0.5.5_mac_aarch64.zip.sha256)
 
 ## 開発
 
