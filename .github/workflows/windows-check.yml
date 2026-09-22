@@ -29,7 +29,7 @@ jobs:
         run: npm ci
 
       - name: Test project invariants
-        run: node --test tests/project.test.mjs
+        run: node --test tests/project.test.mjs tests/species-names.test.mjs
 
       - name: Test Tauri backend
         run: cargo test --manifest-path src-tauri/Cargo.toml --lib --locked

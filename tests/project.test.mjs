@@ -13,7 +13,7 @@ test('application version is consistent across frontend, backend and packaging',
   const cargo = await read('src-tauri/Cargo.toml');
   const cargoLock = await read('src-tauri/Cargo.lock');
   const html = await read('index.html');
-  assert.equal(packageJson.version, '0.6.0');
+  assert.equal(packageJson.version, '0.6.1');
   for (const version of [lock.version, lock.packages[''].version, config.version, cargo.match(/^version = "([^"]+)"/m)[1], cargoLock.match(/name = "digiviewer"\r?\nversion = "([^"]+)"/)[1], html.match(/id="app-version"[^>]*>v([^<]+)</)[1]]) assert.equal(version, packageJson.version);
   assert.equal(config.identifier, 'com.digiviewer.app');
 });
