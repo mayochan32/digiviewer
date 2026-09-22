@@ -28,6 +28,12 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Test project invariants
+        run: node --test tests/project.test.mjs
+
+      - name: Test Tauri backend
+        run: cargo test --manifest-path src-tauri/Cargo.toml --lib --locked
+
       - name: Build frontend
         run: npm run build
 

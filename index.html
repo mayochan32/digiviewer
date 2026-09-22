@@ -12,7 +12,7 @@
       <header class="topbar">
         <div class="brand">
           <strong>DigiViewer</strong>
-          <span id="app-version" class="app-version">v0.5.5</span>
+          <span id="app-version" class="app-version">v0.6.0</span>
           <span id="image-count">0 / 0</span>
           <div id="perf-meter" class="perf-meter" aria-label="処理時間">計測: -</div>
         </div>
@@ -24,6 +24,7 @@
           <input id="open-files" class="hidden-file-input" type="file" accept="image/*,.heic,.heif" multiple />
           <button id="build-thumb-cache" type="button" class="tool-button" disabled>サムネ作成</button>
           <span id="thumb-cache-status" class="thumb-cache-status"></span>
+          <button id="species-identify-button" type="button" class="tool-button" hidden>種名推測</button>
           <button id="settings-button" type="button" class="tool-button">設定</button>
         </div>
       </header>
@@ -169,10 +170,24 @@
             </select>
           </label>
         </div>
+        <section id="species-settings" class="species-settings">
+          <h3>種名推測（無料の追加機能）</h3>
+          <p>必要な場合だけ導入できます。写真はこのPC内で処理し、外部送信しません。</p>
+          <p>専用PythonとモデルをDigiViewerの保存領域に追加します。PCのPython・PATH・レジストリ・ドライバーは変更しません。</p>
+          <p>モデルは約4.5GB。空き容量15GB以上・メモリ16GB以上を目安にしてください。導入時はインターネット接続が必要です。</p>
+          <p id="species-setting-status" role="status">状態を確認しています</p>
+          <div id="species-setting-controls" class="species-controls"></div>
+        </section>
         <div class="settings-actions">
           <button id="clean-thumb-cache" type="button" class="tool-button" disabled>サムネ整理</button>
           <button id="clear-thumb-cache" type="button" class="tool-button" disabled>サムネ削除</button>
         </div>
+      </section>
+    </div>
+    <div id="species-result-dialog" class="modal-backdrop" hidden>
+      <section class="species-result-dialog" role="dialog" aria-modal="true" aria-labelledby="species-result-title">
+        <header class="settings-header"><h2 id="species-result-title">写真から種名を推測</h2><button id="species-result-close" type="button" class="icon-button" aria-label="種名推測を閉じる">×</button></header>
+        <div id="species-result-body"></div>
       </section>
     </div>
   </body>

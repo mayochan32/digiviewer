@@ -1090,3 +1090,17 @@ button:disabled {
   font-weight: 800;
   white-space: nowrap;
 }
+
+/* Optional species inference shares the viewer's existing settings and modal theme. */
+.settings-dialog { max-height: calc(100vh - 48px); overflow-y: auto; }
+.species-settings { border-top: 1px solid var(--line); padding-top: 12px; }
+.species-settings h3 { margin: 0 0 8px; }
+.species-settings p, #species-result-body p { font-size: .86rem; line-height: 1.6; overflow-wrap: anywhere; }
+.species-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.species-controls select { max-width: 100%; }
+.species-result-dialog { width: min(740px, 100%); max-height: calc(100vh - 48px); overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 20px; background: var(--panel); }
+.species-preview { display: block; max-width: 100%; height: 200px; object-fit: contain; margin: 14px auto; }
+#species-result-body label { display: flex; align-items: center; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+#species-result-body li { margin: 16px 0; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+#species-result-body input[type=text] { width: 100%; padding: 8px; }
+.species-filename { text-align: center; }

@@ -722,7 +722,7 @@ dependencies = [
 
 [[package]]
 name = "digiviewer"
-version = "0.5.5"
+version = "0.6.0"
 dependencies = [
  "filetime",
  "image",
@@ -731,6 +731,7 @@ dependencies = [
  "objc2-foundation",
  "serde",
  "serde_json",
+ "sha2",
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",

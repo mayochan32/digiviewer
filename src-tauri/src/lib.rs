@@ -1,3 +1,4 @@
+mod species;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap},
@@ -2099,9 +2100,15 @@ mod tests {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(species::SpeciesState::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
+            species::species_status,
+            species::species_install,
+            species::species_enable,
+            species::species_uninstall,
+            species::species_identify,
             scan_images,
             rename_images,
             move_images_to_deleted,
@@ -2121,6 +2128,11 @@ pub fn run() {
             reveal_file,
             open_crop_directory
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if matches!(event, tauri::RunEvent::Exit) {
+                app.state::<species::SpeciesState>().stop();
+            }
+        });
 }
