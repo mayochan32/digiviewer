@@ -100,6 +100,8 @@ RAWは表示対象ではなく、同じベース名のRAWファイルがある�
 - [macOS Apple Silicon v0.6.0](https://github.com/mayochan32/digiviewer/releases/download/v0.6.0/DigiViewer_0.6.0_mac_aarch64.zip)
 - [macOS Apple Silicon SHA-256](https://github.com/mayochan32/digiviewer/releases/download/v0.6.0/DigiViewer_0.6.0_mac_aarch64.zip.sha256)
 
+Mac版は仮署名済み・Apple未公証です。初回起動時の許可手順は[マニュアル](https://mayochan32.github.io/digiviewer/manual/#install)を参照してください。2026-09-22に0.6.0のMac版ZIPの署名不備を修正し、再梱包しました。
+
 ## 開発
 
 DigiViewerはTauri + Rust + TypeScriptで作っています。
@@ -120,7 +122,7 @@ npm run dev
 ビルド:
 
 ```sh
-npm run tauri build -- --bundles app
+bash scripts/package-macos.sh
 ```
 
 Windows向けのビルド確認はGitHub Actionsの `Windows Check` で行います。成功すると、実行ファイル、NSISインストーラー、MSIインストーラーがArtifactsに出力されます。
