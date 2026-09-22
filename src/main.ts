@@ -1,3 +1,4 @@
+import { setupSpeciesOption } from "./species-option";
 import exifr from "exifr";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -387,6 +388,15 @@ const elements = {
 };
 
 window.addEventListener("DOMContentLoaded", () => {
+  setupSpeciesOption({
+    native: isTauriRuntime(),
+    photo: activeImage,
+    rename: async (path, speciesName) => {
+      const results = await invoke<RenameResult[]>("rename_images", { request: { paths: [path], speciesName } });
+      applyRenameResults(results);
+      render();
+    },
+  });
   applyFontSizeMode();
   ensureCropDirectory();
   loadAppVersion();

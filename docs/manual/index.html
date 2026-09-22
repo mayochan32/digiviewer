@@ -13,7 +13,7 @@
     <a class="skip-link" href="#main">本文へ移動</a>
     <header class="site-header">
       <a class="brand" href="../index.html"><img src="../assets/digiview-icon.png" alt="" width="34" height="34" /><span>DigiViewer <span class="brand-sub">マニュアル</span></span></a>
-      <nav aria-label="関連ページ"><a href="../index.html">紹介ページ</a><a href="https://github.com/mayochan32/digiviewer/releases/tag/v0.5.5">ダウンロード</a></nav>
+      <nav aria-label="関連ページ"><a href="../index.html">紹介ページ</a><a href="https://github.com/mayochan32/digiviewer/releases/tag/v0.6.0">ダウンロード</a></nav>
     </header>
 
     <div class="layout">
@@ -30,12 +30,13 @@
             <a href="#review">06 類似写真・評価</a>
             <a href="#crop">07 クロップ</a>
             <a href="#settings">08 設定・キャッシュ</a>
+            <a href="#species">種名推測（追加機能）</a>
             <a href="#troubleshooting">09 困ったとき</a>
             <a href="#shortcuts">10 操作早見表</a>
             <a href="#files">11 保存データ</a>
           </nav>
         </details>
-        <p class="contents-meta">対象 v0.5.5<br />macOS / Windows<br />更新 2026年9月21日</p>
+        <p class="contents-meta">対象 v0.6.0<br />macOS / Windows<br />更新 2026年9月22日</p>
       </aside>
 
       <main id="main">
@@ -46,7 +47,7 @@
           <p>DigiViewerは、連写などを活用して大量の写真を撮影し、その中から必要な写真を選び出す人のために作った画像ビューアーです。</p>
           <p>写真を素早く切り替え、同じ倍率・位置で並べて比較することで、微妙なピントや構図の違いを確認できます。昆虫や野生生物の観察写真をはじめ、大量の写真を確認・選別する作業を支えます。</p>
           <p>「デジタル観察のススメ」を支える道具のひとつとして、撮影した写真をじっくり見返し、種名を付け、観察記録や地域の生き物情報の共有へつなげることを目指しています。</p>
-          <p class="meta">このマニュアルはデスクトップアプリ v0.5.5 の操作を説明します。MacとWindowsで共通の操作を中心に、異なる部分にはOS名を添えています。</p>
+          <p class="meta">このマニュアルはデスクトップアプリ v0.6.0 の操作を説明します。MacとWindowsで共通の操作を中心に、異なる部分にはOS名を添えています。</p>
           <a class="text-link" href="#quickstart">まず写真を開いてみる →</a>
         </section>
 
@@ -62,6 +63,7 @@
               <li><a href="#review">類似写真をまとめて、評価を付ける</a></li>
               <li><a href="#crop">必要な範囲を切り抜いて保存する</a></li>
               <li><a href="#settings">快適に使うための設定とキャッシュ</a></li>
+              <li><a href="#species">種名推測（無料の追加機能）</a></li>
               <li><a href="#troubleshooting">困ったとき</a></li>
               <li><a href="#shortcuts">操作早見表</a></li>
               <li><a href="#files">保存するデータと対応形式</a></li>
@@ -72,17 +74,17 @@
         <section id="install">
           <p class="section-number">01 / START</p>
           <h2>インストールと起動</h2>
-          <p><a href="https://github.com/mayochan32/digiviewer/releases/tag/v0.5.5">v0.5.5のリリースページ</a>の「Assets」から、お使いのOSに合う配布ファイルを取得します。ソースコードのダウンロードや開発環境の準備は不要です。</p>
+          <p><a href="https://github.com/mayochan32/digiviewer/releases/tag/v0.6.0">v0.6.0のリリースページ</a>の「Assets」から、お使いのOSに合う配布ファイルを取得します。ソースコードのダウンロードや開発環境の準備は不要です。</p>
           <h3>Mac（Apple Silicon）</h3>
           <ol>
-            <li><code>DigiViewer_0.5.5_mac_aarch64.zip</code> をダウンロードして展開します。</li>
+            <li><code>DigiViewer_0.6.0_mac_aarch64.zip</code> をダウンロードして展開します。</li>
             <li><code>DigiViewer.app</code> を「アプリケーション」フォルダに入れます。</li>
             <li>アプリケーションフォルダからDigiViewerを開きます。必要に応じてDockに追加します。</li>
           </ol>
           <p>このMac用パッケージはApple Silicon向けです。更新するときはDigiViewerを終了してからアプリを置き換え、起動後に画面左上のバージョンを確認してください。</p>
           <h3>Windows（x64）</h3>
           <ol>
-            <li><code>DigiViewer_0.5.5_windows_x64_setup.exe</code> をダウンロードします。</li>
+            <li><code>DigiViewer_0.6.0_windows_x64_setup.exe</code> をダウンロードします。</li>
             <li>インストーラーを起動し、案内に沿ってインストールします。</li>
             <li>スタートメニューからDigiViewerを開きます。</li>
           </ol>
@@ -167,7 +169,7 @@
               <tr><th scope="row">「選択解除」</th><td>すべてのチェックを外します。採用・保留などの評価は残ります。</td></tr>
             </tbody>
           </table></div>
-          <p class="note">v0.5.5の範囲チェックは、元の画像一覧の順序に基づきます。フィルタやグループ表示で見えていない写真が含まれる場合があるため、範囲チェックは通常の一覧で行い、操作前に「選択」の枚数を確認してください。絞り込み後も、以前付けたチェックは残る場合があります。</p>
+          <p class="note">v0.6.0の範囲チェックは、元の画像一覧の順序に基づきます。フィルタやグループ表示で見えていない写真が含まれる場合があるため、範囲チェックは通常の一覧で行い、操作前に「選択」の枚数を確認してください。絞り込み後も、以前付けたチェックは残る場合があります。</p>
           <h3>種名をファイル名に付ける</h3>
           <ol>
             <li>対象の写真をチェックし、「種名付加」を押します。</li>
@@ -183,7 +185,7 @@
           <h3>ファイル名で絞り込む</h3>
           <p>ファイル名の左にある「ファイル名フィルタ」に文字を入力します。ファイル名の一部が一致する写真だけが表示されます。英字の大文字・小文字は区別しません。入力を空にすると絞り込みが解除されます。</p>
           <h3>別のソフトで追加した画像を読み込む</h3>
-          <p>上段の「リロード」を押すと、同じフォルダに追加された画像を一覧に加え、追加分のサムネイルキャッシュを作成します。v0.5.5のリロードは<strong>新しいファイルの追加</strong>が対象です。同じ名前で上書き編集した画像や、外部で削除・改名したファイルを反映したい場合は、「フォルダ」から開き直してください。</p>
+          <p>上段の「リロード」を押すと、同じフォルダに追加された画像を一覧に加え、追加分のサムネイルキャッシュを作成します。v0.6.0のリロードは<strong>新しいファイルの追加</strong>が対象です。同じ名前で上書き編集した画像や、外部で削除・改名したファイルを反映したい場合は、「フォルダ」から開き直してください。</p>
         </section>
 
         <section id="review">
@@ -244,7 +246,7 @@
             <figcaption>先読み、文字サイズ、キャッシュの管理は設定画面にまとまっています。</figcaption>
           </figure>
           <div class="table-wrap"><table>
-            <thead><tr><th scope="col">設定</th><th scope="col">効果とv0.5.5の制限</th></tr></thead>
+            <thead><tr><th scope="col">設定</th><th scope="col">効果とv0.6.0の制限</th></tr></thead>
             <tbody>
               <tr><th scope="row">本画像先読み</th><td>表示中の写真の前後を先に読み込みます。0で先読みを止められます。入力欄は50まで指定できますが、現在の実効上限は前後各1枚です。</td></tr>
               <tr><th scope="row">サムネ先読み</th><td>表示中の写真の前後にあるサムネイルを準備します。入力欄は1000までですが、候補範囲の実効上限は前後各24枚、1回の背景処理は最大12枚です。0にしても画面上に見えているサムネイルは読み込みます。</td></tr>
@@ -262,6 +264,29 @@
           <p>写真フォルダに保存したキャッシュは、同じフォルダをMacとWindowsで開くときにも利用できます。画像と一緒に <code>.digiviewer</code> フォルダも保持してください。</p>
           <h3>処理時間の読み方</h3>
           <p>「走査」はファイルを探す時間、「一覧」「描画」は表示準備、「画像」は本画像の読み込み、「EXIF」は撮影情報の読み込み、「サムネ」「平均」はサムネイルの処理時間です。単位はms（1,000ms＝1秒）です。各処理は重なることがあるため、合計が操作の待ち時間になるわけではありません。</p>
+        </section>
+
+        <section id="species">
+          <p class="section-number">OPTION / SPECIES</p>
+          <h2>種名推測（無料の追加機能）</h2>
+          <p>写真1枚から生き物の候補を最大5件表示します。必要な場合だけ「設定」から導入できます。DigiViewerだけで利用でき、写真の管理・公開ソフトは不要です。比較表示では操作対象の1枚を判定します。</p>
+          <h3>導入と判定</h3>
+          <ol>
+            <li>「設定」の「種名推測（無料の追加機能）」で「無料の追加機能を導入」を押します。WindowsではまずCPU版を選べます。</li>
+            <li>導入後に「有効にする」を押し、設定を閉じます。</li>
+            <li>写真を表示し「種名推測」を押します。日本で撮影した写真なら日本の生息記録を考慮する項目を選び、「この写真を判定」を押します。</li>
+            <li>候補・相対スコア・写真全体と切り出しの順位・国内記録を写真と照合します。</li>
+            <li>必要なら「この候補を種名欄に入れる」を押し、確認・編集してから「この写真のファイル名に追加」を押します。同名のRAWも改名されます。</li>
+          </ol>
+          <p class="note">相対スコアは正解確率ではありません。高スコアでも誤ることや、正解が候補に含まれないことがあります。候補選択だけでは写真名は変わりません。判断できなければ閉じてください。和名未登録の候補は学名で表示します。</p>
+          <h3>環境と保存先</h3>
+          <p>Apple Silicon MacのCPU/MPSとWindows x64のCPU版で主要動作を確認しています。GPUは必須ではありません。WindowsのNVIDIA版は対応ドライバーがあるPC向けで、実機未検証です。</p>
+          <p>導入時はインターネット接続・空き容量15GB以上・メモリ16GB以上が目安です。Windows CPU版の専用領域は実測約10.38GiBでした。専用Python・仮想環境・モデルをDigiViewerのアプリデータ領域の <code>species-option</code> に置きます。既存のPythonへの追加インストールは不要です。写真はPC内で処理し、外部送信しません。有料APIやアカウント登録は不要です。</p>
+          <p>設定の「無効にする」で停止、「有効にする」で再開できます。「追加データを削除」は専用環境とモデルを削除し、写真や通常の設定は残します。判定対象はJPEG・PNG・WebP・BMP・TIFF・GIF（先頭フレーム）で、RAW・HEICは対象外です。</p>
+          <h3>Windowsで終了するときの注意</h3>
+          <p class="note"><strong>判定が完了してからアプリを終了してください。</strong> 判定中に強制終了すると、専用Pythonプロセスが残ることがあります。通常のウィンドウ終了での挙動と自然終了までの時間は未確認です。</p>
+          <p>残った場合はタスクマネージャーの「詳細」で実行ファイルの場所を確認し、<code>%LOCALAPPDATA%\com.digiviewer.app\species-option\</code> 配下の専用Pythonだけを終了してください。他のソフトのPythonを一括終了しないでください。その後、DigiViewerを再起動できます。</p>
+          <p>完全なネットワーク切断下の判定や導入中断後の復旧など、未検証項目は<a href="https://github.com/mayochan32/digiviewer/blob/main/docs/windows-0.6.0-review.md">検証結果の詳細</a>に記載しています。</p>
         </section>
 
         <section id="troubleshooting">
@@ -333,7 +358,7 @@
           <p>写真と <code>.digiviewer</code> を一緒に持ち運ぶと、サムネイルや評価を共有できます。設定の文字サイズや先読み枚数は各アプリ側で設定します。画像へのチェックは作業中の選択で、フォルダを開き直したときの復元対象ではありません。</p>
         </section>
         <footer class="manual-footer">
-          <p>DigiViewer v0.5.5 操作マニュアル / 更新 2026年9月21日</p>
+          <p>DigiViewer v0.6.0 操作マニュアル / 更新 2026年9月22日</p>
           <p><a href="#intro">先頭へ戻る</a> · <a href="../index.html">紹介ページ</a> · <a href="https://github.com/mayochan32/digiviewer/blob/main/CHANGELOG.md">変更履歴</a> · <a href="https://github.com/mayochan32/digiviewer/issues">不具合・要望を報告</a></p>
         </footer>
       </main>
