@@ -246,6 +246,7 @@ button:disabled {
 
 .similarity-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 7px;
   min-width: 0;
@@ -264,6 +265,25 @@ button:disabled {
   color: var(--ink);
   font: inherit;
   font-weight: 700;
+}
+
+.species-toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.species-toolbar-controls label { white-space: nowrap; }
+#species-default-name {
+  width: 300px;
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font: inherit;
 }
 
 .similarity-status,

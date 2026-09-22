@@ -349,6 +349,7 @@ const elements = {
   mapButton: document.querySelector<HTMLButtonElement>("#map-button"),
   selectionCount: document.querySelector<HTMLElement>("#selection-count"),
   appendSpeciesButton: document.querySelector<HTMLButtonElement>("#append-species"),
+  speciesDefaultName: document.querySelector<HTMLInputElement>("#species-default-name"),
   copyFilesButton: document.querySelector<HTMLButtonElement>("#copy-files"),
   moveDeletedButton: document.querySelector<HTMLButtonElement>("#move-deleted"),
   clearSelectionButton: document.querySelector<HTMLButtonElement>("#clear-file-selection"),
@@ -389,6 +390,7 @@ const elements = {
 
 window.addEventListener("DOMContentLoaded", () => {
   setupSpeciesOption({
+    setSpeciesName: (name) => { if (elements.speciesDefaultName) elements.speciesDefaultName.value = name; },
     native: isTauriRuntime(),
     photo: activeImage,
     rename: async (path, speciesName) => {
@@ -1966,14 +1968,14 @@ async function appendSpeciesNameToCheckedImages() {
 function requestSpeciesName(count: number) {
   return new Promise<string | null>((resolve) => {
     if (!elements.speciesDialog || !elements.speciesNameInput) {
-      resolve(window.prompt(`${count}枚のファイル名に追加する種名を入力してください。`));
+      resolve(window.prompt(`${count}枚のファイル名に追加する種名を入力してください。`, elements.speciesDefaultName?.value ?? ""));
       return;
     }
 
     if (elements.speciesDialogMessage) {
       elements.speciesDialogMessage.textContent = `${count}枚のファイル名の最後に種名を追加します。`;
     }
-    elements.speciesNameInput.value = "";
+    elements.speciesNameInput.value = elements.speciesDefaultName?.value ?? "";
     elements.speciesDialog.hidden = false;
     elements.speciesNameInput.focus();
 

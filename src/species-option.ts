@@ -9,7 +9,7 @@ type Result = { candidates: Candidate[]; otherScore: number; device: string; sec
 const element = (tag: string, text = '') => { const node = document.createElement(tag); node.textContent = text; return node; };
 const button = (text: string, action: () => void) => { const node = document.createElement('button'); node.type = 'button'; node.className = 'tool-button'; node.textContent = text; node.addEventListener('click', action); return node; };
 
-export function setupSpeciesOption(options: { native: boolean; photo: () => Photo | null | undefined; rename: (path: string, name: string) => Promise<void> }) {
+export function setupSpeciesOption(options: { native: boolean; photo: () => Photo | null | undefined; rename: (path: string, name: string) => Promise<void>; setSpeciesName: (name: string) => void }) {
   const settings = document.querySelector<HTMLElement>('#species-settings')!;
   const statusText = document.querySelector<HTMLElement>('#species-setting-status')!;
   const controls = document.querySelector<HTMLElement>('#species-setting-controls')!;
@@ -84,13 +84,22 @@ export function setupSpeciesOption(options: { native: boolean; photo: () => Phot
         message.textContent = `${result.seconds}秒 / ${result.device.toUpperCase()} / ${result.japanApplied ? '日本の記録を考慮' : '地域補正なし'}`;
         results.append(element('p', '数値は候補間の相対スコアです。正解である確率ではありません。候補に正解が含まれないこともあります。'));
         if (result.warning) results.append(element('p', result.warning));
-        const draftLabel = element('label', '確認した種名（ファイル名に追加する文字）'); const draft = document.createElement('input'); draft.type = 'text'; draft.placeholder = '候補から選ぶか、自分で入力'; draftLabel.append(draft);
+        const draftLabel = element('label', '確認した種名'); const draft = document.createElement('input'); draft.type = 'text'; draft.placeholder = '候補から選ぶか、自分で入力'; draftLabel.append(draft);
+        const setField = button('種名フィールドに設定', () => {
+          const name = draft.value.trim();
+          if (!name) { message.textContent = '確認した種名を入力してください。'; return; }
+          options.setSpeciesName(name);
+          message.textContent = 'メイン画面の種名フィールドに設定しました。ファイル名は変更していません。';
+        });
         const rename = button('この写真のファイル名に追加', () => void (async () => {
           const name = draft.value.trim(); if (!name) { message.textContent = '確認した種名を入力してください。'; return; }
           rename.disabled = true;
-          try { await options.rename(target.path, name); message.textContent = '確認した名前をファイル名に追加しました。'; run.disabled = true; }
+          setField.disabled = true;
+          try { await options.rename(target.path, name); options.setSpeciesName(name); message.textContent = '確認した名前をファイル名に追加し、種名フィールドにも設定しました。'; run.disabled = true; }
           catch (error) { message.textContent = String(error); rename.disabled = false; }
+          finally { setField.disabled = false; }
         })());
+        const actions = element('div'); actions.className = 'species-controls'; actions.append(setField, rename);
         const list = element('ol');
         for (const candidate of result.candidates) {
           const row = element('li');
@@ -103,7 +112,7 @@ export function setupSpeciesOption(options: { native: boolean; photo: () => Phot
           row.append(button('この候補を種名欄に入れる', () => { draft.value = name ?? candidate.scientificName; message.textContent = '種名欄に入れました。まだファイル名は変更していません。写真と照合して確認してください。'; }));
           list.append(row);
         }
-        results.append(element('p', `和名は同梱辞書（${japaneseNameCount.toLocaleString()}学名、${japaneseNameDate}取得）から表示します。すべての種を網羅しているわけではなく、未収録の種は学名で表示します。`), list, element('p', `表示外の候補: ${(result.otherScore * 100).toFixed(1)}%。切り出しは同じ写真の補助情報です。模様などの形態的な根拠をAIが説明しているものではありません。国内記録は飼育・誤記録などを含む可能性があります。`), draftLabel, rename);
+        results.append(element('p', `和名は同梱辞書（${japaneseNameCount.toLocaleString()}学名、${japaneseNameDate}取得）から表示します。すべての種を網羅しているわけではなく、未収録の種は学名で表示します。`), list, element('p', `表示外の候補: ${(result.otherScore * 100).toFixed(1)}%。切り出しは同じ写真の補助情報です。模様などの形態的な根拠をAIが説明しているものではありません。国内記録は飼育・誤記録などを含む可能性があります。`), draftLabel, actions);
       } catch (error) { message.textContent = `判定できませんでした。${String(error)}`; }
       finally { run.disabled = false; await refresh(); }
     })());

@@ -24,7 +24,6 @@
           <input id="open-files" class="hidden-file-input" type="file" accept="image/*,.heic,.heif" multiple />
           <button id="build-thumb-cache" type="button" class="tool-button" disabled>サムネ作成</button>
           <span id="thumb-cache-status" class="thumb-cache-status"></span>
-          <button id="species-identify-button" type="button" class="tool-button" hidden>種名推測</button>
           <button id="settings-button" type="button" class="tool-button">設定</button>
         </div>
       </header>
@@ -55,6 +54,12 @@
             <button id="previous-group" type="button" class="icon-button" title="前の類似グループ" disabled>‹</button>
             <button id="next-group" type="button" class="icon-button" title="次の類似グループ" disabled>›</button>
             <span id="similarity-status" class="similarity-status">未解析</span>
+            <div class="species-toolbar-controls">
+              <button id="species-identify-button" type="button" class="tool-button" hidden>種名推測</button>
+              <button id="append-species" type="button" class="tool-button" disabled>種名付加</button>
+              <label for="species-default-name">種名</label>
+              <input id="species-default-name" type="text" autocomplete="off" placeholder="種名付加の初期値" />
+            </div>
             <span class="similarity-spacer"></span>
             <span id="review-target" class="review-target">対象: 表示中</span>
             <button type="button" class="review-button review-keep" data-review-status="keep">採用</button>
@@ -79,7 +84,6 @@
               <button type="button" data-compare-count="4" aria-pressed="false">4</button>
             </div>
             <button id="sync-toggle" type="button" class="tool-button" aria-pressed="true">同期 ON</button>
-            <button id="append-species" type="button" class="tool-button" disabled>種名付加</button>
             <button id="copy-files" type="button" class="tool-button" disabled>コピー</button>
             <button id="move-deleted" type="button" class="tool-button" disabled>deletedへ移動</button>
             <button id="clear-file-selection" type="button" class="tool-button" disabled>選択解除</button>

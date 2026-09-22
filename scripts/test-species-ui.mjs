@@ -10,7 +10,24 @@ try {
   page.on('pageerror', error => { errors.push(String(error)); console.error('UI error:', error); });
   await page.addInitScript(() => {
     window.__renames = [];
-    window.__TAURI_INTERNALS__ = { invoke: async command => {
+    window.__TAURI_INTERNALS__ = {
+      transformCallback: () => 1,
+      convertFileSrc: () => '/docs/manual/images/overview.png',
+      invoke: async (command, args) => {
+      if (command === 'ensure_crop_directory') return '/fixtures/crops';
+      if (command === 'app_version') return '0.6.1';
+      if (command === 'plugin:event|listen') return 1;
+      if (command === 'plugin:dialog|open') return '/fixtures';
+      if (command === 'load_review_state') return [];
+      if (command === 'save_review_state') return;
+      if (command === 'get_thumbnail') return null;
+      if (command === 'scan_images') return [{ path: '/fixtures/butterfly.jpg', name: 'butterfly.jpg', size: 1000, modified_at: 1 }];
+      if (command === 'rename_images') {
+        if (window.__failRename) throw new Error('テスト用の変更失敗');
+        const path = args.request.paths[0], name = args.request.speciesName;
+        window.__renames.push({ path, name });
+        return [{ old_path: path, path: '/fixtures/butterfly_' + name + '.jpg', name: 'butterfly_' + name + '.jpg', size: 1000, modified_at: 1 }];
+      }
       if (command === 'species_status') return { supported: true, windows: false, installed: true, enabled: true, busy: false, progress: '', error: '', geography: { complete: true } };
       if (command === 'species_identify') return {
         candidates: [
@@ -24,16 +41,28 @@ try {
       throw new Error('Unexpected native command: ' + command);
     }};
   });
-  // Mount the production component in its real HTML. Only native inference and rename are fixtures.
-  await page.route('**/src/main.ts*', route => route.fulfill({ contentType: 'text/javascript', body: `
-    import './styles.css';
-    import { setupSpeciesOption } from '/src/species-option.ts';
-    setupSpeciesOption({ native: true,
-      photo: () => ({ path: '/fixtures/butterfly.jpg', name: '和名表示テスト（判定結果は固定）', url: '/docs/manual/images/overview.png' }),
-      rename: async (path, name) => { window.__renames.push({ path, name }); }
-    });
-  ` }));
+  // Run the complete production UI; only native calls are fixtures.
   await page.goto(process.env.DIGIVIEWER_TEST_URL || 'http://127.0.0.1:1420');
+  await page.locator('#choose-folder').click();
+  await page.locator('.thumb-check').first().click();
+  await page.locator('#append-species').click();
+  assert.equal(await page.locator('#species-name-input').inputValue(), '');
+  await page.locator('#species-cancel').click();
+  await page.locator('#species-default-name').fill('ナミアゲハ');
+  await page.locator('#append-species').click();
+  assert.equal(await page.locator('#species-name-input').inputValue(), 'ナミアゲハ');
+  await page.locator('#species-cancel').click();
+  for (const width of [860, 1280, 1600]) {
+    await page.setViewportSize({ width, height: 1000 });
+    const analysis = await page.locator('#analyze-similarity').boundingBox();
+    const species = await page.locator('#species-identify-button').boundingBox();
+    if (width >= 1280) assert.equal(analysis.y, species.y, `same toolbar row at ${width}px`);
+    assert.equal(await page.locator('.similarity-toolbar #species-identify-button').count(), 1);
+    assert.equal((await page.locator('#species-default-name').boundingBox()).width, 300);
+    assert.ok(await page.locator('#species-default-name').evaluate(el => el.getBoundingClientRect().right <= innerWidth));
+  }
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  if (process.env.DIGIVIEWER_TEST_SCREENSHOT) await page.screenshot({ path: process.env.DIGIVIEWER_TEST_SCREENSHOT + '.main.png' });
   await page.locator('#species-identify-button').click();
   assert.deepEqual(errors, []);
   await page.getByRole('button', { name: 'この写真を判定', exact: true }).click();
@@ -48,10 +77,27 @@ try {
   assert.deepEqual(await page.evaluate(() => window.__renames), []);
   await rows.nth(1).getByRole('button', { name: 'この候補を種名欄に入れる' }).click();
   assert.equal(await page.locator('#species-result-body input[type=text]').inputValue(), 'オオチャバネセセリ');
+  await page.getByRole('button', { name: '種名フィールドに設定', exact: true }).click();
+  assert.equal(await page.locator('#species-default-name').inputValue(), 'オオチャバネセセリ');
+  assert.deepEqual(await page.evaluate(() => window.__renames), []);
   await rows.nth(0).getByRole('button', { name: 'この候補を種名欄に入れる' }).click();
+  await page.evaluate(() => { window.__failRename = true; });
   await page.getByRole('button', { name: 'この写真のファイル名に追加' }).click();
+  await page.getByRole('status').filter({ hasText: 'テスト用の変更失敗' }).waitFor();
+  assert.equal(await page.locator('#species-default-name').inputValue(), 'オオチャバネセセリ');
+  await page.evaluate(() => { window.__failRename = false; });
+  await page.getByRole('button', { name: 'この写真のファイル名に追加' }).click();
+  await page.getByRole('status').filter({ hasText: '種名フィールドにも設定しました' }).waitFor();
+  assert.equal(await page.locator('#species-default-name').inputValue(), 'イチモンジセセリ');
   assert.deepEqual(await page.evaluate(() => window.__renames), [{ path: '/fixtures/butterfly.jpg', name: 'イチモンジセセリ' }]);
   assert.deepEqual(errors, []);
   if (process.env.DIGIVIEWER_TEST_SCREENSHOT) await page.locator('#species-result-dialog').screenshot({ path: process.env.DIGIVIEWER_TEST_SCREENSHOT });
-  console.log('PASS: reported five candidates, Japanese labels, unknown fallbacks, selection without rename, and explicit Japanese rename');
+  await page.locator('#species-result-close').click();
+  await page.locator('#append-species').click();
+  assert.equal(await page.locator('#species-name-input').inputValue(), 'イチモンジセセリ');
+  await page.locator('#species-cancel').click();
+  await page.locator('#species-default-name').fill('');
+  await page.locator('#append-species').click();
+  assert.equal(await page.locator('#species-name-input').inputValue(), '');
+  console.log('PASS: full production UI, toolbar layout, empty/prefilled defaults, Japanese names, field-only action, failed rename preservation, successful rename and default propagation');
 } finally { await browser.close(); }
