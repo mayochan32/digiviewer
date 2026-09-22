@@ -93,12 +93,12 @@ RAWは表示対象ではなく、同じベース名のRAWファイルがある�
 
 ## ダウンロード
 
-最新版は **0.6.0**（任意で導入できる種名推測を追加）です。[リリースページ](https://github.com/mayochan32/digiviewer/releases/tag/v0.6.0)からダウンロードできます。Windows CPU版は主要動作を実機確認済みです。[既知の制約と未検証項目](docs/windows-0.6.0-review.md)があります。
+最新版は **0.6.1**（任意で導入できる種名推測を追加）です。[リリースページ](https://github.com/mayochan32/digiviewer/releases/tag/v0.6.1)からダウンロードできます。Windows CPU版は主要動作を実機確認済みです。[既知の制約と未検証項目](docs/windows-0.6.0-review.md)があります。
 
-- [Windows x64 インストーラー v0.6.0](https://github.com/mayochan32/digiviewer/releases/download/v0.6.0/DigiViewer_0.6.0_windows_x64_setup.exe)
-- [Windows x64 SHA-256](https://github.com/mayochan32/digiviewer/releases/download/v0.6.0/DigiViewer_0.6.0_windows_x64_setup.exe.sha256)
-- [macOS Apple Silicon v0.6.0](https://github.com/mayochan32/digiviewer/releases/download/v0.6.0/DigiViewer_0.6.0_mac_aarch64.zip)
-- [macOS Apple Silicon SHA-256](https://github.com/mayochan32/digiviewer/releases/download/v0.6.0/DigiViewer_0.6.0_mac_aarch64.zip.sha256)
+- [Windows x64 インストーラー v0.6.1](https://github.com/mayochan32/digiviewer/releases/download/v0.6.1/DigiViewer_0.6.1_windows_x64_setup.exe)
+- [Windows x64 SHA-256](https://github.com/mayochan32/digiviewer/releases/download/v0.6.1/DigiViewer_0.6.1_windows_x64_setup.exe.sha256)
+- [macOS Apple Silicon v0.6.1](https://github.com/mayochan32/digiviewer/releases/download/v0.6.1/DigiViewer_0.6.1_mac_aarch64.zip)
+- [macOS Apple Silicon SHA-256](https://github.com/mayochan32/digiviewer/releases/download/v0.6.1/DigiViewer_0.6.1_mac_aarch64.zip.sha256)
 
 Mac版は仮署名済み・Apple未公証です。初回起動時の許可手順は[マニュアル](https://mayochan32.github.io/digiviewer/manual/#install)を参照してください。2026-09-22に0.6.0のMac版ZIPの署名不備を修正し、再梱包しました。
 
@@ -158,7 +158,7 @@ DigiViewerは、単なる画像ビューアーではなく、観察から記録�
 
 ## 種名推測（無料の追加機能）
 
-DigiViewerの「設定」→「種名推測」から、必要な場合だけ導入・有効化できます。有効時は表示中の写真を「種名推測」ボタンから判定し、上位5候補・相対スコア・補助的な根拠を確認できます。候補選択だけでは写真名を変更せず、人が確認して反映します。
+DigiViewerの「設定」→「種名推測」から、必要な場合だけ導入・有効化できます。有効時は表示中の写真を「種名推測」ボタンから判定し、上位5候補・相対スコア・補助的な根拠を確認できます。0.6.1では12,580学名分の和名辞書を同梱し、和名表示と入力反映に対応しています。候補選択だけでは写真名を変更せず、人が確認して反映します。
 
 専用PythonとモデルはDigiViewerのアプリデータ領域に保存し、既存のPythonやPATHを変更しません。写真公開サイト・管理ページとは独立して動きます。Mac CPU/MPSとWindows x64 CPU版の主要動作を確認済みです。Windows NVIDIA版は実機未検証です。詳しくは[種名推測の使い方と対応環境](docs/species-option.md)を参照してください。
 
