@@ -1,0 +1,2800 @@
+{
+  "schema": 1,
+  "retrieved": "2026-10-12",
+  "count": 673,
+  "sources": {
+    "col": {
+      "title": "Catalogue of Life",
+      "version": "2026-08-26 XR",
+      "datasetKey": 316165,
+      "doi": "10.48580/dgyy9",
+      "sourceUrl": "https://doi.org/10.48580/dgyy9",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution": "Bánki et al., Catalogue of Life (2026-08-26 XR, CC BY 4.0) をDigiViewerが抽出・加工。",
+      "retrieved": "2026-10-12"
+    },
+    "inat": {
+      "title": "iNaturalist Taxonomy",
+      "version": "2026-10-01",
+      "sourceUrl": "https://doi.org/10.48580/d7r9s.v56",
+      "metadataUrl": "https://api.checklistbank.org/dataset/139831",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "retrieved": "2026-10-12",
+      "attribution": "iNaturalist contributors, iNaturalist Taxonomy (2026-10-01, CC BY 4.0) をDigiViewerが抽出・加工。"
+    },
+    "biodic": {
+      "title": "環境省生物多様性センター「種の多様性調査（専門家調査）対象種一覧」",
+      "version": "1997",
+      "sourceUrl": "https://www.biodic.go.jp/kiso/do05/index.html",
+      "license": "PDL-1.0",
+      "licenseUrl": "https://www.biodic.go.jp/copyright/terms_of_service.html",
+      "attribution": "環境省生物多様性センター「種の多様性調査（専門家調査）対象種一覧」（1997、PDL1.0）をDigiViewerが抽出・加工。",
+      "retrieved": "2026-10-12"
+    },
+    "snet": {
+      "title": "S-Net",
+      "sourceUrl": "https://www.kahaku.go.jp/kenkyu/s-net/",
+      "license": "CC-BY-4.0 / CC0-1.0 (selected datasets)",
+      "retrieved": "2026-10-12",
+      "attribution": "S-Netの提供機関による標本データ（採用分はCC BY 4.0またはCC0）をDigiViewerが抽出・加工。"
+    }
+  },
+  "inputSha256": {
+    "src/data/japanese-species-names.json": "3dc2bf5aa4ca9b127f45ae4e9bf3dfed0c3f6982cc6c927151b392e8e89f59ed",
+    "src/data/japanese-species-names-supplement.json": "9e254a4956e8c7e6a4a1849e98ebb275c7fa8ffd599b4cd4c454a77fced111fb",
+    "src/data/japanese-species-aliases.json": "13dea6bf5657e5ab681df457f4cbb17e8d2f56637594442dcaad2019b7281524",
+    "docs/japanese-names-expansion-audit.json": "a0ab2ae795774257771a4bcb99460eec184e0323d385e0fff7019ae27c8889f4",
+    "src/data/japanese-insect-names.json": "f1171cc19cb76520639d40fbf1e9108ff1c7ca9da03e9f4e1e843f837bad3c50",
+    "docs/japanese-insect-names-audit.json": "1ba4a6eee2485d4e552103f00ba87643b07d22c9fb0d0e89d3e4dbdae766cbbd"
+  },
+  "sourceFileSha256": {
+    "inaturalist-taxonomy.dwca.zip": "8a8c5ee023ef8265ee63a934c809a6da34a5a096c9382885b8ee16b8d2153ccc",
+    "inat-metadata.json": "6abc570d09dbf96bc1102f163cab8d1867a1a362cd30535738554743c4541691",
+    "domestic-records.json": "6c0df8283c9fd78212b46c697d59c5a347fa6aeaab32da0afefe48326a2b2ff6",
+    "snet-verified.json": "3d748af696d3a9efabeb21a0a164a81d4a7876f78498893f1e59ba4e2799ebe4",
+    "japanese-name-decisions.json": "841c14eb440645daa809b8d9a6d6880d59f7aead6330fe3162eda4260fa759ec"
+  },
+  "entries": {
+    "Abraxas miranda": {
+      "japaneseName": "ユウマダラエダシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/320700"
+    },
+    "Acalolepta permutans": {
+      "japaneseName": "キンケビロウドカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/424150"
+    },
+    "Acalolepta sejuncta": {
+      "japaneseName": "ニセビロウドカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/795119"
+    },
+    "Acanthocinus carinulatus": {
+      "japaneseName": "カラフトモモブトカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/883780"
+    },
+    "Acleris bicolor": {
+      "japaneseName": "マエアカハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/931198"
+    },
+    "Acleris hispidana": {
+      "japaneseName": "ハイミダレモンハマキ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/9CVS"
+    },
+    "Acleris ulmicola": {
+      "japaneseName": "ニレハマキ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/9D2T"
+    },
+    "Acolutha pictaria": {
+      "japaneseName": "マエチャナミシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/244659"
+    },
+    "Acontia marmoralis": {
+      "japaneseName": "ウスキマダラコヤガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/203867"
+    },
+    "Acronicta vulpina": {
+      "japaneseName": "シロケンモン",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/93PT7"
+    },
+    "Actebia praecox": {
+      "japaneseName": "ホソアオバヤガ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/9S8Z"
+    },
+    "Adelges tsugae": {
+      "japaneseName": "ハリモミヒメカサアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/61513"
+    },
+    "Aedes excrucians": {
+      "japaneseName": "アカンヤブカ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/64VY7"
+    },
+    "Aedes nipponicus": {
+      "japaneseName": "シロカタヤブカ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1101248"
+    },
+    "Aedes togoi": {
+      "japaneseName": "トウゴウヤブカ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/657TW"
+    },
+    "Aedes vexans": {
+      "japaneseName": "キンイロヤブカ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/64W5H"
+    },
+    "Agathia carissima": {
+      "japaneseName": "チズモンアオシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/291093"
+    },
+    "Agelasta konoi": {
+      "japaneseName": "コウノゴマフカミキリ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/65QG7"
+    },
+    "Agelasta perplexa": {
+      "japaneseName": "チャゴマフカミキリ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/65QFT"
+    },
+    "Agelasta yonaguni": {
+      "japaneseName": "ヨナグニゴマフカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1008176"
+    },
+    "Agelosus weisei": {
+      "japaneseName": "キンボシマルズオオハネカクシ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/65PY8"
+    },
+    "Aglaostigma nebulosum": {
+      "japaneseName": "ウンモンアシナガハバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/987141"
+    },
+    "Agonopterix alstroemeriana": {
+      "japaneseName": "ドクニンジンヒラタマルハキバガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/345618"
+    },
+    "Agrilus komareki": {
+      "japaneseName": "クワナガタマムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1451061"
+    },
+    "Agriocnemis femina": {
+      "japaneseName": "コフキヒメイトトンボ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/5551351",
+      "sourceAttribution": "出典: 神奈川県立生命の星・地球博物館・鹿児島県立博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Agrionoptera insignis": {
+      "japaneseName": "ホソアカトンボ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/149172"
+    },
+    "Agrisius fuliginosus": {
+      "japaneseName": "ゴマフオオホソバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/437859"
+    },
+    "Agrothereutes lanceolatus": {
+      "japaneseName": "シロテントガリヒメバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1568059"
+    },
+    "Aleochara bipustulata": {
+      "japaneseName": "フタモンヒゲブトハネカクシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/607304"
+    },
+    "Aleuroclava piperis": {
+      "japaneseName": "フウトウカズラコナジラミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/953243"
+    },
+    "Aleurosiphon smilacifoliae": {
+      "japaneseName": "サルトリイバラアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1465679"
+    },
+    "Allocardiophorus nigroapicalis": {
+      "japaneseName": "ツマグロハナコメツキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1169463"
+    },
+    "Amara macronota": {
+      "japaneseName": "ナガマルガタゴミムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/CFCF"
+    },
+    "Ambrosiodmus rubricollis": {
+      "japaneseName": "アカクビキクイムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/553037"
+    },
+    "Ambulyx sericeipennis": {
+      "japaneseName": "アジアホソバスズメ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/199465"
+    },
+    "Amphipyra livida": {
+      "japaneseName": "カラスヨトウ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/92SVB"
+    },
+    "Amphipyra monolitha": {
+      "japaneseName": "オオシマカラスヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/362739"
+    },
+    "Amphipyra pyramidea": {
+      "japaneseName": "シマカラスヨトウ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/D5DP"
+    },
+    "Amphipyra surnia": {
+      "japaneseName": "オオシマカラスヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/712648"
+    },
+    "Amraica superans": {
+      "japaneseName": "ウスイロオオエダシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/336892"
+    },
+    "Anaglyptus bellus": {
+      "japaneseName": "アカジマトラカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/774101"
+    },
+    "Anania funebris": {
+      "japaneseName": "シロモンクロノメイガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/126737"
+    },
+    "Anarta melanopa": {
+      "japaneseName": "コイズミヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/483421"
+    },
+    "Anastrangalia dissimilis": {
+      "japaneseName": "ニイタカハナカミキリ",
+      "sourceUrl": "https://www.biodic.go.jp/kiso/do05/09_ko.pdf#page=6"
+    },
+    "Anaulacus adelioides": {
+      "japaneseName": "トゲアトキリゴミムシ",
+      "sourceUrl": "https://www.wikidata.org/wiki/Q110823616",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/DJS2"
+    },
+    "Anchomenus leucopus": {
+      "japaneseName": "タンゴヒラタゴミムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1239245"
+    },
+    "Ancylis myrtillana": {
+      "japaneseName": "ミヤマカギバヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/527069"
+    },
+    "Andrena semirugosa": {
+      "japaneseName": "アブラナマメヒメハナバチ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/7700856",
+      "sourceAttribution": "出典: 兵庫県立人と自然の博物館（植物以外）・那須塩原市那須野が原博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Anisocentropus magnificus": {
+      "japaneseName": "ニシキコバントビケラ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/6742K"
+    },
+    "Ankylopteryx gracilis": {
+      "japaneseName": "モンヒロバクサカゲロウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/460631"
+    },
+    "Ankylopteryx octopunctata": {
+      "japaneseName": "ヒロバクサカゲロウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/460629"
+    },
+    "Anoecia corni": {
+      "japaneseName": "ミズキヒラタアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/418140"
+    },
+    "Anoecia fulviabdominalis": {
+      "japaneseName": "オカボキバラアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1347224"
+    },
+    "Anomis flava": {
+      "japaneseName": "ワタアカキリバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/213715"
+    },
+    "Anomoneura mori": {
+      "japaneseName": "クワキジラミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/549482"
+    },
+    "Anopheles stephensi": {
+      "japaneseName": "ステフェンスハマダラカ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/311612"
+    },
+    "Anoplophora chinensis": {
+      "japaneseName": "ゴマダラカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/199326"
+    },
+    "Anoplophora oshimana": {
+      "japaneseName": "オオシマゴマダラカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/886227"
+    },
+    "Anthaxia rubromarginata": {
+      "japaneseName": "フチトリヒメヒラタタマムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1075062"
+    },
+    "Anthophilolygus bakeri": {
+      "japaneseName": "ウスオビヒメカスミカメ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/874318"
+    },
+    "Aonidiella aurantii": {
+      "japaneseName": "アカマルカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/60926"
+    },
+    "Apamea aquila": {
+      "japaneseName": "アカモクメヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/472166"
+    },
+    "Aphela gotoi": {
+      "japaneseName": "ハマベゾウムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1458635"
+    },
+    "Aphis clerodendri": {
+      "japaneseName": "クサギアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1595762"
+    },
+    "Aphis craccivora": {
+      "japaneseName": "マメアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/145414"
+    },
+    "Aphis fabae": {
+      "japaneseName": "マメクロアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/55216"
+    },
+    "Aphis nerii": {
+      "japaneseName": "キョウチクトウアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/71154"
+    },
+    "Aphis odinae": {
+      "japaneseName": "ハゼアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/635240"
+    },
+    "Aphis pomi": {
+      "japaneseName": "ヨーロッパリンゴアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/133474"
+    },
+    "Aphis rumicis": {
+      "japaneseName": "ギシギシアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/454218"
+    },
+    "Aphis sumire": {
+      "japaneseName": "スミレアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1593248"
+    },
+    "Aphrophora salicina": {
+      "japaneseName": "マエキアワフキ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/FKKP"
+    },
+    "Apomecyna histrio": {
+      "japaneseName": "ヨスジシラホシサビカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/526808"
+    },
+    "Apomecyna naevia": {
+      "japaneseName": "カノコサビカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/980555"
+    },
+    "Apriona rugicollis": {
+      "japaneseName": "クワカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/711995"
+    },
+    "Apriona swainsoni": {
+      "japaneseName": "サビイロクワカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1276419"
+    },
+    "Aproaerema anthyllidella": {
+      "japaneseName": "クロチビキバガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/466736"
+    },
+    "Araecerus fasciculatus": {
+      "japaneseName": "ワタミヒゲナガゾウムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/214056"
+    },
+    "Arctornis l-nigrum": {
+      "japaneseName": "エルモンドクガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/469887"
+    },
+    "Argogorytes mystaceus": {
+      "japaneseName": "オオトゲアワフキバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/451476"
+    },
+    "Argyresthia brockeella": {
+      "japaneseName": "シロモンキンメムシガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/324285"
+    },
+    "Argyresthia conjugella": {
+      "japaneseName": "リンゴヒメシンクイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/214136"
+    },
+    "Argyresthia laevigatella": {
+      "japaneseName": "カラマツエダモグリガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/522721"
+    },
+    "Argyresthia retinella": {
+      "japaneseName": "アミメシロメムシガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/522730"
+    },
+    "Artona funeralis": {
+      "japaneseName": "ヒメクロバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1525996"
+    },
+    "Asota plana": {
+      "japaneseName": "ホシヒトリモドキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/202258"
+    },
+    "Aspidiotus cryptomeriae": {
+      "japaneseName": "スギマルカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1188356"
+    },
+    "Aspidobyctiscus lacunipennis": {
+      "japaneseName": "ブドウハマキチョッキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/550330"
+    },
+    "Aterpia bicolor": {
+      "japaneseName": "ツシマツマキヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/932541"
+    },
+    "Aulacorthum solani": {
+      "japaneseName": "ジャガイモヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/330194"
+    },
+    "Bacchisa fortunei": {
+      "japaneseName": "ルリカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/921599"
+    },
+    "Bactra hostilis": {
+      "japaneseName": "フタモントガリバヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/714724"
+    },
+    "Bactrocera latifrons": {
+      "japaneseName": "マレーシアミバエ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/652420"
+    },
+    "Bastilla arctotaenia": {
+      "japaneseName": "ホソオビアシブトクチバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/492018"
+    },
+    "Beesonia napiformis": {
+      "japaneseName": "カブラカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1603582"
+    },
+    "Belosticta cinerea": {
+      "japaneseName": "ハイイロハガタヨトウ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/963DM"
+    },
+    "Bembidion niloticum": {
+      "japaneseName": "アトモンミズギワゴミムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5WHXC"
+    },
+    "Bembidion obliquum": {
+      "japaneseName": "ヒメマダラミズギワゴミムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/547883"
+    },
+    "Berosus signaticollis": {
+      "japaneseName": "ゴマフガムシ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/605653",
+      "sourceAttribution": "出典: 千葉県立中央博物館・秋田県立博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Biorhiza nawai": {
+      "japaneseName": "ナラメリンゴタマバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1273228"
+    },
+    "Blasticorhinus ussuriensis": {
+      "japaneseName": "コウンモンクチバ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/604565",
+      "sourceAttribution": "出典: 千葉県立中央博物館・秋田県立博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Blatta orientalis": {
+      "japaneseName": "トウヨウゴキブリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/154213"
+    },
+    "Bocchoris aptalis": {
+      "japaneseName": "ナカキノメイガ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/SNB7Z",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/M8JN"
+    },
+    "Bovicola bovis": {
+      "japaneseName": "ウシハジラミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/386774"
+    },
+    "Brachyta bifasciata": {
+      "japaneseName": "フタスジカタビロハナカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/498040"
+    },
+    "Brevicoryne brassicae": {
+      "japaneseName": "ダイコンアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/326910"
+    },
+    "Bumetopia japonica": {
+      "japaneseName": "ウスアヤカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1400646"
+    },
+    "Buprestis haemorrhoidalis": {
+      "japaneseName": "クロタマムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/455223"
+    },
+    "Byctiscus congener": {
+      "japaneseName": "ドロハマキチョッキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/560236"
+    },
+    "Cacopsylla pyricola": {
+      "japaneseName": "フタホシナシキジラミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/207694"
+    },
+    "Cacopsylla pyrisuga": {
+      "japaneseName": "ナシキジラミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1089305"
+    },
+    "Callidiellum rufipennis": {
+      "japaneseName": "ヒメスギカミキリ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/PNYK"
+    },
+    "Calliphora calliphoroides": {
+      "japaneseName": "フタオクロバエ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/8B9ZK"
+    },
+    "Calliteara taiwana": {
+      "japaneseName": "シタキドクガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/714867"
+    },
+    "Callopistria clava": {
+      "japaneseName": "ツマナミツマキリヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/714865"
+    },
+    "Caloptilia acericola": {
+      "japaneseName": "モミジハマキホソガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/926574"
+    },
+    "Caloptilia cuculipennella": {
+      "japaneseName": "ハイイロハマキホソガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/481622"
+    },
+    "Caloptilia kurokoi": {
+      "japaneseName": "クロコハマキホソガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/926583"
+    },
+    "Caloptilia semifasciella": {
+      "japaneseName": "イチモンジハマキホソガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/926581"
+    },
+    "Calosoma chinense": {
+      "japaneseName": "エゾカタビロオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5WWTT"
+    },
+    "Calosoma inquisitor": {
+      "japaneseName": "アオカタビロオサムシ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/515956",
+      "sourceAttribution": "出典: 岩手県立博物館・美幌博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Calosoma prominens": {
+      "japaneseName": "プロミネンスカタビロオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5X8TS"
+    },
+    "Calybites phasianipennella": {
+      "japaneseName": "タデキボシホソガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/325736"
+    },
+    "Camponotus habereri": {
+      "japaneseName": "ハーベラーオオアリ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/QDTW"
+    },
+    "Camponotus herculeanus": {
+      "japaneseName": "カラフトクロオオアリ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/68WHQ"
+    },
+    "Cantharis plagiata": {
+      "japaneseName": "ホッカイジョウカイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/706658"
+    },
+    "Carabus albrechti": {
+      "japaneseName": "クロオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/68Z7Y"
+    },
+    "Carabus arboreus": {
+      "japaneseName": "コクロナガオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5WZ6T"
+    },
+    "Carabus arrowianus": {
+      "japaneseName": "ミカワオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5WYVX"
+    },
+    "Carabus arvensis": {
+      "japaneseName": "コブスジアカガネオサムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/130161"
+    },
+    "Carabus esakii": {
+      "japaneseName": "シズオカオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5WZ89"
+    },
+    "Carabus fiduciarius": {
+      "japaneseName": "タイリクオオオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/68Z5L"
+    },
+    "Carabus gehinii": {
+      "japaneseName": "オオルリオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/68YQ5"
+    },
+    "Carabus granulatus": {
+      "japaneseName": "アカガネオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5WZ3S"
+    },
+    "Carabus harmandi": {
+      "japaneseName": "ホソヒメクロオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/8M769"
+    },
+    "Carabus insulicola": {
+      "japaneseName": "アオオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/68YVX"
+    },
+    "Carabus kolbei": {
+      "japaneseName": "アイヌキンオサムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/712182"
+    },
+    "Carabus kumagaii": {
+      "japaneseName": "オオクロナガオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/68Z75"
+    },
+    "Carabus lafossei": {
+      "japaneseName": "シナカブリモドキ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5WZ4L"
+    },
+    "Carabus maeander": {
+      "japaneseName": "セスジアカガネオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5WYTY"
+    },
+    "Carabus maiyasanus": {
+      "japaneseName": "マヤサンオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5WZ7W"
+    },
+    "Carabus opaculus": {
+      "japaneseName": "ヒメクロオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5WZ4J"
+    },
+    "Carabus porrecticollis": {
+      "japaneseName": "アキタクロナガオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5WZ69"
+    },
+    "Carabus vanvolxemi": {
+      "japaneseName": "ホソアカガネオサムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1090501"
+    },
+    "Carabus yaconinus": {
+      "japaneseName": "ヤコンオサムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/68YW8"
+    },
+    "Caraphia lepturoides": {
+      "japaneseName": "ケブトハナカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/937486"
+    },
+    "Carcelia rasa": {
+      "japaneseName": "カクモンヤドリバエ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/8BBQ4"
+    },
+    "Cassida ferruginea": {
+      "japaneseName": "イカリアオカメノコハムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/69D72"
+    },
+    "Cassida versicolor": {
+      "japaneseName": "セモンジンガサハムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/RMQD"
+    },
+    "Catapionus gracilicornis": {
+      "japaneseName": "ハイイロヒョウタンゾウムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/367065"
+    },
+    "Catocala deuteronympha": {
+      "japaneseName": "ケンモンキシタバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/930985"
+    },
+    "Catocala ella": {
+      "japaneseName": "ミヤマキシタバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/930976"
+    },
+    "Catocala intacta": {
+      "japaneseName": "ウスイロキシタバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/714828"
+    },
+    "Catocala praegnax": {
+      "japaneseName": "コガタキシタバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/470466"
+    },
+    "Catochrysops strabo": {
+      "japaneseName": "ムラサキオナガウラナミシジミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/198832"
+    },
+    "Cavariella konoi": {
+      "japaneseName": "コウノフタオアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/454269"
+    },
+    "Cavariella salicicola": {
+      "japaneseName": "ヤナギフタオアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1607692"
+    },
+    "Celticecis insulicola": {
+      "japaneseName": "クワノハエノキナガタマバエ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1459286"
+    },
+    "Ceramica pisi": {
+      "japaneseName": "マメヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/143145"
+    },
+    "Ceratovacuna japonica": {
+      "japaneseName": "ササコナフキツノアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/854738"
+    },
+    "Ceresium sinicum": {
+      "japaneseName": "テツイロヒメカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/542486"
+    },
+    "Cerura erminea": {
+      "japaneseName": "オオモクメシャチホコ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/92XWC"
+    },
+    "Cetonia roelofsi": {
+      "japaneseName": "アオハナムグリ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/T68P"
+    },
+    "Chaitophorus saliniger": {
+      "japaneseName": "ヤナギクロケアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1114673"
+    },
+    "Chalcolampra octodecimguttata": {
+      "japaneseName": "ハマゴウハムシ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/MM9ZW"
+    },
+    "Chalcophora yunnana": {
+      "japaneseName": "サツマウバタマムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1079981"
+    },
+    "Chalcosia formosana": {
+      "japaneseName": "メスジロホタルガ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/QSRMR",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/TGSW"
+    },
+    "Chaoborus flavicans": {
+      "japaneseName": "キイロケヨソイカ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1593802"
+    },
+    "Chaoborus punctipennis": {
+      "japaneseName": "ゴマフケヨソイカ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/TM8P"
+    },
+    "Charaxes lucretius": {
+      "japaneseName": "キオビフタオチョウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/357259"
+    },
+    "Charops bicolor": {
+      "japaneseName": "ホウネンタワラチビアメバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1280386"
+    },
+    "Chasminodes nigrilinea": {
+      "japaneseName": "ヒロオビクロギンガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1239237"
+    },
+    "Chlaenius lineellus": {
+      "japaneseName": "キベリアオゴミムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/69VHK"
+    },
+    "Chlaenius quadrisulcatus": {
+      "japaneseName": "クマガイクロアオゴミムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/889520"
+    },
+    "Chlaenius sulcicollis": {
+      "japaneseName": "クマガイクロアオゴミムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/69W5Y"
+    },
+    "Chlaenius suvorovi": {
+      "japaneseName": "チビアオゴミムシ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/69VHW"
+    },
+    "Chlorophorus diadema": {
+      "japaneseName": "クロトラカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/778819"
+    },
+    "Choristoneura lafauryana": {
+      "japaneseName": "ウスキカクモンハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/527089"
+    },
+    "Chorthippus fallax": {
+      "japaneseName": "アカイシヒナバッタ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/757851"
+    },
+    "Chorthippus maritimus": {
+      "japaneseName": "ヒナバッタ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/467944"
+    },
+    "Chrysaeglia magnifica": {
+      "japaneseName": "ルリモンホソバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/125972"
+    },
+    "Chrysis fasciata": {
+      "japaneseName": "ムツバセイボウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/503330"
+    },
+    "Chrysobothris chrysostigma": {
+      "japaneseName": "ツシマムツボシタマムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/563299"
+    },
+    "Chrysomphalus aonidum": {
+      "japaneseName": "アカホシマルカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/473018"
+    },
+    "Chrysopa formosa": {
+      "japaneseName": "クモンクサカゲロウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/371360"
+    },
+    "Chrysopa perla": {
+      "japaneseName": "ミヤマクサカゲロウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/52424"
+    },
+    "Chrysoperla carnea": {
+      "japaneseName": "ヒメクサカゲロウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/311581"
+    },
+    "Chrysopilus ditissimis": {
+      "japaneseName": "キアシキンシギアブ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/462194"
+    },
+    "Chrysorithrum flavomaculata": {
+      "japaneseName": "ウンモンキシタバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/882437"
+    },
+    "Cinara chibi": {
+      "japaneseName": "カラマツチビオオアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1712446"
+    },
+    "Cladius brullei": {
+      "japaneseName": "キイチゴヒメハバチ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/MJWLM"
+    },
+    "Clivina fossor": {
+      "japaneseName": "カラフトヒメヒョウタンゴミムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5ZB38"
+    },
+    "Cnestus mutilatus": {
+      "japaneseName": "クスノオオキクイムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/493583"
+    },
+    "Coccus viridis": {
+      "japaneseName": "ミドリカタカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/330203"
+    },
+    "Coelopa frigida": {
+      "japaneseName": "ハマベバエ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/194032"
+    },
+    "Coleophora alcyonipennella": {
+      "japaneseName": "キンバネツツミノガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/341426"
+    },
+    "Coleophora artemisicolella": {
+      "japaneseName": "ヨモギハナツツミノガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/928923"
+    },
+    "Compsapoderus erythrogaster": {
+      "japaneseName": "ヒメクロオトシブミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/903101"
+    },
+    "Cosmia trapezina": {
+      "japaneseName": "イタヤキリガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/324215"
+    },
+    "Cosmiomorpha similis": {
+      "japaneseName": "チャイロカナブン",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/YTTV"
+    },
+    "Cosmotriche lobulina": {
+      "japaneseName": "タカムクカレハ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/821007"
+    },
+    "Cotinis mutabilis": {
+      "japaneseName": "キベリコツノヒシムネハナムグリ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/YXR2"
+    },
+    "Crocidosema plebejana": {
+      "japaneseName": "アオイヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/330517"
+    },
+    "Cryptamorpha desjardinsi": {
+      "japaneseName": "モンセマルホソヒラタムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/388069"
+    },
+    "Cryptomyzus taoi": {
+      "japaneseName": "ホトケノザクギケアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1453578"
+    },
+    "Ctenoplusia ichinosei": {
+      "japaneseName": "ニシキキンウワバ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/326PQ"
+    },
+    "Cucullia artemisiae": {
+      "japaneseName": "トカチセダカモクメ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/483455"
+    },
+    "Cucullia umbratica": {
+      "japaneseName": "ホッカイセダカモクメ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/429136"
+    },
+    "Culicoides circumscriptus": {
+      "japaneseName": "イソヌカカ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/989594"
+    },
+    "Cycnotrachelodes roelofsi": {
+      "japaneseName": "エゴツルクビオトシブミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/560733"
+    },
+    "Cylindera kaleea": {
+      "japaneseName": "トウキョウヒメハンミョウ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/33276"
+    },
+    "Cymindis vaporariorum": {
+      "japaneseName": "オコックアトキリゴミムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3377P"
+    },
+    "Cymolomia hartigiana": {
+      "japaneseName": "トウヒヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/324270"
+    },
+    "Cyrtopeltis miyamotoi": {
+      "japaneseName": "ノイバラホソカスミカメ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/550181"
+    },
+    "Danaus affinis": {
+      "japaneseName": "アフィニスカバマダラ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/149346"
+    },
+    "Deflorita apicalis": {
+      "japaneseName": "ツマグロツユムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/909781"
+    },
+    "Deltote bankiana": {
+      "japaneseName": "フタスジコヤガ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/34KP7"
+    },
+    "Deltote pygarga": {
+      "japaneseName": "シロフコヤガ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/93YKK"
+    },
+    "Demonarosa rufotessellata": {
+      "japaneseName": "ベニイラガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/538915"
+    },
+    "Denticollis nipponensis": {
+      "japaneseName": "ニホンベニコメツキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1103193"
+    },
+    "Derambila dentifera": {
+      "japaneseName": "ハニンスホソシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/639043"
+    },
+    "Diaspidiotus ostreaeformis": {
+      "japaneseName": "ウィリアムズマルカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/57813"
+    },
+    "Diaspis echinocacti": {
+      "japaneseName": "サボテンシロカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/325703"
+    },
+    "Dichomeris rasilella": {
+      "japaneseName": "ウスグロキバガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/733882"
+    },
+    "Diestrammena gigas": {
+      "japaneseName": "アマミマダラカマドウマ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/362M9"
+    },
+    "Diestrammena iriomotensis": {
+      "japaneseName": "ヤエヤママダラウマ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/362MF"
+    },
+    "Diestrammena nicolai": {
+      "japaneseName": "オオハヤシウマ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/978234"
+    },
+    "Dieuches siamicus": {
+      "japaneseName": "ネッタイシロヘリナガカメムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1238110"
+    },
+    "Dilophodes elegans": {
+      "japaneseName": "クロフシロエダシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/733875"
+    },
+    "Diomma pulchrum": {
+      "japaneseName": "マダラヒメヨコバイ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/36B4L"
+    },
+    "Diplatys flavicollis": {
+      "japaneseName": "ドウボソハサミムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/338559"
+    },
+    "Diplonevra peregrina": {
+      "japaneseName": "オオアカノミバエ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/8BSX5"
+    },
+    "Disparia diluta": {
+      "japaneseName": "ホソバネグロシャチホコ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/853776"
+    },
+    "Dohrniphora cornuta": {
+      "japaneseName": "コシアキノミバエ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/329920"
+    },
+    "Dolerus genucinctus": {
+      "japaneseName": "カタアカスギナハバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/963246"
+    },
+    "Dolichoctis rotundata": {
+      "japaneseName": "コヨツボシアトキリゴミムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/374WX"
+    },
+    "Dorcus hopei": {
+      "japaneseName": "オオクワガタ",
+      "sourceUrl": "https://www.biodic.go.jp/kiso/do05/09_ko.pdf#page=3"
+    },
+    "Dorcus saiga": {
+      "japaneseName": "サイガヒラタクワガタ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1112297"
+    },
+    "Drymus latus": {
+      "japaneseName": "コゲチャナガカメムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/924123"
+    },
+    "Duliophyle agitata": {
+      "japaneseName": "ヒロオビエダシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/927103"
+    },
+    "Duolandrevus coulonianus": {
+      "japaneseName": "ネッタイクチキコオロギ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/886711"
+    },
+    "Duolandrevus yaeyamensis": {
+      "japaneseName": "ヤエヤマクチキコオロギ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1103154"
+    },
+    "Dynaspidiotus tsugae": {
+      "japaneseName": "ツガマルカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/994356"
+    },
+    "Dyschirius aeneus": {
+      "japaneseName": "ダイミョウチビヒョウタンゴミムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1119393"
+    },
+    "Dyschirius tristis": {
+      "japaneseName": "アシグロチビヒョウタンゴミムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/387MH"
+    },
+    "Ectoedemia occultella": {
+      "japaneseName": "ナナカマドモグリチビガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/522488"
+    },
+    "Ectopsocopsis cryptomeriae": {
+      "japaneseName": "クリイロチャタテ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/270670"
+    },
+    "Ectopsocus briggsi": {
+      "japaneseName": "ブリッグスウスイロチャタテ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/270671"
+    },
+    "Egesina bifasciana": {
+      "japaneseName": "ニイジマチビカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1243073"
+    },
+    "Eligma narcissus": {
+      "japaneseName": "シンジュキノカワガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/144054"
+    },
+    "Endotricha flavofascialis": {
+      "japaneseName": "キオビトガリメイガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/558020"
+    },
+    "Enochrus affinis": {
+      "japaneseName": "クロヒゲヒラタガムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/39WB9"
+    },
+    "Eobiana engelhardti": {
+      "japaneseName": "ヒメギス",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/6862889",
+      "sourceAttribution": "出典: 兵庫県立人と自然の博物館（植物以外）・千葉県立中央博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Epermenia sinjovi": {
+      "japaneseName": "シシウドササベリガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/938577"
+    },
+    "Epinotia piceae": {
+      "japaneseName": "トウヒツヅリヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1154875"
+    },
+    "Epinotia ulmi": {
+      "japaneseName": "ニレチャイロヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/937401"
+    },
+    "Epinotia ulmicola": {
+      "japaneseName": "ニレコヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/774794"
+    },
+    "Epirhyssa japonica": {
+      "japaneseName": "シラホシオナガバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1375579"
+    },
+    "Epirrita autumnata": {
+      "japaneseName": "アキナミシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/173571"
+    },
+    "Episomus turritus": {
+      "japaneseName": "シロコブゾウムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/6G7SJ"
+    },
+    "Erebia neriene": {
+      "japaneseName": "ベニヒカゲ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/606591",
+      "sourceAttribution": "出典: 環境省自然環境局　生物多様性センター・秋田県立博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Eriosoma lanigerum": {
+      "japaneseName": "リンゴワタムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/360308"
+    },
+    "Eschatarchia lineata": {
+      "japaneseName": "ヘリスジナミシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/870105"
+    },
+    "Eterusia taiwana": {
+      "japaneseName": "タイワンルリチラシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/734255"
+    },
+    "Ethmia lapidella": {
+      "japaneseName": "トホシスヒロキバガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/734260"
+    },
+    "Eucharis esakii": {
+      "japaneseName": "エサキアリヤドリコバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1255216"
+    },
+    "Euclidia dentata": {
+      "japaneseName": "ツメクサキシタバ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/932TV"
+    },
+    "Eucosma coniogramma": {
+      "japaneseName": "オヒルギヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/937866"
+    },
+    "Eucriotettix oculatus": {
+      "japaneseName": "ナガレトゲヒシバッタ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/356028"
+    },
+    "Eudemopsis tokui": {
+      "japaneseName": "コツマモンベニヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/932519"
+    },
+    "Eudemopsis toshimai": {
+      "japaneseName": "ニセツマモンベニヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/932518"
+    },
+    "Eudicella smithii": {
+      "japaneseName": "スミスサスマタカナブン",
+      "sourceUrl": "https://www.inaturalist.org/taxa/665281"
+    },
+    "Eulachnus thunbergii": {
+      "japaneseName": "マツホソオオアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1240719"
+    },
+    "Eulecanium kunoense": {
+      "japaneseName": "タマカタカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/81854"
+    },
+    "Euops lespedezae": {
+      "japaneseName": "ハギルリオトシブミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/557842"
+    },
+    "Euparius oculatus": {
+      "japaneseName": "キノコヒゲナガゾウムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/904414"
+    },
+    "Euphranta nigrescens": {
+      "japaneseName": "ムラクモハマダラミバエ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/6HB9H"
+    },
+    "Eupithecia subfuscata": {
+      "japaneseName": "キナミウスグロナミシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/219837"
+    },
+    "Euploea radamanthus": {
+      "japaneseName": "シロモンルリマダラ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/149405"
+    },
+    "Eupoecilia inouei": {
+      "japaneseName": "イノウエホソハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/931256"
+    },
+    "Eupteryx decemnotata": {
+      "japaneseName": "トモンヨモギヒメヨコバイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/430532"
+    },
+    "Eupteryx melanocephala": {
+      "japaneseName": "クロヨモギヒメヨコバイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/922094"
+    },
+    "Eutetrapha chrysochloris": {
+      "japaneseName": "ハンノアオカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/739857"
+    },
+    "Euthalia irrubescens": {
+      "japaneseName": "イナズマチョウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/734130"
+    },
+    "Euwallacea interjectus": {
+      "japaneseName": "アイノキクイムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/911834"
+    },
+    "Euwallacea validus": {
+      "japaneseName": "トドマツオオキクイムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/455885"
+    },
+    "Euxoa nigricans": {
+      "japaneseName": "キタクロヤガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/325249"
+    },
+    "Exeristes roborator": {
+      "japaneseName": "フシダカヒメバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/264675"
+    },
+    "Exomala okiwaensis": {
+      "japaneseName": "オキナワセマダラコガネ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3DNKY"
+    },
+    "Favonius saphirina": {
+      "japaneseName": "ウラジロミドリシジミ",
+      "sourceUrl": "https://www.wikidata.org/wiki/Q5971124",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3DWYR"
+    },
+    "Fentonia ocypete": {
+      "japaneseName": "ホソバシャチホコ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/734107"
+    },
+    "Fixsenia pruni": {
+      "japaneseName": "リンゴシジミ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/5441179",
+      "sourceAttribution": "出典: あつぎ郷土博物館・ミュージアムパーク茨城県自然博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Garaeus mirandus": {
+      "japaneseName": "ナシモンエダシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/951089"
+    },
+    "Gastrodes grossipes": {
+      "japaneseName": "マツヒラタナガカメムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/469434"
+    },
+    "Gastropacha clathrata": {
+      "japaneseName": "ワタナベカレハ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/96YD7"
+    },
+    "Gastropacha populifolia": {
+      "japaneseName": "ホシカレハ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/93444"
+    },
+    "Gastropacha quercifolia": {
+      "japaneseName": "ヒロバカレハ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3FDTS"
+    },
+    "Gaurotes doris": {
+      "japaneseName": "カラカネハナカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/907610"
+    },
+    "Gibberifera simplana": {
+      "japaneseName": "ウスキシロヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/513103"
+    },
+    "Glenea chlorospila": {
+      "japaneseName": "リュウキュウルリボシカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/911841"
+    },
+    "Glenea lineata": {
+      "japaneseName": "スジシロカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/741701"
+    },
+    "Glenea relicta": {
+      "japaneseName": "シラホシカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/904418"
+    },
+    "Goniodes dissimilis": {
+      "japaneseName": "カクアゴハジラミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/330633"
+    },
+    "Goniorhynchus butyrosa": {
+      "japaneseName": "クロヘリキノメイガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/956129"
+    },
+    "Graptopsaltria tienta": {
+      "japaneseName": "シナアブラゼミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/874236"
+    },
+    "Gymnastes flavitibia": {
+      "japaneseName": "ミスジガガンボ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3HPJH"
+    },
+    "Gymnosoma inornatum": {
+      "japaneseName": "ヒメマルボシヒラタヤドリバエ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1088387"
+    },
+    "Gynaephora rossii": {
+      "japaneseName": "ダイセツドクガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/220737"
+    },
+    "Gynnidomorpha minimana": {
+      "japaneseName": "ミニホソハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/527222"
+    },
+    "Gypsonoma oppressana": {
+      "japaneseName": "タテヤマヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/527228"
+    },
+    "Habrosyne aurorina": {
+      "japaneseName": "ヒメウスベニトガリバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/785647"
+    },
+    "Habrosyne fraterna": {
+      "japaneseName": "オオアヤトガリバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/734312"
+    },
+    "Habrosyne pyritoides": {
+      "japaneseName": "アヤトガリバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/322132"
+    },
+    "Hadena variolata": {
+      "japaneseName": "コグレヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/220834"
+    },
+    "Haplothrips kurdjumovi": {
+      "japaneseName": "ハナクダアザミウマ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/390286"
+    },
+    "Harpalus laevipes": {
+      "japaneseName": "アイヌゴモクムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3JSML"
+    },
+    "Harpalus solitaris": {
+      "japaneseName": "ミヤマゴモクムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3JSRB"
+    },
+    "Hedya dimidiana": {
+      "japaneseName": "シロモンヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/774786"
+    },
+    "Heliothrips haemorrhoidalis": {
+      "japaneseName": "クロトンアザミウマ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/330694"
+    },
+    "Hemerobius atrifrons": {
+      "japaneseName": "カオグロヒメカゲロウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/804538"
+    },
+    "Hemerobius humulinus": {
+      "japaneseName": "ミヤマヒメカゲロウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/270800"
+    },
+    "Hemerobius simulans": {
+      "japaneseName": "スジマダラヒメカゲロウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/454974"
+    },
+    "Henicolabus lewisi": {
+      "japaneseName": "ルイスアシナガオトシブミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1557280"
+    },
+    "Hestina japonica": {
+      "japaneseName": "ゴマダラチョウ",
+      "sourceUrl": "https://www.biodic.go.jp/kiso/do05/06_cho.pdf#page=7"
+    },
+    "Heterophleps fusca": {
+      "japaneseName": "ウスクモナミシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/954542"
+    },
+    "Horithyatira decorata": {
+      "japaneseName": "カワムラトガリバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/244179"
+    },
+    "Hydraecia petasitis": {
+      "japaneseName": "フキヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/483506"
+    },
+    "Hygrotus impressopunctatus": {
+      "japaneseName": "カラフトシマケシゲンゴロウ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3NCG3"
+    },
+    "Hylaeus nippon": {
+      "japaneseName": "ニッポンメンハナバチ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/1819084",
+      "sourceAttribution": "出典: あつぎ郷土博物館・那須塩原市那須野が原博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Hylecoetus dermestoides": {
+      "japaneseName": "ツマグロツツシンクイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/177745"
+    },
+    "Hypatima excellentella": {
+      "japaneseName": "シロノコメキバガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/734417"
+    },
+    "Hypena mandarina": {
+      "japaneseName": "マガリウスヅマアツバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1284825"
+    },
+    "Hyperomyzus lactucae": {
+      "japaneseName": "チシャミドリアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/390862"
+    },
+    "Hypersypnoides submarginata": {
+      "japaneseName": "オオシロテンクチバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/126763"
+    },
+    "Hypocaccus varians": {
+      "japaneseName": "ハマベエンマムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/340888"
+    },
+    "Hypocala deflorata": {
+      "japaneseName": "ムーアキシタクチバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/121858"
+    },
+    "Hypospila creberrima": {
+      "japaneseName": "メイガモドキクチバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1291919"
+    },
+    "Hypsopygia pelasgalis": {
+      "japaneseName": "アカシマメイガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/542834"
+    },
+    "Ibalia japonica": {
+      "japaneseName": "ニホンヒラタタマバチ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3P75Z"
+    },
+    "Inurois punctigera": {
+      "japaneseName": "クロテンフユシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1336873"
+    },
+    "Ischnura elegans": {
+      "japaneseName": "マンシュウイトトンボ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/61508"
+    },
+    "Istocheta aldrichi": {
+      "japaneseName": "マメコガネヤドリバエ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/197122"
+    },
+    "Jankowskia fuscaria": {
+      "japaneseName": "チャノウンモンエダシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/776648"
+    },
+    "Javesella salina": {
+      "japaneseName": "シロキタウンカ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3QNPJ"
+    },
+    "Judolia dentatofasciata": {
+      "japaneseName": "シララカハナカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1007740"
+    },
+    "Judolia sexmaculata": {
+      "japaneseName": "シララカハナカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/472806"
+    },
+    "Kaochiaoja arthraxonis": {
+      "japaneseName": "アシボソヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1444077"
+    },
+    "Labdia bicolorella": {
+      "japaneseName": "オオツマキトガリホソガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/928949"
+    },
+    "Laburrus impictifrons": {
+      "japaneseName": "ミドリヒロヨコバイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/914645"
+    },
+    "Lachnus roboris": {
+      "japaneseName": "カシオオアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/337780"
+    },
+    "Lachnus tropicalis": {
+      "japaneseName": "クリオオアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/914201"
+    },
+    "Laciniodes denigrata": {
+      "japaneseName": "セジロナミシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/915401"
+    },
+    "Larinus latissimus": {
+      "japaneseName": "ゴボウゾウムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/551498"
+    },
+    "Laspeyria subrosea": {
+      "japaneseName": "ウスベニコヤガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/926275"
+    },
+    "Leistus niger": {
+      "japaneseName": "キノカワゴミムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3T38Z"
+    },
+    "Lemyra flammeola": {
+      "japaneseName": "アカヒトリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/495526"
+    },
+    "Leptapoderus balteatus": {
+      "japaneseName": "ウスモンオトシブミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/816036"
+    },
+    "Leptapoderus rubidus": {
+      "japaneseName": "ウスアカオトシブミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/552511"
+    },
+    "Leptura mimica": {
+      "japaneseName": "ヤツボシハナカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/360080"
+    },
+    "Lepturobosca virens": {
+      "japaneseName": "アオハナカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/507841"
+    },
+    "Leucania loreyi": {
+      "japaneseName": "クサシロキヨトウ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/94472"
+    },
+    "Leucania obsoleta": {
+      "japaneseName": "ノヒラキヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/324830"
+    },
+    "Leucania polysticha": {
+      "japaneseName": "ニセスジシロキヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/558645"
+    },
+    "Leucania roseilinea": {
+      "japaneseName": "アトジロキヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1068781"
+    },
+    "Leucorrhinia orientalis": {
+      "japaneseName": "カオジロトンボ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/563097"
+    },
+    "Leucozona glaucia": {
+      "japaneseName": "オオヨコモンヒラタアブ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/727QS"
+    },
+    "Leucozona lucorum": {
+      "japaneseName": "ツマグロハナアブ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/6PW35"
+    },
+    "Limnogonus fossarum": {
+      "japaneseName": "セスジアメンボ",
+      "sourceUrl": "https://www.biodic.go.jp/kiso/do05/07_se.pdf#page=2"
+    },
+    "Limotettix striola": {
+      "japaneseName": "イチモンジヨコバイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/791364"
+    },
+    "Liothrips piperinus": {
+      "japaneseName": "フウトウカズラヤドリクダアザミウマ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1598555"
+    },
+    "Liothrips vaneeckei": {
+      "japaneseName": "ユリクダアザミウマ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/391744"
+    },
+    "Lipaphis erysimi": {
+      "japaneseName": "ニセダイコンアブラムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3V92T"
+    },
+    "Liposcelis bostrychophila": {
+      "japaneseName": "ヒラタチャタテ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/270921"
+    },
+    "Liriomyza trifolii": {
+      "japaneseName": "マメハモグリバエ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/243751"
+    },
+    "Liris deplanatus": {
+      "japaneseName": "リュウキュウコオロギバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1076852"
+    },
+    "Litocerus communis": {
+      "japaneseName": "ハイマダラヒゲナガゾウムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/893539"
+    },
+    "Lobesia crimea": {
+      "japaneseName": "アザミホソバヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/876114"
+    },
+    "Lomographa simplicior": {
+      "japaneseName": "クロズウスキエダシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/372675"
+    },
+    "Longistigma liquidambarus": {
+      "japaneseName": "フウナガマダラオオアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1291682"
+    },
+    "Lophops carinata": {
+      "japaneseName": "マエジマアシブトウンカ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/353282"
+    },
+    "Lophyra striolata": {
+      "japaneseName": "タテスジハンミョウ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3W4YC"
+    },
+    "Loxoblemmus arietulus": {
+      "japaneseName": "ハラオカメコオロギ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/499211"
+    },
+    "Loxoncus circumcinctus": {
+      "japaneseName": "キベリゴモクムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3W9QJ"
+    },
+    "Lucanus capreolus": {
+      "japaneseName": "カプレオルスミヤマクワガタ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/60812"
+    },
+    "Lucanus parryi": {
+      "japaneseName": "パリーミヤマクワガタ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/625525"
+    },
+    "Lucanus sericeus": {
+      "japaneseName": "セリケウスミヤマクワガタ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/921973"
+    },
+    "Luma sericea": {
+      "japaneseName": "モンキノメイガ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3WDYS"
+    },
+    "Lymantria mathura": {
+      "japaneseName": "カシワマイマイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/55246"
+    },
+    "Lymantria postalba": {
+      "japaneseName": "コシロシタマイマイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1311992"
+    },
+    "Lyonetia clerkella": {
+      "japaneseName": "モモハモグリガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/207527"
+    },
+    "Lyonetia ledi": {
+      "japaneseName": "ツツジハモグリガ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3WSNT"
+    },
+    "Lyonetia prunifoliella": {
+      "japaneseName": "リンゴハモグリガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/453435"
+    },
+    "Macarostola japonica": {
+      "japaneseName": "ベニホソガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/925857"
+    },
+    "Maconellicoccus hirsutus": {
+      "japaneseName": "ワタコナカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/199372"
+    },
+    "Macroglossum heliophila": {
+      "japaneseName": "イチモンジホウジャク",
+      "sourceUrl": "https://www.biodic.go.jp/kiso/do05/08_ga.pdf#page=3"
+    },
+    "Macrosiphoniella kuwayamai": {
+      "japaneseName": "クワヤマヒメヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1447245"
+    },
+    "Macrosiphoniella oblonga": {
+      "japaneseName": "アシナガヒメヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1000095"
+    },
+    "Macrosiphoniella sanborni": {
+      "japaneseName": "キクヒメヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/391970"
+    },
+    "Macrosiphoniella yomogicola": {
+      "japaneseName": "ヨモギヒメヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/564060"
+    },
+    "Macrosiphoniella yomogifoliae": {
+      "japaneseName": "アオヒメヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1629416"
+    },
+    "Macrosiphum euphorbiae": {
+      "japaneseName": "チューリップヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/53859"
+    },
+    "Macrostomion sumatranum": {
+      "japaneseName": "スマトラカモドキバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1425806"
+    },
+    "Maikona jezoensis": {
+      "japaneseName": "マイコトラガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/470434"
+    },
+    "Maladera holosericea": {
+      "japaneseName": "ホソビロウドコガネ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3XLCQ"
+    },
+    "Marumba gaschkewitschii": {
+      "japaneseName": "モモスズメ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/664954",
+      "sourceAttribution": "出典: 千葉県立中央博物館・岐阜県博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Marumba sperchius": {
+      "japaneseName": "クチバスズメ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/356273"
+    },
+    "Mecorhis plumbea": {
+      "japaneseName": "クチナガチョッキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1277547"
+    },
+    "Meganola brunellus": {
+      "japaneseName": "テンスジコブガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/735845"
+    },
+    "Megaselia scalaris": {
+      "japaneseName": "クサビノミバエ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/3YYP5"
+    },
+    "Melanaphis bambusae": {
+      "japaneseName": "タケノアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/709988"
+    },
+    "Melanaphis japonica": {
+      "japaneseName": "ススキアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1592147"
+    },
+    "Menacanthus eurysternus": {
+      "japaneseName": "ヒヨドリハジラミ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/6R9ZM"
+    },
+    "Merionoeda formosana": {
+      "japaneseName": "ニッポンモモブトコバネカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/892027"
+    },
+    "Mesechthistatus furciferus": {
+      "japaneseName": "マヤサンコブヤハズカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/921385"
+    },
+    "Mesosa hirsuta": {
+      "japaneseName": "カタシロゴマフカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/547550"
+    },
+    "Mesosa pictipes": {
+      "japaneseName": "オキナワゴマフカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/958343"
+    },
+    "Metaceronema japonica": {
+      "japaneseName": "ツバキワタカイガラモドキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/732798"
+    },
+    "Metapocyrtus adspersus": {
+      "japaneseName": "ビサヤアカアシカタゾウムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/42CJX"
+    },
+    "Metcalfa pruinosa": {
+      "japaneseName": "ネズミハゴロモ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/126209"
+    },
+    "Metylophorus nebulosus": {
+      "japaneseName": "カバイロチャタテ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/210299"
+    },
+    "Miaenia fasciata": {
+      "japaneseName": "クロオビトゲムネカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/781010"
+    },
+    "Micromus variegatus": {
+      "japaneseName": "アヤホソバヒメカゲロウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/364111"
+    },
+    "Mimectatina divaricata": {
+      "japaneseName": "ドイカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/803547"
+    },
+    "Mimectatina meridiana": {
+      "japaneseName": "コゲチャサビカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/896435"
+    },
+    "Mimela ignicauda": {
+      "japaneseName": "ベーツツヤコガネ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1244722"
+    },
+    "Mimopsestis basalis": {
+      "japaneseName": "ネグロトガリバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/949125"
+    },
+    "Minettia longipennis": {
+      "japaneseName": "ヤブクロシマバエ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/73M6F"
+    },
+    "Mochtherus luctuosus": {
+      "japaneseName": "ヤセアトキリゴミムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1118075"
+    },
+    "Mogannia hebes": {
+      "japaneseName": "クサゼミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/358848"
+    },
+    "Mollitrichosiphum nigrofasciatum": {
+      "japaneseName": "クロオビケブカアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1552074"
+    },
+    "Monochamus alternatus": {
+      "japaneseName": "マツノマダラカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/209674"
+    },
+    "Monochamus sutor": {
+      "japaneseName": "ヒメシラフヒゲナガカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/209343"
+    },
+    "Myas cuprescens": {
+      "japaneseName": "アカガネオオゴミムシ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/44RRP"
+    },
+    "Myriochila specularis": {
+      "japaneseName": "コハンミョウ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/458RC"
+    },
+    "Mythimna divergens": {
+      "japaneseName": "ナガフタオビキヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/735926"
+    },
+    "Myzus siegesbeckiae": {
+      "japaneseName": "ヒキオコシコブアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1104930"
+    },
+    "Nagustoides lii": {
+      "japaneseName": "アカチャサシガメ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1061325"
+    },
+    "Nebria rufescens": {
+      "japaneseName": "キタマルクビゴミムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/131873"
+    },
+    "Necrophila brunnicollis": {
+      "japaneseName": "ベッコウヒラタシデムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/711774"
+    },
+    "Necrophila japonica": {
+      "japaneseName": "オオヒラタシデムシ",
+      "sourceUrl": "https://www.wikidata.org/wiki/Q112662409",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/45ZSM"
+    },
+    "Necydalis gigantea": {
+      "japaneseName": "オニホソコバネカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/923579"
+    },
+    "Necydalis major": {
+      "japaneseName": "アイヌホソコバネカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/452030"
+    },
+    "Nemophora amatella": {
+      "japaneseName": "オオヒゲナガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/869682"
+    },
+    "Nemophora bellela": {
+      "japaneseName": "アラスカヒゲナガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/453379"
+    },
+    "Neocentrocnemis stali": {
+      "japaneseName": "ハラビロトゲサシガメ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/499509"
+    },
+    "Neoitamus cothurnatus": {
+      "japaneseName": "モモグロマガリケムシヒキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/703648"
+    },
+    "Neophyllaphis podocarpi": {
+      "japaneseName": "マキシンハアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1496106"
+    },
+    "Nesotaxonus fulvus": {
+      "japaneseName": "チャイロハバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1364134"
+    },
+    "Netelia ocellaris": {
+      "japaneseName": "ヨトウアメバチモドキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1082791"
+    },
+    "Ninguta schrenckii": {
+      "japaneseName": "オオヒカゲ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/359031"
+    },
+    "Nippolachnus piri": {
+      "japaneseName": "ナシミドリオオアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1026713"
+    },
+    "Nipponaphis distychii": {
+      "japaneseName": "イスノオオムネアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1155522"
+    },
+    "Nipponaphis distyliicola": {
+      "japaneseName": "イスノフシアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1155518"
+    },
+    "Nosophora euryterminalis": {
+      "japaneseName": "ソトグロキノメイガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/840467"
+    },
+    "Novius cardinalis": {
+      "japaneseName": "ベダリアテントウ",
+      "sourceUrl": "https://www.wikidata.org/wiki/Q2235176",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/VBDWT"
+    },
+    "Nylanderia yaeyamensis": {
+      "japaneseName": "ヤエヤマアメイロアリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1487389"
+    },
+    "Odontolabis leuthneri": {
+      "japaneseName": "リュートネルツヤクワガタ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/782820"
+    },
+    "Odontopera arida": {
+      "japaneseName": "エグリヅマエダシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/372690"
+    },
+    "Odontosia sieversii": {
+      "japaneseName": "シーベルスシャチホコ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/853760"
+    },
+    "Odontotermes formosanus": {
+      "japaneseName": "タイワンシロアリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/492045"
+    },
+    "Oncopsis alni": {
+      "japaneseName": "ハンノヒロズヨコバイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/451775"
+    },
+    "Oncopsis flavicollis": {
+      "japaneseName": "マエキヒロズヨコバイ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/49JBV"
+    },
+    "Onthophagus proletarius": {
+      "japaneseName": "ヨツモンエンマコガネ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/49MG3"
+    },
+    "Onthophagus trituber": {
+      "japaneseName": "ミツコブエンマコガネ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/49MRH"
+    },
+    "Ooceraea biroi": {
+      "japaneseName": "クビレハリアリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1195447"
+    },
+    "Oodes japonicus": {
+      "japaneseName": "ヤマトトックリゴミムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1494976"
+    },
+    "Ophiusa disjungens": {
+      "japaneseName": "ヒロオビクロモンシタバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/348921"
+    },
+    "Opsius stactogalus": {
+      "japaneseName": "ギョリュウミドリヨコバイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/226518"
+    },
+    "Orchestes koltzei": {
+      "japaneseName": "カシワノミゾウムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/551337"
+    },
+    "Orgyia recens": {
+      "japaneseName": "アカモンドクガ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/BJW8R"
+    },
+    "Orthocabera sericea": {
+      "japaneseName": "キスジシロエダシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/337106"
+    },
+    "Orthosia gothica": {
+      "japaneseName": "カシワキリガ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/74YB9"
+    },
+    "Orthosia incerta": {
+      "japaneseName": "ミヤマカバキリガ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/9389N"
+    },
+    "Oxyodes scrobiculata": {
+      "japaneseName": "クロミミモンクチバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/205289"
+    },
+    "Ozotomerus japonicus": {
+      "japaneseName": "ウスモンツツヒゲナガゾウムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/551338"
+    },
+    "Pagria signata": {
+      "japaneseName": "ヒメキバネサルハムシ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/2322125",
+      "sourceAttribution": "出典: 千葉県立中央博物館・環境省自然環境局　生物多様性センター（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Pammene germmana": {
+      "japaneseName": "ホソバヒメシンクイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/527500"
+    },
+    "Pammene obscurana": {
+      "japaneseName": "ウスグロヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/527505"
+    },
+    "Panilla costipunctata": {
+      "japaneseName": "マエクロモンアツバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/736255"
+    },
+    "Papilio castor": {
+      "japaneseName": "オナシモンキアゲハ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4CK8D"
+    },
+    "Paradromius longiceps": {
+      "japaneseName": "モリキバネホソアトキリゴミムシ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/6TP7N"
+    },
+    "Parapsestis argenteopicta": {
+      "japaneseName": "ギンモントガリバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/909136"
+    },
+    "Parasaissetia nigra": {
+      "japaneseName": "クロカタカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/330206"
+    },
+    "Paratachycines ussuriensis": {
+      "japaneseName": "ウスリーカマドウマ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/560786"
+    },
+    "Parechthistatus gibber": {
+      "japaneseName": "セダカコブヤハズカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/968062"
+    },
+    "Parvarhynchus japonicus": {
+      "japaneseName": "カヤキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1350251"
+    },
+    "Pealius rubi": {
+      "japaneseName": "クサイチゴコナジラミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1613104"
+    },
+    "Pedicinus obtusus": {
+      "japaneseName": "サルジラミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1038732"
+    },
+    "Penthema formosanum": {
+      "japaneseName": "シロスジマダラ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/596492"
+    },
+    "Penthetria japonica": {
+      "japaneseName": "ヒメセアカケバエ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1077139"
+    },
+    "Peratophyga grata": {
+      "japaneseName": "クロフヒメエダシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/735346"
+    },
+    "Periplaneta kijimuna": {
+      "japaneseName": "アカズミゴキブリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1393716"
+    },
+    "Periplaneta lateralis": {
+      "japaneseName": "トルキスタンゴキブリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1473952"
+    },
+    "Perixera absconditaria": {
+      "japaneseName": "クロモンウスチャヒメシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/199572"
+    },
+    "Phanerotoma flava": {
+      "japaneseName": "キイロコウラコマユバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/950109"
+    },
+    "Phlugiolopsis yaeyamensis": {
+      "japaneseName": "ヤエヤマササキリモドキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/979144"
+    },
+    "Phyllomimus klapperichi": {
+      "japaneseName": "タイリククサキリモドキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/424589"
+    },
+    "Phyllonorycter junoniella": {
+      "japaneseName": "コケモモキンモンホソガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/875789"
+    },
+    "Phymatapoderus flavimanus": {
+      "japaneseName": "ヒメコブオトシブミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/550340"
+    },
+    "Phymateus saxosus": {
+      "japaneseName": "キマダラドクバッタ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/126156"
+    },
+    "Physetobasis dentifascia": {
+      "japaneseName": "ハネナガナミシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/954661"
+    },
+    "Physopelta cincticollis": {
+      "japaneseName": "ヒメホシカメムシ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/2322607",
+      "sourceAttribution": "出典: 千葉県立中央博物館・環境省自然環境局　生物多様性センター（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Physopelta quadriguttata": {
+      "japaneseName": "ヨツモンオオホシカメムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/357799"
+    },
+    "Pidonia amentata": {
+      "japaneseName": "セスジヒメハナカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1509389"
+    },
+    "Pimpla pluto": {
+      "japaneseName": "クロフシヒラタヒメバチ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/1613021",
+      "sourceAttribution": "出典: 神奈川県立生命の星・地球博物館・那須塩原市那須野が原博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Pineus cembrae": {
+      "japaneseName": "キタマツカサアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/793413"
+    },
+    "Platycerus takakuwai": {
+      "japaneseName": "トウカイコルリクワガタ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1079210"
+    },
+    "Platycnemis foliacea": {
+      "japaneseName": "グンバイトンボ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/1628268",
+      "sourceAttribution": "出典: よねざわ昆虫館・神奈川県立生命の星・地球博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Platynaspis maculosa": {
+      "japaneseName": "モンクチビルテントウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/713655"
+    },
+    "Platystethus cornutus": {
+      "japaneseName": "ヘリグロヒメカワベハネカクシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4JZ3H"
+    },
+    "Platystomos sellatus": {
+      "japaneseName": "シロヒゲナガゾウムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/630722"
+    },
+    "Plautia crossota": {
+      "japaneseName": "チャバネアオカメムシ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/3668278",
+      "sourceAttribution": "出典: 橿原市昆虫館・群馬県立ぐんま昆虫の森（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Plebejus subsolanus": {
+      "japaneseName": "アサマシジミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/358817"
+    },
+    "Plectrura metallica": {
+      "japaneseName": "アカガネカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/957661"
+    },
+    "Plusia putnami": {
+      "japaneseName": "キタイネキンウワバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/228421"
+    },
+    "Poecilus versicolor": {
+      "japaneseName": "キンナガゴミムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/6VT9W"
+    },
+    "Pogonocherus dimidiatus": {
+      "japaneseName": "ネジロカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/632553"
+    },
+    "Pogonocherus fasciculatus": {
+      "japaneseName": "ヒメシラオビカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/505407"
+    },
+    "Polia bombycina": {
+      "japaneseName": "オオチャイロヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/322336"
+    },
+    "Polyhymno pontifera": {
+      "japaneseName": "スジウスキキバガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1080464"
+    },
+    "Pothyne annulata": {
+      "japaneseName": "シロスジドウボソカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/986367"
+    },
+    "Pothyne formosana": {
+      "japaneseName": "タテスジドウボソカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/739333"
+    },
+    "Pothyne variegata": {
+      "japaneseName": "カスリドウボソカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/708162"
+    },
+    "Prismognathus davidis": {
+      "japaneseName": "タイワンキンオニクワガタ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1123357"
+    },
+    "Prociphilus osmanthae": {
+      "japaneseName": "ヒイラギハマキワタムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/481828"
+    },
+    "Prosopocoilus formosanus": {
+      "japaneseName": "ウスバクワガタ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/911313"
+    },
+    "Protaetia culta": {
+      "japaneseName": "カバイロハナムグリ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/77Z98"
+    },
+    "Protaetia exasperata": {
+      "japaneseName": "オオシマアオハナムグリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1023611"
+    },
+    "Protaetia ishigakia": {
+      "japaneseName": "イシガキシロテンハナムグリ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4MZDC"
+    },
+    "Protaetia lewisi": {
+      "japaneseName": "リュウキュウオオハナムグリ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4MZ5M"
+    },
+    "Protegira songi": {
+      "japaneseName": "トチュウウスクモヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1051199"
+    },
+    "Pseudococcus longispinus": {
+      "japaneseName": "ナガオコナカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/84805"
+    },
+    "Pseudoips prasinana": {
+      "japaneseName": "アオスジアオリンガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/321945"
+    },
+    "Pseudomallada prasinus": {
+      "japaneseName": "セボシクサカゲロウ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/LBMCW",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4P2GD"
+    },
+    "Pseudomegoura magnoliae": {
+      "japaneseName": "ニワトコヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1234305"
+    },
+    "Pseudomesauletes uniformis": {
+      "japaneseName": "クロケシツブチョッキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1260267"
+    },
+    "Pseudoregma bambucicola": {
+      "japaneseName": "タケツノアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1442167"
+    },
+    "Psychoda alternata": {
+      "japaneseName": "ホシチョウバエ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4PMFQ"
+    },
+    "Psyrana amaiensis": {
+      "japaneseName": "アマミヘリグロツユムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/979378"
+    },
+    "Pterolophia gibbosipennis": {
+      "japaneseName": "コブバネサビカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1147848"
+    },
+    "Pterolophia jugosa": {
+      "japaneseName": "ナカジロサビカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1231130"
+    },
+    "Pterolophia kaleea": {
+      "japaneseName": "イシガキシロオビサビカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1469477"
+    },
+    "Pteronemobius nigriscens": {
+      "japaneseName": "ヒメスズ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/979388"
+    },
+    "Pterostichus eschscholtzii": {
+      "japaneseName": "オオナガゴミムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/78LVG"
+    },
+    "Pterostichus haptoderoides": {
+      "japaneseName": "トックリナガゴミムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4Q3PT"
+    },
+    "Pterostichus orientalis": {
+      "japaneseName": "アトマルナガゴミムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/713457"
+    },
+    "Pterostoma griseum": {
+      "japaneseName": "チョウセンエグリシャチホコ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/785652"
+    },
+    "Pulvinaria floccifera": {
+      "japaneseName": "オキツワタカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/396029"
+    },
+    "Pulvinaria idesiae": {
+      "japaneseName": "イイギリワタカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1620225"
+    },
+    "Pulvinaria photiniae": {
+      "japaneseName": "ウシコロシワタカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1480200"
+    },
+    "Pulvinaria polygonata": {
+      "japaneseName": "タイワンワタカイガラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/746730"
+    },
+    "Pyrausta phoenicealis": {
+      "japaneseName": "ベニフキノメイガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/473599"
+    },
+    "Pyrgocorypha formosana": {
+      "japaneseName": "ズトガリクビキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1104723"
+    },
+    "Pyrophaena rosarum": {
+      "japaneseName": "フタモンヒラアシヒラタアブ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/9HK7P"
+    },
+    "Rhagades pruni": {
+      "japaneseName": "ルリハダホソクロバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/468428"
+    },
+    "Rhodopina lewisii": {
+      "japaneseName": "セミスジコブヒゲカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1253401"
+    },
+    "Rhopalosiphum nymphaeae": {
+      "japaneseName": "クワイクビレアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/142766"
+    },
+    "Rhyssa amoena": {
+      "japaneseName": "ジョウザンオナガバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/54551"
+    },
+    "Sansarea circulifera": {
+      "japaneseName": "マルモンイラガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/622338"
+    },
+    "Sarucallis kahawaluokalani": {
+      "japaneseName": "サルスベリヒゲマダラアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/506298"
+    },
+    "Saturnia japonica": {
+      "japaneseName": "クスサン",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/604446",
+      "sourceAttribution": "出典: 岐阜県博物館・秋田県立博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Saturnia jonasii": {
+      "japaneseName": "ヒメヤママユ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/6201005",
+      "sourceAttribution": "出典: 千葉県立中央博物館・秋田県立博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Scarites terricola": {
+      "japaneseName": "ナガヒョウタンゴミムシ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/8787759",
+      "sourceAttribution": "出典: ミュージアムパーク茨城県自然博物館・千葉県立中央博物館（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Scenopinus glabrifrons": {
+      "japaneseName": "キアシマドギワアブ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1271803"
+    },
+    "Schreckensteinia festaliella": {
+      "japaneseName": "タテジマホソマイコガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/345532"
+    },
+    "Sciara thoracica": {
+      "japaneseName": "セアカクロバネキノコバエ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1466535"
+    },
+    "Scopula corrivalaria": {
+      "japaneseName": "ウラナミヒメシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/202589"
+    },
+    "Scopula divisaria": {
+      "japaneseName": "ミドリヒメシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/202584"
+    },
+    "Scopula impersonata": {
+      "japaneseName": "ハイイロヒメシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/952256"
+    },
+    "Scopula nigropunctata": {
+      "japaneseName": "マエキヒメシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/470781"
+    },
+    "Scutellera nepalensis": {
+      "japaneseName": "ラデンキンカメムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1355528"
+    },
+    "Scythris sinensis": {
+      "japaneseName": "ヨツモンキヌバコガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/363524"
+    },
+    "Selepa discigera": {
+      "japaneseName": "シロスジキノカワガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/207635"
+    },
+    "Semachrysa matsumurae": {
+      "japaneseName": "マツムラクサカゲロウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1440111"
+    },
+    "Sergentomyia squamirostris": {
+      "japaneseName": "ニホンサシチョウバエ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/6YHF5"
+    },
+    "Serrognathus consentaneus": {
+      "japaneseName": "チョウセンヒラタクワガタ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4WXX4"
+    },
+    "Serrognathus costatus": {
+      "japaneseName": "スジブトヒラタクワガタ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4WXX5"
+    },
+    "Serrognathus titanus": {
+      "japaneseName": "ヒラタクワガタ",
+      "sourceUrl": "https://www.wikidata.org/wiki/Q874874",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4WXXD"
+    },
+    "Shivaphis celti": {
+      "japaneseName": "エノキワタアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/335282"
+    },
+    "Sigmatoneura kolbei": {
+      "japaneseName": "クロミャクチャタテ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/494309"
+    },
+    "Sitobion ibarae": {
+      "japaneseName": "イバラヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/449887"
+    },
+    "Sitobion kamtshaticum": {
+      "japaneseName": "アシボソセツヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1612979"
+    },
+    "Sophonia suturalis": {
+      "japaneseName": "ナカグロホソサジヨコバイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1598731"
+    },
+    "Sorhoanus assimilis": {
+      "japaneseName": "ニセムギトガリヨコバイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/914803"
+    },
+    "Spatalia dives": {
+      "japaneseName": "ギンモンシャチホコ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/768245"
+    },
+    "Sphaenognathus alticollis": {
+      "japaneseName": "アルティコリスシワバネクワガタ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4YKYD"
+    },
+    "Sphaenognathus monguilloni": {
+      "japaneseName": "モンギロンシワバネクワガタ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4YKYB"
+    },
+    "Sphaenognathus spinifer": {
+      "japaneseName": "スピニフェールシワバネクワガタ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4YKZ8"
+    },
+    "Spinarge prunivora": {
+      "japaneseName": "サクラトゲチュウレンジ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1364323"
+    },
+    "Stathmopoda gemmiconsuta": {
+      "japaneseName": "ヒメムラサキシキブマイコガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1469935"
+    },
+    "Stathmopoda sericicola": {
+      "japaneseName": "スジボソマイコガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1527956"
+    },
+    "Stauropus alternus": {
+      "japaneseName": "ナントシャチホコ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/202022"
+    },
+    "Stauropus fagi": {
+      "japaneseName": "シャチホコガ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/4ZMFX"
+    },
+    "Stenoloba assimilis": {
+      "japaneseName": "アオキノコヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/962514"
+    },
+    "Stenus flavidulus": {
+      "japaneseName": "ズグロメダカハネカクシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/542332"
+    },
+    "Sternuchopsis waltoni": {
+      "japaneseName": "ムツスジアシナガゾウムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/623248"
+    },
+    "Stictane rectilinea": {
+      "japaneseName": "クロスジチビコケガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/145574"
+    },
+    "Stictoleptura dichroa": {
+      "japaneseName": "アカハナカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/986660"
+    },
+    "Stomaphis malloti": {
+      "japaneseName": "アカメガシワクチナガオオアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1602896"
+    },
+    "Stomaphis yanonis": {
+      "japaneseName": "ヤノクチナガオオアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1587388"
+    },
+    "Suinzona cyrtonoides": {
+      "japaneseName": "アカソハムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1390520"
+    },
+    "Svercacheta siamensis": {
+      "japaneseName": "タンボコオロギ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/865317"
+    },
+    "Swammerdamia caesiella": {
+      "japaneseName": "ニセウスグロヒメスガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/232017"
+    },
+    "Sypnoides fumosa": {
+      "japaneseName": "クロシラフクチバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/551742"
+    },
+    "Tabanus mandarinus": {
+      "japaneseName": "シロフアブ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/802972"
+    },
+    "Tachys fasciatus": {
+      "japaneseName": "クロオビコミズギワゴミムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/697000"
+    },
+    "Taicallimorpha albipuncta": {
+      "japaneseName": "ホシカラスヒトリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/743293"
+    },
+    "Takecallis arundicolens": {
+      "japaneseName": "タケヒゲマダラアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1293233"
+    },
+    "Teleogryllus infernalis": {
+      "japaneseName": "エゾエンマコオロギ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/560791"
+    },
+    "Telicota bambusae": {
+      "japaneseName": "ホリシャアカセセリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/337531"
+    },
+    "Telmatogeton japonicus": {
+      "japaneseName": "ヤマトイソユスリカ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/553145"
+    },
+    "Temnoscheila japonica": {
+      "japaneseName": "オオコクヌスト",
+      "sourceUrl": "https://www.inaturalist.org/taxa/540975"
+    },
+    "Tenthredo finschi": {
+      "japaneseName": "セグロコシホソハバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1361174"
+    },
+    "Tethea ampliata": {
+      "japaneseName": "オオバトガリバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/903391"
+    },
+    "Tethea consimilis": {
+      "japaneseName": "オオマエベニトガリバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/785645"
+    },
+    "Thelaira nigripes": {
+      "japaneseName": "アシナガハリバエ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/607154"
+    },
+    "Theretra clotho": {
+      "japaneseName": "サツマスズメ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/338292"
+    },
+    "Thoracaphis kashifolia": {
+      "japaneseName": "シラカシムネアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1155600"
+    },
+    "Thosea sinensis": {
+      "japaneseName": "クロテンイラガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/318870"
+    },
+    "Thranius multinotatus": {
+      "japaneseName": "ヤエヤマホソバネカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/903257"
+    },
+    "Thrips coloratus": {
+      "japaneseName": "ビワハナアザミウマ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/83441"
+    },
+    "Thrips nigropilosus": {
+      "japaneseName": "クロゲハナアザミウマ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/410226"
+    },
+    "Thysanoplusia daubei": {
+      "japaneseName": "アミメギンウワバ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/94BGJ"
+    },
+    "Timandra recompta": {
+      "japaneseName": "ベニスジヒメシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/911514"
+    },
+    "Tineovertex melanochryseus": {
+      "japaneseName": "クロスジキヒロズコガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1238080"
+    },
+    "Tinocallis insularis": {
+      "japaneseName": "ムクロジヒゲマダラアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1473316"
+    },
+    "Tinocallis zelkowae": {
+      "japaneseName": "ケヤキブチアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1347218"
+    },
+    "Trachea punkikonis": {
+      "japaneseName": "オオシロテンアオヨトウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/961362"
+    },
+    "Trichodectes canis": {
+      "japaneseName": "イヌハジラミ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/58BBW"
+    },
+    "Trichodectes pinguis": {
+      "japaneseName": "クマハジラミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/232886"
+    },
+    "Trigomphus citimus": {
+      "japaneseName": "タベサナエ",
+      "sourceUrl": "https://science-net.kahaku.go.jp/specimen/2338241",
+      "sourceAttribution": "出典: 橿原市昆虫館・環境省自然環境局　生物多様性センター（S-Net、CC BY 4.0）。DigiViewerが抽出・加工。"
+    },
+    "Trigonodes hyppasia": {
+      "japaneseName": "サンカククチバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/203110"
+    },
+    "Trioza cinnamomi": {
+      "japaneseName": "ニッケイトガリキジラミ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/479973"
+    },
+    "Tripteroides bambusa": {
+      "japaneseName": "キンパラナガハシカ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/58ZDS"
+    },
+    "Tuberculatus capitatus": {
+      "japaneseName": "クヌギトゲマダラアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/943066"
+    },
+    "Tuberculatus indicus": {
+      "japaneseName": "カバイロトゲマダラアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1454716"
+    },
+    "Tuberculatus kuricola": {
+      "japaneseName": "クリヒゲマダラアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/917368"
+    },
+    "Tuberculatus stigmatus": {
+      "japaneseName": "クロトゲマダラアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1586324"
+    },
+    "Tuberocephalus sakurae": {
+      "japaneseName": "サクラコブアブラムシ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/59JH3"
+    },
+    "Tuberocephalus sasakii": {
+      "japaneseName": "サクラフシアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/897480"
+    },
+    "Tuberolachnus salignus": {
+      "japaneseName": "ヤナギコブオオアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/354036"
+    },
+    "Tyloptera bella": {
+      "japaneseName": "ホソバナミシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/708842"
+    },
+    "Uroleucon formosanum": {
+      "japaneseName": "タイワンヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/447807"
+    },
+    "Uroleucon giganteum": {
+      "japaneseName": "アザミオオヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/510816"
+    },
+    "Uroleucon gobonis": {
+      "japaneseName": "ゴボウヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/889543"
+    },
+    "Uroleucon luteolum": {
+      "japaneseName": "アワダチソウミドリヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/704369"
+    },
+    "Uroleucon picridis": {
+      "japaneseName": "コウゾリナヒゲナガアブラムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/549240"
+    },
+    "Utetheisa inconstans": {
+      "japaneseName": "オキナワモンシロモドキ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/DQFWX"
+    },
+    "Utetheisa lotrix": {
+      "japaneseName": "タイワンベニゴマダラヒトリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/334603"
+    },
+    "Utetheisa pulchelloides": {
+      "japaneseName": "ベニゴマダラヒトリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/125231"
+    },
+    "Vigentinocome autumnalis": {
+      "japaneseName": "ナンカイミドリキリガ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/DQHG9"
+    },
+    "Volucella pellucens": {
+      "japaneseName": "シロスジベッコウハナアブ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/52480"
+    },
+    "Vulgichneumon leucaniae": {
+      "japaneseName": "アワヨトウヤドリヒメバチ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1373763"
+    },
+    "Wesmaelius nervosus": {
+      "japaneseName": "ブチヘリヒメカゲロウ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/454990"
+    },
+    "Xandrames latiferaria": {
+      "japaneseName": "シロスジオオエダシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/622416"
+    },
+    "Xenysmoderes consularis": {
+      "japaneseName": "ゲットウトゲムネサルゾウムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/950580"
+    },
+    "Xestia baja": {
+      "japaneseName": "キミミヤガ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/5CDVN"
+    },
+    "Xestia c-nigrum": {
+      "japaneseName": "シロモンヤガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/203342"
+    },
+    "Xestia kollari": {
+      "japaneseName": "ハコベヤガ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/94C4N"
+    },
+    "Xestia wockei": {
+      "japaneseName": "タカネモンヤガ",
+      "sourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/94C5F"
+    },
+    "Xestophrys horvathi": {
+      "japaneseName": "オキナワシブイロカヤキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/523055"
+    },
+    "Xyleborinus andrewesi": {
+      "japaneseName": "ホソバネキクイムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/703320"
+    },
+    "Xyleborinus attenuatus": {
+      "japaneseName": "サクラノホソキクイムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/456122"
+    },
+    "Xyleborinus saxesenii": {
+      "japaneseName": "サクセスキクイムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/409196"
+    },
+    "Xylena solidaginis": {
+      "japaneseName": "シロスジキリガ",
+      "sourceUrl": "https://www.nilim.go.jp/lab/fbg/ksnkankyo/mizukokuweb/system/seibutsuListfile.htm",
+      "aliasSourceUrl": "https://www.checklistbank.org/dataset/316165/taxon/94C5Y"
+    },
+    "Xylopolia bella": {
+      "japaneseName": "クロスジキリガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/921401"
+    },
+    "Xylosandrus amputatus": {
+      "japaneseName": "ツヅミキクイムシ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/930247"
+    },
+    "Xylotrechus pyrrhoderus": {
+      "japaneseName": "ブドウトラカミキリ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1127413"
+    },
+    "Yamatotettix pacificus": {
+      "japaneseName": "ヘリグロヤマトヨコバイ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1601774"
+    },
+    "Ypsolopha yasudai": {
+      "japaneseName": "クロテンキクチブサガ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/927692"
+    },
+    "Zanclognatha fumosa": {
+      "japaneseName": "ウスグロアツバ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/1154880"
+    },
+    "Zeiraphera bicolora": {
+      "japaneseName": "セギンモンヒメハマキ",
+      "sourceUrl": "https://www.inaturalist.org/taxa/937818"
+    },
+    "Zola terranea": {
+      "japaneseName": "トビスジトガリナミシャク",
+      "sourceUrl": "https://www.inaturalist.org/taxa/954631"
+    }
+  }
+}

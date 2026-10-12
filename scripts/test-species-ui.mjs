@@ -31,6 +31,11 @@ try {
         return [{ old_path: path, path: '/fixtures/butterfly_' + name + '.jpg', name: 'butterfly_' + name + '.jpg', size: 1000, modified_at: 1 }];
       }
       if (command === 'species_status') return { supported: true, windows: false, installed: true, enabled: true, busy: false, progress: '', error: '', geography: { complete: true } };
+      if (command === 'species_identify' && window.__completion) return {
+        candidates: ['Carabus albrechti', 'Anoplophora chinensis', 'Hestina japonica', 'Andrena semirugosa', 'Favonius saphirina'].map((scientificName, i) => ({ scientificName, score: .3 - i * .05, wholeRank: i + 1, cropSupport: 5 - i, japanRecords: 1 })),
+        otherScore: 0, device: 'mps', seconds: 10, japanApplied: true, geographyDate: '2026-09-22',
+        warning: '辞書表示のテスト用候補です。写真の推論結果ではありません。',
+      };
       if (command === 'species_identify' && window.__insectExpansion) return {
         candidates: [
           { scientificName: 'Bombus diversus', score: .4, wholeRank: 1, cropSupport: 5, japanRecords: 9140 },
@@ -129,6 +134,7 @@ try {
   assert.equal(await rows.nth(2).locator('strong').innerText(), 'ナナホシテントウ — Coccinella septempunctata');
   assert.match(await rows.nth(0).innerText(), /63\.2%/);
   assert.match(await rows.nth(2).innerText(), /6\.0%/);
+  await page.locator('#species-result-body summary').click();
   assert.match(await page.locator('#species-result-body').innerText(), /国土技術政策総合研究所.*DigiViewerが加工/);
   await rows.nth(0).getByRole('button', { name: '和名の出典', exact: true }).click();
   assert.match((await page.evaluate(() => window.__openedUrls)).at(-1), /^https:\/\/www\.nilim\.go\.jp\//);
@@ -155,6 +161,7 @@ try {
   }
   assert.match(await rows.nth(4).innerText(), /和名未収録 — Example unknown/);
   assert.match(await rows.nth(0).innerText(), /40\.0%/);
+  await page.locator('#species-result-body summary').click();
   assert.match(await page.locator('#species-result-body').innerText(), /Catalogue of Life.*CC BY 4\.0/);
   await rows.nth(0).getByRole('button', { name: '和名の出典', exact: true }).click();
   assert.match((await page.evaluate(() => window.__openedUrls)).at(-1), /^https:\/\/www\.checklistbank\.org\/dataset\/316165\/taxon\//);
@@ -168,6 +175,37 @@ try {
   if (process.env.DIGIVIEWER_TEST_SCREENSHOT) {
     await page.locator('.species-result-dialog').evaluate(el => el.scrollTop = 0);
     await page.locator('#species-result-dialog').screenshot({ path: process.env.DIGIVIEWER_TEST_SCREENSHOT + '.insects.png' });
+  }
+  await page.locator('#species-result-close').click();
+  await page.evaluate(() => { window.__completion = true; });
+  await page.locator('#species-identify-button').click();
+  await page.getByRole('button', { name: 'この写真を判定', exact: true }).click();
+  await rows.first().waitFor();
+  assert.match(await page.locator('#species-result-body').innerText(), /42,600学名/);
+  for (const [index, label] of ['クロオサムシ', 'ゴマダラカミキリ', 'ゴマダラチョウ', 'アブラナマメヒメハナバチ', 'ウラジロミドリシジミ'].entries()) {
+    assert.match(await rows.nth(index).locator('strong').innerText(), new RegExp('^' + label + ' — '));
+  }
+  assert.match(await rows.nth(3).innerText(), /S-Net、CC BY 4.0.*DigiViewerが抽出・加工/);
+  const sourcePatterns = [/checklistbank.org/, /inaturalist.org/, /biodic.go.jp/, /science-net.kahaku.go.jp/, /wikidata.org/];
+  for (let index = 0; index < 5; index++) {
+    await rows.nth(index).getByRole('button', { name: '和名の出典', exact: true }).click();
+    assert.match((await page.evaluate(() => window.__openedUrls)).at(-1), sourcePatterns[index]);
+  }
+  await page.locator('#species-result-body summary').click();
+  assert.match(await page.locator('#species-result-body details').innerText(), /iNaturalist contributors/);
+  await page.getByRole('button', { name: 'CC BY 4.0', exact: true }).click();
+  assert.equal((await page.evaluate(() => window.__openedUrls)).at(-1), 'https://creativecommons.org/licenses/by/4.0/');
+  await page.locator('#species-result-body summary').click();
+  await rows.nth(3).getByRole('button', { name: 'この候補を種名欄に入れる' }).click();
+  await page.getByRole('button', { name: '種名フィールドに設定', exact: true }).click();
+  assert.equal(await page.locator('#species-default-name').inputValue(), 'アブラナマメヒメハナバチ');
+  assert.deepEqual(await page.evaluate(() => window.__renames), beforeRenames);
+  assert.deepEqual(errors, []);
+  if (process.env.DIGIVIEWER_TEST_SCREENSHOT) {
+    await page.locator('.species-result-dialog').evaluate(el => el.scrollTop = 0);
+    await page.locator('#species-result-dialog').screenshot({ path: process.env.DIGIVIEWER_TEST_SCREENSHOT + '.completion.png' });
+    await rows.nth(3).scrollIntoViewIfNeeded();
+    await page.locator('#species-result-dialog').screenshot({ path: process.env.DIGIVIEWER_TEST_SCREENSHOT + '.specimens.png' });
   }
   console.log('PASS: full production UI, toolbar layout, empty/prefilled defaults, Japanese names, field-only action, failed rename preservation, successful rename and default propagation, new ladybird name, preserved scores, domestic/Wikidata/Catalogue of Life source links, insect additions and synonym evidence');
 } finally { await browser.close(); }

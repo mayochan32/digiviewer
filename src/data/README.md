@@ -78,3 +78,49 @@ python3 scripts/expand-japanese-insect-names.py \
 前段階の辞書を作成してから実行します。固定版の完全一致検索と種の詳細を最大6並列で取得し、失敗時は再試行します。途中失敗時は同じキャッシュで再開できます。`--fetch` を外すと通信せずに再生成し、必要な応答が欠けていれば中断します。別日に取得する場合は新しいキャッシュを指定してください。取得・照合が完了するまで同梱辞書を書き換えません。利用者のアプリはこの処理を実行せず、同梱JSONを読むだけです。
 
 検証: `python3 -B -m unittest discover -s tests -p 'test_japanese_insect_builder.py'`。既存のNodeテストとUIテストにも、キイロテントウなどの追加和名・異名リンク・従来名を維持する検証を含めています。
+
+## 昆虫の追加照合（673学名、2026-10-12取得）
+
+`japanese-insect-names-extended.json` は上記3辞書を変えずに追加する辞書です。各値は和名・出典URL、必要に応じて学名対応の出典・標本提供機関のクレジットを持ちます。`docs/japanese-insect-names-extended-audit.json` に採否・照合ID・資料および応答のSHA-256を保存します。順序はCOLの厳密な同一種照合（135）→iNaturalist（513）→環境省（5）→S-Net（19）→個別に識別子を確認した表記対応（1）です。
+
+- COLでは亜属表記を解析し、同じ科・同じ受容種IDの記録をまとめます。別の受容種IDがある場合や、いずれかの候補に分類上の問題がある場合は採用しません。検索にない場合はGBIF v2の完全一致からIDを得ますが、固定版COL 316165で同じID・学名・階級・科を確認できないものは使いません。
+- iNaturalistは[公式の月次分類アーカイブ](https://www.inaturalist.org/taxa/inaturalist-taxonomy.dwca.zip)の2026-10-01版を使用。[ChecklistBankメタデータ](https://api.checklistbank.org/dataset/139831)の版・ライセンスも保存し、アーカイブのEMLと版を比較します。iNaturalist contributors, iNaturalist Taxonomy, DOI [10.48580/d7r9s.v56](https://doi.org/10.48580/d7r9s.v56), CC BY 4.0。種階級の学名・科の完全一致、カタカナ和名が1つ、他出典との競合がないことを条件に抽出・加工します。種内分類を二名法に切り詰めません。
+- 環境省生物多様性センターの[対象種一覧](https://www.biodic.go.jp/kiso/do05/index.html)（1997）の `05_to.pdf`・`06_cho.pdf`・`07_se.pdf`・`08_ga.pdf`・`09_ko.pdf` を使用。二名法が明記された817行を抽出し、モデルの科とも照合します。[PDL1.0](https://www.biodic.go.jp/copyright/terms_of_service.html)に基づいて抽出・加工し、採用行の資料・ページ・種コードを記録します。更新後の分類を網羅する資料ではありません。
+- S-Netは `scripts/data/snet-targets.json` に固定した60学名を調べたものです。国内記録の多い未収録学名から、先行照合に和名の競合がないものを選んでいます。公開CSVの全行取得を確認し、種階級・同じ学名・和名が1つ・2機関以上を条件に、GBIFの同一標本・同じ科・種階級・和名・利用条件を再確認します。CC BY 4.0またはCC0の採用分だけを抽出・加工します。2機関の一致は誤同定がないことの保証ではありません。標本を照合するための機関・コレクション・標本番号・出典IDを記録し、採集者氏名や座標を同梱しません。
+- `scripts/data/japanese-name-decisions.json` は個別に確認した対応です。`Favonius saphirina` と既存の `Favonius saphirinus` はCOLの明示的なWikidata IDが共通であることを確認。既存和名を採用し、誤記候補を含めて判断理由を保存します。出典側のID・和名候補集合が変わった場合は自動更新せず処理を止めます。
+
+和名が複数あるもの、同名別種、分類が合わないものは未収録のままです。文字の類似、画像生成AIによる翻訳、亜種名の切り詰めで件数を増やしません。表示率の比較は[検証報告](../../docs/japanese-names-expansion-0.6.2.md)を参照してください。
+
+### 再生成
+
+開発者用の処理です。通常利用者が追加のPythonライブラリを入れる必要はありません。PDF抽出にだけ `pdfplumber` を使い、他の追加処理はPythonの標準ライブラリで実行できます。
+
+取得済み資料はローカルの `release/japanese-names-preview/insect-name-completion-source-cache-20261012.zip` に保存します（Git管理・アプリへの同梱対象外）。展開したディレクトリを以下の `/path/to/completion-cache` に指定します。このアーカイブには元のCOL照合キャッシュ、iNaturalistアーカイブと同版メタデータ、環境省PDF、S-Netの検索結果・公開CSV・GBIF応答、抽出結果、入力モデルラベルと日本記録のスナップショットを含みます。入力写真は含みません。
+
+```sh
+python3 scripts/extract-domestic-insect-names.py \
+  --directory /path/to/completion-cache/biodic \
+  --output /path/to/completion-cache/domestic-records.json
+
+python3 scripts/collect-snet-insect-names.py \
+  --targets scripts/data/snet-targets.json \
+  --cache /path/to/completion-cache \
+  --retrieved 2026-10-12 \
+  --output /path/to/completion-cache/snet-verified.json
+
+python3 scripts/complete-japanese-insect-names.py \
+  --col-cache /path/to/completion-cache/col-cache \
+  --public-cache /path/to/completion-cache/public-cache \
+  --retrieved 2026-10-12 \
+  --model-labels /path/to/completion-cache/txt_emb_species.json \
+  --japan-names /path/to/completion-cache/japan-names.json \
+  --inat-archive /path/to/completion-cache/inaturalist-taxonomy.dwca.zip \
+  --inat-metadata /path/to/completion-cache/inat-clb-metadata.json \
+  --domestic-records /path/to/completion-cache/domestic-records.json \
+  --snet-verified /path/to/completion-cache/snet-verified.json \
+  --decisions scripts/data/japanese-name-decisions.json
+```
+
+通常は通信しません。足りないキャッシュはエラーにします。新しく調べる場合だけ新規キャッシュディレクトリ・取得日と `--fetch` を指定します。COL応答とGBIF応答は取得日の異なるキャッシュを混ぜない検査があります。S-NetのHTML/CSVは取得日別のディレクトリで管理してください。公式アーカイブやPDFの更新後は、版・利用条件・行の見た目を再確認してから採用します。
+
+`--output-root /path/to/verification` を完成辞書の再生成時に指定すると、作業中の辞書を上書きせず比較できます。取得済み資料を使って辞書と監査記録を再生成し、同梱ファイルとのSHA-256一致を確認しています。

@@ -2,14 +2,17 @@ import snapshot from './data/japanese-species-names.json';
 import supplement from './data/japanese-species-names-supplement.json';
 import aliases from './data/japanese-species-aliases.json';
 import insects from './data/japanese-insect-names.json';
+import extended from './data/japanese-insect-names-extended.json';
 
-type Entry = { japaneseName: string; sourceUrl: string; aliasSourceUrl?: string };
+type Entry = { japaneseName: string; sourceUrl: string; aliasSourceUrl?: string; sourceAttribution?: string };
 const names: Readonly<Record<string, readonly string[]>> = snapshot.entries;
 const extraNames: Readonly<Record<string, readonly string[]>> = supplement.entries;
 const insectNames: Readonly<Record<string, Entry>> = insects.entries;
+const extendedNames: Readonly<Record<string, Entry>> = extended.entries;
 const synonyms: Readonly<Record<string, { acceptedName: string; source: string }>> = aliases;
-export const japaneseNameCount = new Set([...Object.keys(names), ...Object.keys(extraNames), ...Object.keys(insectNames)]).size;
-export const japaneseNameDate = insects.retrieved;
+export const japaneseNameCount = new Set([...Object.keys(names), ...Object.keys(extraNames), ...Object.keys(insectNames), ...Object.keys(extendedNames)]).size;
+export const japaneseNameDate = extended.retrieved;
+export const japaneseAdditionalSources = Object.entries(extended.sources).filter(([key]) => key !== 'col').map(([, source]) => source);
 export const japaneseInsectAttribution = insects.source.attribution;
 export const japaneseInsectSourceUrl = insects.source.sourceUrl;
 export const japaneseNameAttribution = supplement.sources['nilim-r07'].attribution;
@@ -21,7 +24,8 @@ function directName(key: string): Entry | undefined {
     return { japaneseName: entry[0], sourceUrl: `https://www.wikidata.org/wiki/${entry[1]}` };
   }
   if (!Object.prototype.hasOwnProperty.call(extraNames, key)) {
-    return Object.prototype.hasOwnProperty.call(insectNames, key) ? insectNames[key] : undefined;
+    if (Object.prototype.hasOwnProperty.call(insectNames, key)) return insectNames[key];
+    return Object.prototype.hasOwnProperty.call(extendedNames, key) ? extendedNames[key] : undefined;
   }
   const [japaneseName, source, record] = extraNames[key];
   if (source === 'wikidata') return { japaneseName, sourceUrl: `https://www.wikidata.org/wiki/${record}` };

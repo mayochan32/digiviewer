@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "retrieved": "2026-10-12",
+  "entries": {
+    "Favonius saphirina": {
+      "japaneseName": "ウラジロミドリシジミ",
+      "existingScientificName": "Favonius saphirinus",
+      "sourceUrl": "https://www.wikidata.org/wiki/Q5971124",
+      "colUsageId": "3DWYR",
+      "linkedIdentifier": "wikidata:Q5971124",
+      "observedJapaneseNames": ["ウラジロミドリシジミ", "ウラジロミドリジシミ"],
+      "reason": "COLの種レコードが参照するWikidata Q5971124は既存辞書のFavonius saphirinusと同一。既存の種階級の和名を採用し、文字順の異なる別表記は採用しない。文字の類似による学名照合ではない。"
+    }
+  }
+}
