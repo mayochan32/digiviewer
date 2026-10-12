@@ -79,7 +79,7 @@ export function setupSpeciesOption(options: { native: boolean; photo: () => Phot
       localStorage.setItem('digiviewer.species.japan', String(japan.checked));
       try {
         const result = await invoke<Result>('species_identify', { path: target.path, japan: japan.checked && !japan.disabled, cpu: cpu.checked });
-        const { lookupJapaneseSpeciesName, japaneseNameCount, japaneseNameDate } = await import('./species-names');
+        const { lookupJapaneseSpeciesName, japaneseNameCount, japaneseNameDate, japaneseNameAttribution, japaneseNameSourceUrl } = await import('./species-names');
         if (generation !== requestGeneration || dialog.hidden) return;
         message.textContent = `${result.seconds}秒 / ${result.device.toUpperCase()} / ${result.japanApplied ? '日本の記録を考慮' : '地域補正なし'}`;
         results.append(element('p', '数値は候補間の相対スコアです。正解である確率ではありません。候補に正解が含まれないこともあります。'));
@@ -112,7 +112,9 @@ export function setupSpeciesOption(options: { native: boolean; photo: () => Phot
           row.append(button('この候補を種名欄に入れる', () => { draft.value = name ?? candidate.scientificName; message.textContent = '種名欄に入れました。まだファイル名は変更していません。写真と照合して確認してください。'; }));
           list.append(row);
         }
-        results.append(element('p', `和名は同梱辞書（${japaneseNameCount.toLocaleString()}学名、${japaneseNameDate}取得）から表示します。すべての種を網羅しているわけではなく、未収録の種は学名で表示します。`), list, element('p', `表示外の候補: ${(result.otherScore * 100).toFixed(1)}%。切り出しは同じ写真の補助情報です。模様などの形態的な根拠をAIが説明しているものではありません。国内記録は飼育・誤記録などを含む可能性があります。`), draftLabel, actions);
+        const attribution = element('p', japaneseNameAttribution + ' 出典: Wikidata（CC0）・国総研（公共データ利用規約）。');
+        attribution.append(button('国内リストの出典', () => void openUrl(japaneseNameSourceUrl).catch(error => { message.textContent = `出典を開けませんでした。${error}`; })));
+        results.append(element('p', `和名は同梱辞書（${japaneseNameCount.toLocaleString()}学名、${japaneseNameDate}更新）から表示します。すべての種を網羅しているわけではなく、未収録の種は学名で表示します。`), attribution, list, element('p', `表示外の候補: ${(result.otherScore * 100).toFixed(1)}%。切り出しは同じ写真の補助情報です。模様などの形態的な根拠をAIが説明しているものではありません。国内記録は飼育・誤記録などを含む可能性があります。`), draftLabel, actions);
       } catch (error) { message.textContent = `判定できませんでした。${String(error)}`; }
       finally { run.disabled = false; await refresh(); }
     })());

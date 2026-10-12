@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { build } from 'esbuild';
 
 const bundled = await build({ entryPoints: ['src/species-names.ts'], bundle: true, write: false, platform: 'node', format: 'esm' });
@@ -37,7 +38,7 @@ test('bundled snapshot is broad, attributed, unambiguous and independently usabl
   const data = JSON.parse(await fs.readFile('src/data/japanese-species-names.json', 'utf8'));
   assert.equal(data.license, 'CC0-1.0');
   assert.ok(japaneseNameCount > 8000);
-  assert.equal(Object.keys(data.entries).length, japaneseNameCount);
+  assert.equal(Object.keys(data.entries).length, data.count);
   for (const [name, [japanese, id]] of Object.entries(data.entries)) {
     assert.match(name, /^[A-Z][a-z]+ [a-z][a-z-]+$/);
     assert.match(japanese, /[ァ-ヺ]/);
@@ -46,4 +47,44 @@ test('bundled snapshot is broad, attributed, unambiguous and independently usabl
   }
   const aliases = JSON.parse(await fs.readFile('src/data/japanese-species-aliases.json', 'utf8'));
   for (const alias of Object.values(aliases)) assert.ok(Object.hasOwn(data.entries, alias.acceptedName));
+});
+
+
+test('domestic additions resolve the reported ladybird and preserve the existing correct name', () => {
+  assert.equal(lookup('Coccinella ainu')?.japaneseName, 'アイヌテントウ');
+  assert.equal(lookup('Coccinella septempunctata')?.japaneseName, 'ナナホシテントウ');
+  assert.match(lookup('Coccinella ainu').sourceUrl, /^https:\/\/www\.nilim\.go\.jp\//);
+  for (const [scientific, japanese] of Object.entries({
+    'Nephus oshimensis': 'オシマヒメテントウ',
+    'Hemithea aestivaria': 'キバラヒメアオシャク',
+    'Protohermes immaculatus': 'アマミヘビトンボ',
+  })) assert.equal(lookup(scientific)?.japaneseName, japanese, scientific);
+  assert.equal(lookup('Coccinella madeup'), undefined);
+  assert.equal(lookup('Parnara guttata guttata'), undefined);
+});
+
+test('additions have traceable sources, preserve all existing names, and exclude conflicts', async () => {
+  const baseBytes = await fs.readFile('src/data/japanese-species-names.json');
+  const base = JSON.parse(baseBytes);
+  const extra = JSON.parse(await fs.readFile('src/data/japanese-species-names-supplement.json', 'utf8'));
+  const audit = JSON.parse(await fs.readFile('docs/japanese-names-expansion-audit.json', 'utf8'));
+  assert.equal(extra.baseSha256, createHash('sha256').update(baseBytes).digest('hex'));
+  assert.equal(extra.count, Object.keys(extra.entries).length);
+  assert.equal(japaneseNameCount, base.count + extra.count);
+  assert.equal(audit.combinedCount, japaneseNameCount);
+  assert.ok(extra.count > 20000);
+  assert.equal(extra.sources['nilim-r07'].license, 'PDL-1.0');
+  assert.equal(extra.sources.wikidata.license, 'CC0-1.0');
+  for (const [name, [japanese]] of Object.entries(base.entries)) assert.equal(lookup(name)?.japaneseName, japanese, name);
+  for (const [name, [japanese, source, record]] of Object.entries(extra.entries)) {
+    assert.ok(!Object.hasOwn(base.entries, name));
+    assert.ok(!Object.hasOwn(audit.newNamesExcluded, name));
+    assert.match(name, /^[A-Z][a-z]+ [a-z][a-z-]+$/);
+    assert.match(japanese, /^[ァ-ヺー・]+$/);
+    assert.ok(Object.hasOwn(extra.sources, source));
+    assert.match(record, source === 'wikidata' ? /^Q[1-9][0-9]*$/ : /^[0-9]+$/);
+    assert.equal(lookup(name)?.japaneseName, japanese, name);
+    assert.match(lookup(name).sourceUrl, /^https:\/\//);
+  }
+  for (const name of Object.keys(audit.newNamesExcluded)) assert.equal(lookup(name), undefined, name);
 });

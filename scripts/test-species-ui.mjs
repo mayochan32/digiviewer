@@ -10,12 +10,14 @@ try {
   page.on('pageerror', error => { errors.push(String(error)); console.error('UI error:', error); });
   await page.addInitScript(() => {
     window.__renames = [];
+    window.__openedUrls = [];
     window.__TAURI_INTERNALS__ = {
       transformCallback: () => 1,
       convertFileSrc: () => '/docs/manual/images/overview.png',
       invoke: async (command, args) => {
+      if (command === 'plugin:opener|open_url') { window.__openedUrls.push(args.url); return; }
       if (command === 'ensure_crop_directory') return '/fixtures/crops';
-      if (command === 'app_version') return '0.6.1';
+      if (command === 'app_version') return '0.6.2';
       if (command === 'plugin:event|listen') return 1;
       if (command === 'plugin:dialog|open') return '/fixtures';
       if (command === 'load_review_state') return [];
@@ -29,6 +31,15 @@ try {
         return [{ old_path: path, path: '/fixtures/butterfly_' + name + '.jpg', name: 'butterfly_' + name + '.jpg', size: 1000, modified_at: 1 }];
       }
       if (command === 'species_status') return { supported: true, windows: false, installed: true, enabled: true, busy: false, progress: '', error: '', geography: { complete: true } };
+      if (command === 'species_identify' && window.__ladybird) return {
+        candidates: [
+          { scientificName: 'Coccinella ainu', score: .632, wholeRank: 1, cropSupport: 5, japanRecords: 57 },
+          { scientificName: 'Coccinella monticola', score: .085, wholeRank: 2, cropSupport: 5, japanRecords: 0 },
+          { scientificName: 'Coccinella septempunctata', score: .060, wholeRank: 4, cropSupport: 5, japanRecords: 38616 },
+          { scientificName: 'Coccinella magnifica', score: .050, wholeRank: null, cropSupport: 5, japanRecords: 0 },
+          { scientificName: 'Coccinella alta', score: .041, wholeRank: 3, cropSupport: 2, japanRecords: 0 },
+        ], otherScore: .132, device: 'mps', seconds: 15.59, japanApplied: true, geographyDate: '2026-09-22',
+      };
       if (command === 'species_identify') return {
         candidates: [
           { scientificName: 'Parnara guttatus', score: .894, wholeRank: 1, cropSupport: 5, japanRecords: 1765 },
@@ -99,5 +110,30 @@ try {
   await page.locator('#species-default-name').fill('');
   await page.locator('#append-species').click();
   assert.equal(await page.locator('#species-name-input').inputValue(), '');
-  console.log('PASS: full production UI, toolbar layout, empty/prefilled defaults, Japanese names, field-only action, failed rename preservation, successful rename and default propagation');
+  await page.locator('#species-cancel').click();
+  await page.evaluate(() => { window.__ladybird = true; });
+  await page.locator('#species-identify-button').click();
+  await page.getByRole('button', { name: 'この写真を判定', exact: true }).click();
+  await rows.first().waitFor();
+  assert.equal(await rows.nth(0).locator('strong').innerText(), 'アイヌテントウ — Coccinella ainu');
+  assert.equal(await rows.nth(2).locator('strong').innerText(), 'ナナホシテントウ — Coccinella septempunctata');
+  assert.match(await rows.nth(0).innerText(), /63\.2%/);
+  assert.match(await rows.nth(2).innerText(), /6\.0%/);
+  assert.match(await page.locator('#species-result-body').innerText(), /国土技術政策総合研究所.*DigiViewerが加工/);
+  await rows.nth(0).getByRole('button', { name: '和名の出典', exact: true }).click();
+  assert.match((await page.evaluate(() => window.__openedUrls)).at(-1), /^https:\/\/www\.nilim\.go\.jp\//);
+  await rows.nth(2).getByRole('button', { name: '和名の出典', exact: true }).click();
+  assert.match((await page.evaluate(() => window.__openedUrls)).at(-1), /^https:\/\/www\.wikidata\.org\/wiki\/Q/);
+  const beforeRenames = await page.evaluate(() => window.__renames);
+  await rows.nth(0).getByRole('button', { name: 'この候補を種名欄に入れる' }).click();
+  assert.equal(await page.locator('#species-result-body input[type=text]').inputValue(), 'アイヌテントウ');
+  await page.getByRole('button', { name: '種名フィールドに設定', exact: true }).click();
+  assert.equal(await page.locator('#species-default-name').inputValue(), 'アイヌテントウ');
+  assert.deepEqual(await page.evaluate(() => window.__renames), beforeRenames);
+  assert.deepEqual(errors, []);
+  if (process.env.DIGIVIEWER_TEST_SCREENSHOT) {
+    await page.locator('#species-result-body').evaluate(el => el.scrollTop = 0);
+    await page.locator('#species-result-dialog').screenshot({ path: process.env.DIGIVIEWER_TEST_SCREENSHOT + '.ladybird.png' });
+  }
+  console.log('PASS: full production UI, toolbar layout, empty/prefilled defaults, Japanese names, field-only action, failed rename preservation, successful rename and default propagation, new ladybird name, preserved scores, domestic/Wikidata source links');
 } finally { await browser.close(); }
