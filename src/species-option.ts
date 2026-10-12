@@ -79,7 +79,7 @@ export function setupSpeciesOption(options: { native: boolean; photo: () => Phot
       localStorage.setItem('digiviewer.species.japan', String(japan.checked));
       try {
         const result = await invoke<Result>('species_identify', { path: target.path, japan: japan.checked && !japan.disabled, cpu: cpu.checked });
-        const { lookupJapaneseSpeciesName, japaneseNameCount, japaneseNameDate, japaneseNameAttribution, japaneseNameSourceUrl } = await import('./species-names');
+        const { lookupJapaneseSpeciesName, japaneseNameCount, japaneseNameDate, japaneseNameAttribution, japaneseNameSourceUrl, japaneseInsectAttribution, japaneseInsectSourceUrl } = await import('./species-names');
         if (generation !== requestGeneration || dialog.hidden) return;
         message.textContent = `${result.seconds}秒 / ${result.device.toUpperCase()} / ${result.japanApplied ? '日本の記録を考慮' : '地域補正なし'}`;
         results.append(element('p', '数値は候補間の相対スコアです。正解である確率ではありません。候補に正解が含まれないこともあります。'));
@@ -107,12 +107,15 @@ export function setupSpeciesOption(options: { native: boolean; photo: () => Phot
           const name = japanese?.japaneseName;
           row.append(element('strong', `${name ?? '和名未収録'} — ${candidate.scientificName}`));
           if (japanese) row.append(button('和名の出典', () => void openUrl(japanese.sourceUrl).catch(error => { message.textContent = `出典を開けませんでした。${String(error)}`; })));
+          if (japanese?.aliasSourceUrl) row.append(button('学名の対応の出典', () => void openUrl(japanese.aliasSourceUrl!).catch(error => { message.textContent = `出典を開けませんでした。${String(error)}`; })));
           row.append(element('p', `相対スコア ${(candidate.score * 100).toFixed(1)}% ・ 写真全体: ${candidate.wholeRank ? candidate.wholeRank + '位' : '上位5件外'} ・ 切り出し5箇所中${candidate.cropSupport}箇所で上位5件`));
           row.append(element('p', candidate.japanRecords === null ? '日本の生息記録は未取得です。' : candidate.japanRecords ? `日本のGBIF記録 ${candidate.japanRecords.toLocaleString()}件（${result.geographyDate}取得）` : '取得した日本の記録に学名の一致はありません。日本にいないという意味ではありません。'));
           row.append(button('この候補を種名欄に入れる', () => { draft.value = name ?? candidate.scientificName; message.textContent = '種名欄に入れました。まだファイル名は変更していません。写真と照合して確認してください。'; }));
           list.append(row);
         }
         const attribution = element('p', japaneseNameAttribution + ' 出典: Wikidata（CC0）・国総研（公共データ利用規約）。');
+        attribution.append(element('span', ' ' + japaneseInsectAttribution));
+        attribution.append(button('昆虫の追加辞書の出典', () => void openUrl(japaneseInsectSourceUrl).catch(error => { message.textContent = `出典を開けませんでした。${error}`; })));
         attribution.append(button('国内リストの出典', () => void openUrl(japaneseNameSourceUrl).catch(error => { message.textContent = `出典を開けませんでした。${error}`; })));
         results.append(element('p', `和名は同梱辞書（${japaneseNameCount.toLocaleString()}学名、${japaneseNameDate}更新）から表示します。すべての種を網羅しているわけではなく、未収録の種は学名で表示します。`), attribution, list, element('p', `表示外の候補: ${(result.otherScore * 100).toFixed(1)}%。切り出しは同じ写真の補助情報です。模様などの形態的な根拠をAIが説明しているものではありません。国内記録は飼育・誤記録などを含む可能性があります。`), draftLabel, actions);
       } catch (error) { message.textContent = `判定できませんでした。${String(error)}`; }

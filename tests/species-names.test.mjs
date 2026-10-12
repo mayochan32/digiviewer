@@ -70,8 +70,9 @@ test('additions have traceable sources, preserve all existing names, and exclude
   const audit = JSON.parse(await fs.readFile('docs/japanese-names-expansion-audit.json', 'utf8'));
   assert.equal(extra.baseSha256, createHash('sha256').update(baseBytes).digest('hex'));
   assert.equal(extra.count, Object.keys(extra.entries).length);
-  assert.equal(japaneseNameCount, base.count + extra.count);
-  assert.equal(audit.combinedCount, japaneseNameCount);
+  const insects = JSON.parse(await fs.readFile('src/data/japanese-insect-names.json', 'utf8'));
+  assert.equal(japaneseNameCount, base.count + extra.count + insects.count);
+  assert.equal(audit.combinedCount, base.count + extra.count);
   assert.ok(extra.count > 20000);
   assert.equal(extra.sources['nilim-r07'].license, 'PDL-1.0');
   assert.equal(extra.sources.wikidata.license, 'CC0-1.0');
@@ -87,4 +88,41 @@ test('additions have traceable sources, preserve all existing names, and exclude
     assert.match(lookup(name).sourceUrl, /^https:\/\//);
   }
   for (const name of Object.keys(audit.newNamesExcluded)) assert.equal(lookup(name), undefined, name);
+});
+
+test('insect additions resolve species-level Japanese names and verified old names', () => {
+  for (const [name, japanese] of Object.entries({
+    'Bombus diversus': 'トラマルハナバチ', 'Illeis koebelei': 'キイロテントウ',
+    'Zizeeria maha': 'ヤマトシジミ', 'Maculinea teleius': 'ゴマシジミ',
+    'Byasa alcinous': 'ジャコウアゲハ',
+  })) assert.equal(lookup(name)?.japaneseName, japanese, name);
+  for (const name of ['Zizeeria maha', 'Maculinea teleius']) assert.match(lookup(name).aliasSourceUrl, /^https:\/\/www.checklistbank.org\/dataset\/316165\/taxon\//);
+  for (const name of ['Bombus diversus', 'Illeis koebelei']) assert.match(lookup(name).sourceUrl, /^https:\/\/www.checklistbank.org\/dataset\/316165\/taxon\//);
+  for (const name of ['Bombus diversus diversus', 'Illeis koebelei amamiana', 'Zizeeria mahaa']) assert.equal(lookup(name), undefined);
+});
+
+test('insect overlay preserves earlier sources, records provenance, and excludes disputed names', async () => {
+  const data = JSON.parse(await fs.readFile('src/data/japanese-insect-names.json', 'utf8'));
+  const audit = JSON.parse(await fs.readFile('docs/japanese-insect-names-audit.json', 'utf8'));
+  const supplement = JSON.parse(await fs.readFile('src/data/japanese-species-names-supplement.json', 'utf8'));
+  assert.equal(data.source.license, 'CC-BY-4.0');
+  assert.equal(data.source.doi, '10.48580/dgyy9');
+  assert.equal(data.count, Object.keys(data.entries).length);
+  assert.equal(data.count, audit.additionalCount);
+  assert.equal(japaneseNameCount, audit.combinedCount);
+  for (const [file, hash] of Object.entries(data.inputSha256)) assert.equal(createHash('sha256').update(await fs.readFile(file)).digest('hex'), hash, file);
+  for (const [name, entry] of Object.entries(data.entries)) {
+    assert.match(name, /^[A-Z][a-z]+ [a-z][a-z-]+$/);
+    assert.match(entry.japaneseName, /^[ァ-ヺー・]+$/);
+    assert.equal(lookup(name)?.japaneseName, entry.japaneseName);
+    assert.ok(!Object.hasOwn(supplement.entries, name));
+    assert.ok(Object.hasOwn(audit.entries, name));
+    assert.match(entry.aliasSourceUrl || entry.sourceUrl, /^https:\/\/www.checklistbank.org\/dataset\/316165\/taxon\/[A-Za-z0-9]+$/);
+  }
+  for (const [name, [japanese]] of Object.entries(supplement.entries)) assert.equal(lookup(name)?.japaneseName, japanese, name);
+  for (const name of Object.keys(audit.excluded)) assert.equal(lookup(name), undefined, name);
+  const coverage = audit.modelJapanCoverage.counts.Insecta;
+  assert.equal(coverage.total, 11404);
+  assert.equal(coverage.before, 5595);
+  assert.equal(coverage.after - coverage.before, data.count);
 });

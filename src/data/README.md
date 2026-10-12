@@ -49,3 +49,32 @@ python3 scripts/expand-japanese-species-names.py \
 - UI操作: Viteを起動し、Playwrightが利用できる開発環境で `node scripts/test-species-ui.mjs`。必要に応じて `DIGIVIEWER_PLAYWRIGHT_PACKAGE`、`DIGIVIEWER_TEST_BROWSER_CHANNEL=chrome`、`DIGIVIEWER_TEST_SCREENSHOT` を指定します。
 
 UIテストは報告されたチョウ・テントウムシの候補を固定応答として使用します。実際の表示コンポーネントで和名、出典、スコアの維持、入力反映、改名の成否を確認し、画像認識精度を測るテストとは区別します。
+
+## 昆虫の追加辞書（Catalogue of Life）
+
+`japanese-insect-names.json` は前段階の辞書で和名が出なかった、日本の記録があるモデル候補の昆虫5,809学名を対象にした追加分です。GBIFが使うCatalogue of Lifeの固定版 **2026-08-26 XR / ChecklistBank 316165** を照合し、元の辞書・既存の旧学名対応は変更しません。
+
+出典: Bánki et al. (2026), *Catalogue of Life* (2026-08-26 XR), Catalogue of Life Foundation。[データセット・引用情報](https://doi.org/10.48580/dgyy9)、[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)。DigiViewerが抽出・加工しており、原典がDigiViewerや判定結果を推奨するという意味ではありません。
+
+採用条件:
+
+- 完全一致検索の全応答を確認し、同じ学名が複数の項目に該当する場合は除外。動物界・昆虫綱・モデルと同じ科であること、種階級、分類上の状態を確認します。
+- 種階級の日本語・カタカナ名だけを採用します。亜種の和名を種の和名に切り詰めません。種階級が明示された `Genus (Subgenus) species` の亜属表記は、同じ分類IDに対応することを確認して扱います。
+- 異名は出典に明記された受容種IDをたどります。既存辞書から別の学名の和名を使う場合は、受容種名または明記された同タイプ異名（homotypic synonym）との対応に限定します。新たに追加した項目を再帰的につなげません。
+- 受容種・同タイプ異名・既存辞書の和名が競合した場合、分類上の問題が未解決の場合、既に前段階で競合とした場合は追加しません。出典の `homotypic consolidation`（解決済みの統合）だけは許可し、`homotypic consolidation unresolved` など他の問題フラグは除外します。
+
+各項目に和名の出典URL、必要に応じて学名対応の出典URLを保持します。画面の「学名の対応の出典」から異名の根拠を開けます。監査ファイル `docs/japanese-insect-names-audit.json` に採用根拠・不採用理由・取得した応答のSHA-256・同じ分母での表示率を記録します。カタカナ表記や出典の網羅性には限界があり、すべての標準和名の収録を保証するものではありません。
+
+開発者向け再生成（Python標準ライブラリのみ）:
+
+```sh
+python3 scripts/expand-japanese-insect-names.py \
+  --cache /path/to/col-response-cache --fetch \
+  --retrieved YYYY-MM-DD \
+  --model-labels /path/to/txt_emb_species.json \
+  --japan-names /path/to/japan-names.json
+```
+
+前段階の辞書を作成してから実行します。固定版の完全一致検索と種の詳細を最大6並列で取得し、失敗時は再試行します。途中失敗時は同じキャッシュで再開できます。`--fetch` を外すと通信せずに再生成し、必要な応答が欠けていれば中断します。別日に取得する場合は新しいキャッシュを指定してください。取得・照合が完了するまで同梱辞書を書き換えません。利用者のアプリはこの処理を実行せず、同梱JSONを読むだけです。
+
+検証: `python3 -B -m unittest discover -s tests -p 'test_japanese_insect_builder.py'`。既存のNodeテストとUIテストにも、キイロテントウなどの追加和名・異名リンク・従来名を維持する検証を含めています。

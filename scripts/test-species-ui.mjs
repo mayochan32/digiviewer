@@ -31,6 +31,16 @@ try {
         return [{ old_path: path, path: '/fixtures/butterfly_' + name + '.jpg', name: 'butterfly_' + name + '.jpg', size: 1000, modified_at: 1 }];
       }
       if (command === 'species_status') return { supported: true, windows: false, installed: true, enabled: true, busy: false, progress: '', error: '', geography: { complete: true } };
+      if (command === 'species_identify' && window.__insectExpansion) return {
+        candidates: [
+          { scientificName: 'Bombus diversus', score: .4, wholeRank: 1, cropSupport: 5, japanRecords: 9140 },
+          { scientificName: 'Illeis koebelei', score: .2, wholeRank: 2, cropSupport: 4, japanRecords: 1154 },
+          { scientificName: 'Zizeeria maha', score: .15, wholeRank: 3, cropSupport: 3, japanRecords: 3543 },
+          { scientificName: 'Maculinea teleius', score: .1, wholeRank: 4, cropSupport: 2, japanRecords: 2681 },
+          { scientificName: 'Example unknown', score: .05, wholeRank: 5, cropSupport: 1, japanRecords: 0 },
+        ], otherScore: .1, device: 'mps', seconds: 10, japanApplied: true, geographyDate: '2026-09-22',
+        warning: '辞書表示のテスト用候補です。写真の推論結果ではありません。',
+      };
       if (command === 'species_identify' && window.__ladybird) return {
         candidates: [
           { scientificName: 'Coccinella ainu', score: .632, wholeRank: 1, cropSupport: 5, japanRecords: 57 },
@@ -132,8 +142,32 @@ try {
   assert.deepEqual(await page.evaluate(() => window.__renames), beforeRenames);
   assert.deepEqual(errors, []);
   if (process.env.DIGIVIEWER_TEST_SCREENSHOT) {
-    await page.locator('#species-result-body').evaluate(el => el.scrollTop = 0);
+    await page.locator('.species-result-dialog').evaluate(el => el.scrollTop = 0);
     await page.locator('#species-result-dialog').screenshot({ path: process.env.DIGIVIEWER_TEST_SCREENSHOT + '.ladybird.png' });
   }
-  console.log('PASS: full production UI, toolbar layout, empty/prefilled defaults, Japanese names, field-only action, failed rename preservation, successful rename and default propagation, new ladybird name, preserved scores, domestic/Wikidata source links');
+  await page.locator('#species-result-close').click();
+  await page.evaluate(() => { window.__insectExpansion = true; });
+  await page.locator('#species-identify-button').click();
+  await page.getByRole('button', { name: 'この写真を判定', exact: true }).click();
+  await rows.first().waitFor();
+  for (const [index, label] of ['トラマルハナバチ', 'キイロテントウ', 'ヤマトシジミ', 'ゴマシジミ'].entries()) {
+    assert.match(await rows.nth(index).locator('strong').innerText(), new RegExp('^' + label + ' — '));
+  }
+  assert.match(await rows.nth(4).innerText(), /和名未収録 — Example unknown/);
+  assert.match(await rows.nth(0).innerText(), /40\.0%/);
+  assert.match(await page.locator('#species-result-body').innerText(), /Catalogue of Life.*CC BY 4\.0/);
+  await rows.nth(0).getByRole('button', { name: '和名の出典', exact: true }).click();
+  assert.match((await page.evaluate(() => window.__openedUrls)).at(-1), /^https:\/\/www\.checklistbank\.org\/dataset\/316165\/taxon\//);
+  await rows.nth(2).getByRole('button', { name: '学名の対応の出典', exact: true }).click();
+  assert.match((await page.evaluate(() => window.__openedUrls)).at(-1), /^https:\/\/www\.checklistbank\.org\/dataset\/316165\/taxon\//);
+  await rows.nth(2).getByRole('button', { name: 'この候補を種名欄に入れる' }).click();
+  await page.getByRole('button', { name: '種名フィールドに設定', exact: true }).click();
+  assert.equal(await page.locator('#species-default-name').inputValue(), 'ヤマトシジミ');
+  assert.deepEqual(await page.evaluate(() => window.__renames), beforeRenames);
+  assert.deepEqual(errors, []);
+  if (process.env.DIGIVIEWER_TEST_SCREENSHOT) {
+    await page.locator('.species-result-dialog').evaluate(el => el.scrollTop = 0);
+    await page.locator('#species-result-dialog').screenshot({ path: process.env.DIGIVIEWER_TEST_SCREENSHOT + '.insects.png' });
+  }
+  console.log('PASS: full production UI, toolbar layout, empty/prefilled defaults, Japanese names, field-only action, failed rename preservation, successful rename and default propagation, new ladybird name, preserved scores, domestic/Wikidata/Catalogue of Life source links, insect additions and synonym evidence');
 } finally { await browser.close(); }
