@@ -30,7 +30,7 @@ try {
       convertFileSrc: file => '/manual-fixture/' + file.split('/').pop().split('_')[0],
       invoke: async (command, args) => {
         if (command === 'ensure_crop_directory') return '/manual/crops';
-        if (command === 'app_version') return '0.6.1';
+        if (command === 'app_version') return '0.7.0';
         if (command === 'plugin:event|listen') return 1;
         if (command === 'plugin:dialog|open') return '/manual';
         if (command === 'load_review_state') return [];

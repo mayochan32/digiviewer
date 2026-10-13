@@ -1,0 +1,3023 @@
+{
+  "retrieved": "2026-10-12",
+  "baseCount": 12580,
+  "additionalCount": 27598,
+  "combinedCount": 40178,
+  "addedBySource": {
+    "nilim-r07": 25809,
+    "wikidata": 1789
+  },
+  "wikidataScope": {
+    "description": "BioCLIP 2 classification names with positive records in the complete Japan GBIF snapshot; no Japanese Wikipedia article requirement",
+    "count": 54054,
+    "namesSha256": "65725b9ebd6ea8147110040f99faf697657eccfdfe7fdbf47aea8984f07c8772"
+  },
+  "eligibleSourceNames": {
+    "wikidata": 9607,
+    "nilim-r07": 29853
+  },
+  "nilimCoverage": {
+    "Aves": {
+      "total": 685,
+      "before": 537,
+      "after": 677
+    },
+    "Insecta": {
+      "total": 20842,
+      "before": 499,
+      "after": 20834
+    }
+  },
+  "existingNamesPreserved": {
+    "Acrocephalus dumetorum": {
+      "retained": "シベリアヨシキリ",
+      "sourceNames": [
+        [
+          "シベリアヨシキリ",
+          "wikidata",
+          "Q312779"
+        ],
+        [
+          "ヤブヨシキリ",
+          "nilim-r07",
+          "30009920"
+        ]
+      ]
+    },
+    "Aesculus hippocastanum": {
+      "retained": "セイヨウトチノキ",
+      "sourceNames": [
+        [
+          "セイヨウトチノキ",
+          "wikidata",
+          "Q26899"
+        ],
+        [
+          "マロニエ",
+          "nilim-r07",
+          "701315"
+        ]
+      ]
+    },
+    "Ageratum houstonianum": {
+      "retained": "オオカッコウアザミ",
+      "sourceNames": [
+        [
+          "オオカッコウアザミ",
+          "wikidata",
+          "Q280807"
+        ],
+        [
+          "ムラサキカッコウアザミ",
+          "nilim-r07",
+          "704329"
+        ]
+      ]
+    },
+    "Aglais milberti": {
+      "retained": "アメリカコヒオドシ",
+      "sourceNames": [
+        [
+          "ヤンキーコヒオドシ",
+          "nilim-r07",
+          "59678"
+        ]
+      ]
+    },
+    "Alopecurus aequalis": {
+      "retained": "スズメノテッポウ",
+      "sourceNames": [
+        [
+          "スズメノテッポウ",
+          "wikidata",
+          "Q159010"
+        ],
+        [
+          "ノハラスズメノテッポウ",
+          "nilim-r07",
+          "703452"
+        ]
+      ]
+    },
+    "Apios americana": {
+      "retained": "アメリカホドイモ",
+      "sourceNames": [
+        [
+          "アメリカホド",
+          "nilim-r07",
+          "10001545"
+        ],
+        [
+          "アメリカホドイモ",
+          "wikidata",
+          "Q568933"
+        ]
+      ]
+    },
+    "Arachis hypogaea": {
+      "retained": "ラッカセイ",
+      "sourceNames": [
+        [
+          "ナンキンマメ",
+          "nilim-r07",
+          "701106"
+        ],
+        [
+          "ラッカセイ",
+          "wikidata",
+          "Q37383"
+        ]
+      ]
+    },
+    "Argentina anserina": {
+      "retained": "ヨウシュツルキンバイ",
+      "sourceNames": [
+        [
+          "エゾツルキンバイ",
+          "nilim-r07",
+          "700992"
+        ],
+        [
+          "ヨウシュツルキンバイ",
+          "wikidata",
+          "Q64061702"
+        ]
+      ]
+    },
+    "Argyranthemum frutescens": {
+      "retained": "マーガレット",
+      "sourceNames": [
+        [
+          "マーガレット",
+          "wikidata",
+          "Q2062517"
+        ],
+        [
+          "モクシュンギク",
+          "nilim-r07",
+          "702254"
+        ]
+      ]
+    },
+    "Arisaema serratum": {
+      "retained": "マムシグサ",
+      "sourceNames": [
+        [
+          "カントウマムシグサ",
+          "nilim-r07",
+          "20003817"
+        ],
+        [
+          "カントウマムシグサ",
+          "wikidata",
+          "Q163174"
+        ]
+      ]
+    },
+    "Armoracia rusticana": {
+      "retained": "ホースラディッシュ",
+      "sourceNames": [
+        [
+          "セイヨウワサビ",
+          "nilim-r07",
+          "700812"
+        ],
+        [
+          "ホースラディッシュ",
+          "wikidata",
+          "Q26545"
+        ]
+      ]
+    },
+    "Aromia bungii": {
+      "retained": "クロジャコウカミキリ",
+      "sourceNames": [
+        [
+          "クビアカツヤカミキリ",
+          "nilim-r07",
+          "30010278"
+        ],
+        [
+          "クロジャコウカミキリ",
+          "wikidata",
+          "Q14808043"
+        ]
+      ]
+    },
+    "Asimina triloba": {
+      "retained": "ポーポー",
+      "sourceNames": [
+        [
+          "ポポー",
+          "nilim-r07",
+          "703341"
+        ],
+        [
+          "ポーポー",
+          "wikidata",
+          "Q948827"
+        ]
+      ]
+    },
+    "Asparagus officinalis": {
+      "retained": "アスパラガス",
+      "sourceNames": [
+        [
+          "アスパラガス",
+          "wikidata",
+          "Q28367"
+        ],
+        [
+          "オランダキジカクシ",
+          "nilim-r07",
+          "702519"
+        ]
+      ]
+    },
+    "Avena sativa": {
+      "retained": "エンバク",
+      "sourceNames": [
+        [
+          "エンバク",
+          "wikidata",
+          "Q12104"
+        ],
+        [
+          "マカラスムギ",
+          "nilim-r07",
+          "702717"
+        ]
+      ]
+    },
+    "Bassia scoparia": {
+      "retained": "ホウキギ",
+      "sourceNames": [
+        [
+          "イソホウキギ",
+          "nilim-r07",
+          "700571"
+        ],
+        [
+          "ホウキギ",
+          "wikidata",
+          "Q829752"
+        ]
+      ]
+    },
+    "Betula grossa": {
+      "retained": "アズサ",
+      "sourceNames": [
+        [
+          "アズサ",
+          "wikidata",
+          "Q199105"
+        ],
+        [
+          "ミズメ",
+          "nilim-r07",
+          "700312"
+        ]
+      ]
+    },
+    "Brassica oleracea": {
+      "retained": "ヤセイカンラン",
+      "sourceNames": [
+        [
+          "カンラン",
+          "nilim-r07",
+          "703344"
+        ],
+        [
+          "ヤセイカンラン",
+          "wikidata",
+          "Q146212"
+        ]
+      ]
+    },
+    "Buteo buteo": {
+      "retained": "ヨーロッパノスリ",
+      "sourceNames": [
+        [
+          "ノスリ",
+          "nilim-r07",
+          "500738"
+        ],
+        [
+          "ヨーロッパノスリ",
+          "wikidata",
+          "Q25385"
+        ]
+      ]
+    },
+    "Cabomba caroliniana": {
+      "retained": "ハゴロモモ",
+      "sourceNames": [
+        [
+          "ハゴロモモ",
+          "wikidata",
+          "Q786072"
+        ],
+        [
+          "フサジュンサイ",
+          "nilim-r07",
+          "700725"
+        ]
+      ]
+    },
+    "Cairina moschata": {
+      "retained": "ノバリケン",
+      "sourceNames": [
+        [
+          "ノバリケン",
+          "wikidata",
+          "Q242851"
+        ],
+        [
+          "バリケン",
+          "nilim-r07",
+          "500690"
+        ]
+      ]
+    },
+    "Callistephus chinensis": {
+      "retained": "エゾギク",
+      "sourceNames": [
+        [
+          "エゾギク",
+          "wikidata",
+          "Q312441"
+        ],
+        [
+          "サツマギク",
+          "nilim-r07",
+          "703421"
+        ]
+      ]
+    },
+    "Callorhinus ursinus": {
+      "retained": "キタオットセイ",
+      "sourceNames": [
+        [
+          "オットセイ",
+          "nilim-r07",
+          "501478"
+        ],
+        [
+          "キタオットセイ",
+          "wikidata",
+          "Q7966"
+        ]
+      ]
+    },
+    "Capricornis crispus": {
+      "retained": "ニホンカモシカ",
+      "sourceNames": [
+        [
+          "カモシカ",
+          "nilim-r07",
+          "501492"
+        ],
+        [
+          "ニホンカモシカ",
+          "wikidata",
+          "Q754034"
+        ]
+      ]
+    },
+    "Carex pisiformis": {
+      "retained": "ホンモンジスゲ類",
+      "sourceNames": [
+        [
+          "ホンモンジスゲ",
+          "nilim-r07",
+          "10001891"
+        ]
+      ]
+    },
+    "Carica papaya": {
+      "retained": "パパイア",
+      "sourceNames": [
+        [
+          "パパイア",
+          "wikidata",
+          "Q34887"
+        ],
+        [
+          "パパイヤ",
+          "nilim-r07",
+          "704046"
+        ]
+      ]
+    },
+    "Castanea mollissima": {
+      "retained": "シナグリ",
+      "sourceNames": [
+        [
+          "シナグリ",
+          "wikidata",
+          "Q699584"
+        ],
+        [
+          "チュウゴクグリ",
+          "nilim-r07",
+          "10005171"
+        ]
+      ]
+    },
+    "Casuarina cunninghamiana": {
+      "retained": "カンニンガムモクマオウ",
+      "sourceNames": [
+        [
+          "カニンガムモクマオウ",
+          "nilim-r07",
+          "30008718"
+        ],
+        [
+          "カンニンガムモクマオウ",
+          "wikidata",
+          "Q662316"
+        ]
+      ]
+    },
+    "Catacanthus incarnatus": {
+      "retained": "ジンメンカメムシ",
+      "sourceNames": [
+        [
+          "オオアカカメムシ",
+          "nilim-r07",
+          "56361"
+        ]
+      ]
+    },
+    "Cayratia japonica": {
+      "retained": "ヤブガラシ",
+      "sourceNames": [
+        [
+          "ヤブカラシ",
+          "nilim-r07",
+          "701381"
+        ],
+        [
+          "ヤブガラシ",
+          "wikidata",
+          "Q1023841"
+        ]
+      ]
+    },
+    "Celosia argentea": {
+      "retained": "ケイトウ",
+      "sourceNames": [
+        [
+          "ケイトウ",
+          "wikidata",
+          "Q161816"
+        ],
+        [
+          "ノゲイトウ",
+          "nilim-r07",
+          "700597"
+        ]
+      ]
+    },
+    "Cestrum nocturnum": {
+      "retained": "ヤコウボク",
+      "sourceNames": [
+        [
+          "ヤコウカ",
+          "nilim-r07",
+          "30009056"
+        ],
+        [
+          "ヤコウボク",
+          "wikidata",
+          "Q36125"
+        ]
+      ]
+    },
+    "Chamaemelum nobile": {
+      "retained": "ローマンカモミール",
+      "sourceNames": [
+        [
+          "ローマカミツレ",
+          "nilim-r07",
+          "30010017"
+        ],
+        [
+          "ローマンカモミール",
+          "wikidata",
+          "Q5723577"
+        ]
+      ]
+    },
+    "Chrysanthemum morifolium": {
+      "retained": "キク",
+      "sourceNames": [
+        [
+          "イエギク",
+          "nilim-r07",
+          "10001747"
+        ]
+      ]
+    },
+    "Cichorium intybus": {
+      "retained": "チコリー",
+      "sourceNames": [
+        [
+          "キクニガナ",
+          "nilim-r07",
+          "702256"
+        ],
+        [
+          "チコリー",
+          "wikidata",
+          "Q2544599"
+        ]
+      ]
+    },
+    "Cirsium aidzuense": {
+      "retained": "アイズヒメアザミ",
+      "sourceNames": [
+        [
+          "アイズヒメアザミ",
+          "wikidata",
+          "Q5707546"
+        ],
+        [
+          "アイヅヒメアザミ",
+          "nilim-r07",
+          "704354"
+        ]
+      ]
+    },
+    "Cirsium nipponicum": {
+      "retained": "ナンブアザミ",
+      "sourceNames": [
+        [
+          "キタカミアザミ",
+          "nilim-r07",
+          "30009434"
+        ],
+        [
+          "ナンブアザミ",
+          "wikidata",
+          "Q15595480"
+        ]
+      ]
+    },
+    "Citrus depressa": {
+      "retained": "シークヮーサー",
+      "sourceNames": [
+        [
+          "シイクワシャー",
+          "nilim-r07",
+          "703943"
+        ]
+      ]
+    },
+    "Clarias batrachus": {
+      "retained": "ウォーキングキャットフィッシュ",
+      "sourceNames": [
+        [
+          "ウォーキングキャットフィッシュ",
+          "wikidata",
+          "Q852229"
+        ],
+        [
+          "クララ",
+          "nilim-r07",
+          "30009690"
+        ]
+      ]
+    },
+    "Coriandrum sativum": {
+      "retained": "コリアンダー",
+      "sourceNames": [
+        [
+          "コエンドロ",
+          "nilim-r07",
+          "10001613"
+        ],
+        [
+          "コリアンダー",
+          "wikidata",
+          "Q41611"
+        ]
+      ]
+    },
+    "Cosmos bipinnatus": {
+      "retained": "オオハルシャギク",
+      "sourceNames": [
+        [
+          "オオハルシャギク",
+          "wikidata",
+          "Q575748"
+        ],
+        [
+          "コスモス",
+          "nilim-r07",
+          "702294"
+        ]
+      ]
+    },
+    "Crocidura shantungensis": {
+      "retained": "コジネズミ",
+      "sourceNames": [
+        [
+          "アジアコジネズミ",
+          "nilim-r07",
+          "501332"
+        ],
+        [
+          "コジネズミ",
+          "wikidata",
+          "Q305978"
+        ]
+      ]
+    },
+    "Danio rerio": {
+      "retained": "ゼブラフィッシュ",
+      "sourceNames": [
+        [
+          "ゼブラダニオ",
+          "nilim-r07",
+          "30007642"
+        ],
+        [
+          "ゼブラフィッシュ",
+          "wikidata",
+          "Q169444"
+        ]
+      ]
+    },
+    "Datura stramonium": {
+      "retained": "シロバナヨウシュチョウセンアサガオ",
+      "sourceNames": [
+        [
+          "シロバナヨウシュチョウセンアサガオ",
+          "wikidata",
+          "Q30959"
+        ],
+        [
+          "ヨウシュチョウセンアサガオ",
+          "nilim-r07",
+          "701985"
+        ]
+      ]
+    },
+    "Digitalis purpurea": {
+      "retained": "キツネノテブクロ",
+      "sourceNames": [
+        [
+          "キツネノテブクロ",
+          "wikidata",
+          "Q157555"
+        ],
+        [
+          "ジギタリス",
+          "nilim-r07",
+          "702018"
+        ]
+      ]
+    },
+    "Dioscorea bulbifera": {
+      "retained": "カシュウイモ",
+      "sourceNames": [
+        [
+          "カシュウイモ",
+          "wikidata",
+          "Q311239"
+        ],
+        [
+          "ニガカシュウ",
+          "nilim-r07",
+          "703441"
+        ]
+      ]
+    },
+    "Dracaena trifasciata": {
+      "retained": "サンセベリア",
+      "sourceNames": [
+        [
+          "アツバチトセラン",
+          "nilim-r07",
+          "30010731"
+        ],
+        [
+          "サンセベリア",
+          "wikidata",
+          "Q65936984"
+        ]
+      ]
+    },
+    "Echinotriton andersoni": {
+      "retained": "イボイモリ",
+      "sourceNames": [
+        [
+          "イボイモリ",
+          "wikidata",
+          "Q1946696"
+        ],
+        [
+          "オキナワイボイモリ",
+          "nilim-r07",
+          "501188"
+        ]
+      ]
+    },
+    "Eleocharis dulcis": {
+      "retained": "シログワイ",
+      "sourceNames": [
+        [
+          "イヌクログワイ",
+          "nilim-r07",
+          "704569"
+        ],
+        [
+          "シログワイ",
+          "wikidata",
+          "Q932664"
+        ]
+      ]
+    },
+    "Eocapnia nivalis": {
+      "retained": "セッケイカワゲラ",
+      "sourceNames": [
+        [
+          "ユキクロカワゲラ",
+          "nilim-r07",
+          "52454"
+        ]
+      ]
+    },
+    "Epipremnum aureum": {
+      "retained": "ポトス",
+      "sourceNames": [
+        [
+          "オウゴンカズラ",
+          "nilim-r07",
+          "704542"
+        ],
+        [
+          "ポトス",
+          "wikidata",
+          "Q161809"
+        ]
+      ]
+    },
+    "Eptesicus nilssonii": {
+      "retained": "キタクビワコウモリ",
+      "sourceNames": [
+        [
+          "キタクビワコウモリ",
+          "wikidata",
+          "Q300941"
+        ],
+        [
+          "ヒメホリカワコウモリ",
+          "nilim-r07",
+          "501381"
+        ]
+      ]
+    },
+    "Eremochloa ophiuroides": {
+      "retained": "ムカデシバ",
+      "sourceNames": [
+        [
+          "チャボウシノシッペイ",
+          "nilim-r07",
+          "20003647"
+        ],
+        [
+          "ムカデシバ",
+          "wikidata",
+          "Q5385537"
+        ]
+      ]
+    },
+    "Erythrina crista-galli": {
+      "retained": "アメリカデイゴ",
+      "sourceNames": [
+        [
+          "アメリカデイゴ",
+          "wikidata",
+          "Q162849"
+        ],
+        [
+          "カイコウズ",
+          "nilim-r07",
+          "10001550"
+        ]
+      ]
+    },
+    "Eugenia uniflora": {
+      "retained": "ピタンガ",
+      "sourceNames": [
+        [
+          "タチバナアデク",
+          "nilim-r07",
+          "30010007"
+        ],
+        [
+          "ピタンガ",
+          "wikidata",
+          "Q306504"
+        ]
+      ]
+    },
+    "Euphorbia maculata": {
+      "retained": "オオニシキソウ",
+      "sourceNames": [
+        [
+          "オオニシキソウ",
+          "wikidata",
+          "Q177322"
+        ],
+        [
+          "コニシキソウ",
+          "nilim-r07",
+          "701249"
+        ]
+      ]
+    },
+    "Falco cherrug": {
+      "retained": "セーカーハヤブサ",
+      "sourceNames": [
+        [
+          "セーカーハヤブサ",
+          "wikidata",
+          "Q165974"
+        ],
+        [
+          "ワキスジハヤブサ",
+          "nilim-r07",
+          "30009903"
+        ]
+      ]
+    },
+    "Ficopomatus enigmaticus": {
+      "retained": "カニヤドリカンザシ",
+      "sourceNames": [
+        [
+          "カニヤドリカンザシ",
+          "wikidata",
+          "Q1885247"
+        ],
+        [
+          "カニヤドリカンザシゴカイ",
+          "nilim-r07",
+          "100797"
+        ]
+      ]
+    },
+    "Ficus benjamina": {
+      "retained": "ベンジャミン",
+      "sourceNames": [
+        [
+          "シダレガジュマル",
+          "nilim-r07",
+          "703668"
+        ],
+        [
+          "ベンジャミン",
+          "wikidata",
+          "Q275160"
+        ]
+      ]
+    },
+    "Galium spurium": {
+      "retained": "ヤエムグラ",
+      "sourceNames": [
+        [
+          "トゲナシヤエムグラ",
+          "nilim-r07",
+          "10001662"
+        ],
+        [
+          "ヤエムグラ",
+          "wikidata",
+          "Q159316"
+        ]
+      ]
+    },
+    "Gamblea innovans": {
+      "retained": "タカノツメ (ウコギ科)",
+      "sourceNames": [
+        [
+          "タカノツメ",
+          "nilim-r07",
+          "701562"
+        ]
+      ]
+    },
+    "Hedera canariensis": {
+      "retained": "オカメヅタ",
+      "sourceNames": [
+        [
+          "オカメヅタ",
+          "wikidata",
+          "Q3123106"
+        ],
+        [
+          "カナリーキヅタ",
+          "nilim-r07",
+          "30010219"
+        ]
+      ]
+    },
+    "Hesperis matronalis": {
+      "retained": "ハナダイコン",
+      "sourceNames": [
+        [
+          "ハナスズシロ",
+          "nilim-r07",
+          "10002546"
+        ],
+        [
+          "ハナダイコン",
+          "wikidata",
+          "Q1857886"
+        ]
+      ]
+    },
+    "Hexacentrus japonicus": {
+      "retained": "ハヤシノウマオイ",
+      "sourceNames": [
+        [
+          "ハタケノウマオイ",
+          "nilim-r07",
+          "52736"
+        ],
+        [
+          "ハヤシノウマオイ",
+          "wikidata",
+          "Q11844015"
+        ]
+      ]
+    },
+    "Hexacentrus unicolor": {
+      "retained": "ハタケノウマオイ",
+      "sourceNames": [
+        [
+          "タイワンウマオイ",
+          "nilim-r07",
+          "52738"
+        ],
+        [
+          "ハタケノウマオイ",
+          "wikidata",
+          "Q10523761"
+        ]
+      ]
+    },
+    "Hydroides elegans": {
+      "retained": "カサネカンザシ",
+      "sourceNames": [
+        [
+          "カサネカンザシ",
+          "wikidata",
+          "Q2619236"
+        ],
+        [
+          "カサネカンザシゴカイ",
+          "nilim-r07",
+          "100799"
+        ]
+      ]
+    },
+    "Hyla hallowellii": {
+      "retained": "ハロウェルアマガエル",
+      "sourceNames": [
+        [
+          "ハロウェルアマガエル",
+          "wikidata",
+          "Q258136"
+        ],
+        [
+          "ハロウエルアマガエル",
+          "nilim-r07",
+          "501197"
+        ]
+      ]
+    },
+    "Ictalurus punctatus": {
+      "retained": "アメリカナマズ",
+      "sourceNames": [
+        [
+          "アメリカナマズ",
+          "wikidata",
+          "Q836957"
+        ],
+        [
+          "チャネルキャットフィッシュ",
+          "nilim-r07",
+          "500123"
+        ]
+      ]
+    },
+    "Imperata cylindrica": {
+      "retained": "チガヤ",
+      "sourceNames": [
+        [
+          "ケナシチガヤ",
+          "nilim-r07",
+          "702807"
+        ],
+        [
+          "チガヤ",
+          "wikidata",
+          "Q693409"
+        ]
+      ]
+    },
+    "Ipomoea tricolor": {
+      "retained": "ソライロアサガオ",
+      "sourceNames": [
+        [
+          "アメリカソライロアサガオ",
+          "nilim-r07",
+          "30007572"
+        ],
+        [
+          "ソライロアサガオ",
+          "wikidata",
+          "Q159698"
+        ]
+      ]
+    },
+    "Isatis tinctoria": {
+      "retained": "ホソバタイセイ",
+      "sourceNames": [
+        [
+          "ハマタイセイ",
+          "nilim-r07",
+          "700844"
+        ],
+        [
+          "ホソバタイセイ",
+          "wikidata",
+          "Q212547"
+        ]
+      ]
+    },
+    "Juglans regia": {
+      "retained": "シナノグルミ",
+      "sourceNames": [
+        [
+          "カシグルミ",
+          "nilim-r07",
+          "700256"
+        ],
+        [
+          "シナノグルミ",
+          "wikidata",
+          "Q46871"
+        ]
+      ]
+    },
+    "Juncus tenuis": {
+      "retained": "クサイ (植物)",
+      "sourceNames": [
+        [
+          "クサイ",
+          "nilim-r07",
+          "702661"
+        ]
+      ]
+    },
+    "Juniperus rigida": {
+      "retained": "ネズ",
+      "sourceNames": [
+        [
+          "ネズ",
+          "wikidata",
+          "Q1204856"
+        ],
+        [
+          "ネズミサシ",
+          "nilim-r07",
+          "700244"
+        ]
+      ]
+    },
+    "Kalanchoe pinnata": {
+      "retained": "セイロンベンケイ",
+      "sourceNames": [
+        [
+          "セイロンベンケイ",
+          "wikidata",
+          "Q311188"
+        ],
+        [
+          "トウロウソウ",
+          "nilim-r07",
+          "30008699"
+        ]
+      ]
+    },
+    "Lanius isabellinus": {
+      "retained": "アカオモズ",
+      "sourceNames": [
+        [
+          "アカオモズ",
+          "wikidata",
+          "Q752678"
+        ],
+        [
+          "モウコアカモズ",
+          "nilim-r07",
+          "30009392"
+        ]
+      ]
+    },
+    "Larix olgensis": {
+      "retained": "マンシュウカラマツ",
+      "sourceNames": [
+        [
+          "チョウセンカラマツ",
+          "nilim-r07",
+          "30005714"
+        ]
+      ]
+    },
+    "Leontopodium discolor": {
+      "retained": "レブンウスユキソウ",
+      "sourceNames": [
+        [
+          "エゾウスユキソウ",
+          "nilim-r07",
+          "20003613"
+        ],
+        [
+          "レブンウスユキソウ",
+          "wikidata",
+          "Q15616190"
+        ]
+      ]
+    },
+    "Lepus brachyurus": {
+      "retained": "ニホンノウサギ",
+      "sourceNames": [
+        [
+          "ニホンノウサギ",
+          "wikidata",
+          "Q1355766"
+        ],
+        [
+          "ノウサギ",
+          "nilim-r07",
+          "501399"
+        ]
+      ]
+    },
+    "Leucaena leucocephala": {
+      "retained": "ギンネム",
+      "sourceNames": [
+        [
+          "ギンゴウカン",
+          "nilim-r07",
+          "703905"
+        ],
+        [
+          "ギンネム",
+          "wikidata",
+          "Q35905"
+        ]
+      ]
+    },
+    "Litsea cubeba": {
+      "retained": "リツェア・クベバ",
+      "sourceNames": [
+        [
+          "アオモジ",
+          "nilim-r07",
+          "700621"
+        ],
+        [
+          "リツェア・クベバ",
+          "wikidata",
+          "Q541476"
+        ]
+      ]
+    },
+    "Lutra lutra": {
+      "retained": "ユーラシアカワウソ",
+      "sourceNames": [
+        [
+          "カワウソ",
+          "nilim-r07",
+          "501469"
+        ],
+        [
+          "ユーラシアカワウソ",
+          "wikidata",
+          "Q29995"
+        ]
+      ]
+    },
+    "Machilus japonica": {
+      "retained": "ホソバタブ",
+      "sourceNames": [
+        [
+          "アオガシ",
+          "nilim-r07",
+          "700628"
+        ],
+        [
+          "ホソバタブ",
+          "wikidata",
+          "Q15607987"
+        ]
+      ]
+    },
+    "Magnolia figo": {
+      "retained": "カラタネオガタマ",
+      "sourceNames": [
+        [
+          "カラタネオガタマ",
+          "wikidata",
+          "Q311864"
+        ],
+        [
+          "トウオガタマ",
+          "nilim-r07",
+          "30010726"
+        ]
+      ]
+    },
+    "Magnolia liliiflora": {
+      "retained": "モクレン",
+      "sourceNames": [
+        [
+          "シモクレン",
+          "nilim-r07",
+          "700607"
+        ],
+        [
+          "モクレン",
+          "wikidata",
+          "Q942031"
+        ]
+      ]
+    },
+    "Martesia striata": {
+      "retained": "チビカモメガイ",
+      "sourceNames": [
+        [
+          "カモメガイモドキ",
+          "nilim-r07",
+          "100639"
+        ]
+      ]
+    },
+    "Matricaria chamomilla": {
+      "retained": "カモミール",
+      "sourceNames": [
+        [
+          "カミツレ",
+          "nilim-r07",
+          "702390"
+        ],
+        [
+          "カモミール",
+          "wikidata",
+          "Q28437"
+        ]
+      ]
+    },
+    "Meles anakuma": {
+      "retained": "ニホンアナグマ",
+      "sourceNames": [
+        [
+          "アナグマ",
+          "nilim-r07",
+          "501468"
+        ],
+        [
+          "ニホンアナグマ",
+          "wikidata",
+          "Q1576038"
+        ]
+      ]
+    },
+    "Mentha pulegium": {
+      "retained": "ペニーロイヤルミント",
+      "sourceNames": [
+        [
+          "ペニーロイヤルミント",
+          "wikidata",
+          "Q161235"
+        ],
+        [
+          "メグサハッカ",
+          "nilim-r07",
+          "701933"
+        ]
+      ]
+    },
+    "Mentha spicata": {
+      "retained": "スペアミント",
+      "sourceNames": [
+        [
+          "オランダハッカ",
+          "nilim-r07",
+          "701935"
+        ],
+        [
+          "スペアミント",
+          "wikidata",
+          "Q160114"
+        ]
+      ]
+    },
+    "Mentha suaveolens": {
+      "retained": "アップルミント (植物)",
+      "sourceNames": [
+        [
+          "マルバハッカ",
+          "nilim-r07",
+          "701934"
+        ]
+      ]
+    },
+    "Micranthes fusca": {
+      "retained": "クロクモソウ",
+      "sourceNames": [
+        [
+          "エゾクロクモソウ",
+          "nilim-r07",
+          "700947"
+        ],
+        [
+          "クロクモソウ",
+          "wikidata",
+          "Q17780641"
+        ]
+      ]
+    },
+    "Momordica charantia": {
+      "retained": "ツルレイシ",
+      "sourceNames": [
+        [
+          "ツルレイシ",
+          "wikidata",
+          "Q428750"
+        ],
+        [
+          "ニガウリ",
+          "nilim-r07",
+          "701490"
+        ]
+      ]
+    },
+    "Motacilla alba": {
+      "retained": "タイリクハクセキレイ",
+      "sourceNames": [
+        [
+          "タイリクハクセキレイ",
+          "wikidata",
+          "Q25399"
+        ],
+        [
+          "ハクセキレイ",
+          "nilim-r07",
+          "500983"
+        ]
+      ]
+    },
+    "Mustela sibirica": {
+      "retained": "チョウセンイタチ",
+      "sourceNames": [
+        [
+          "シベリアイタチ",
+          "nilim-r07",
+          "501460"
+        ],
+        [
+          "チョウセンイタチ",
+          "wikidata",
+          "Q271459"
+        ]
+      ]
+    },
+    "Neatus picipes": {
+      "retained": "ゴミムシダマシ",
+      "sourceNames": [
+        [
+          "クロゴミムシダマシ",
+          "nilim-r07",
+          "78257"
+        ],
+        [
+          "ゴミムシダマシ",
+          "wikidata",
+          "Q7731275"
+        ]
+      ]
+    },
+    "Neomysis awatschensis": {
+      "retained": "イサザアミ",
+      "sourceNames": [
+        [
+          "クロイサザアミ",
+          "nilim-r07",
+          "101182"
+        ]
+      ]
+    },
+    "Nerita albicilla": {
+      "retained": "アマオブネ",
+      "sourceNames": [
+        [
+          "アマオブネ",
+          "wikidata",
+          "Q5966096"
+        ],
+        [
+          "アマオブネガイ",
+          "nilim-r07",
+          "100157"
+        ]
+      ]
+    },
+    "Nerita undata": {
+      "retained": "コシダカアマガイ",
+      "sourceNames": [
+        [
+          "アラスジアマオブネ",
+          "nilim-r07",
+          "100156"
+        ]
+      ]
+    },
+    "Neritina turrita": {
+      "retained": "シマカノコガイ",
+      "sourceNames": [
+        [
+          "シマカノコ",
+          "nilim-r07",
+          "100161"
+        ]
+      ]
+    },
+    "Odorrana ishikawae": {
+      "retained": "イシカワガエル",
+      "sourceNames": [
+        [
+          "イシカワガエル",
+          "wikidata",
+          "Q2212227"
+        ],
+        [
+          "オキナワイシカワガエル",
+          "nilim-r07",
+          "501219"
+        ]
+      ]
+    },
+    "Oncorhynchus nerka": {
+      "retained": "ベニザケ",
+      "sourceNames": [
+        [
+          "ヒメマス",
+          "nilim-r07",
+          "500159"
+        ],
+        [
+          "ベニザケ",
+          "nilim-r07",
+          "500158"
+        ],
+        [
+          "ベニザケ",
+          "wikidata",
+          "Q44064"
+        ]
+      ]
+    },
+    "Origanum vulgare": {
+      "retained": "オレガノ",
+      "sourceNames": [
+        [
+          "オレガノ",
+          "wikidata",
+          "Q134283"
+        ],
+        [
+          "ハナハッカ",
+          "nilim-r07",
+          "30009290"
+        ]
+      ]
+    },
+    "Oryctes hisamatsui": {
+      "retained": "ヒサマツサイカブト",
+      "sourceNames": [
+        [
+          "ヒサマツサイカブトムシ",
+          "nilim-r07",
+          "74185"
+        ]
+      ]
+    },
+    "Oryctes rhinoceros": {
+      "retained": "サイカブト",
+      "sourceNames": [
+        [
+          "サイカブト",
+          "wikidata",
+          "Q1188841"
+        ],
+        [
+          "サイカブトムシ",
+          "nilim-r07",
+          "74186"
+        ]
+      ]
+    },
+    "Oxalis stricta": {
+      "retained": "オッタチカタバミ",
+      "sourceNames": [
+        [
+          "エゾタチカタバミ",
+          "nilim-r07",
+          "701221"
+        ],
+        [
+          "オッタチカタバミ",
+          "wikidata",
+          "Q158332"
+        ]
+      ]
+    },
+    "Pacifastacus leniusculus": {
+      "retained": "シグナルザリガニ",
+      "sourceNames": [
+        [
+          "ウチダザリガニ",
+          "nilim-r07",
+          "101277"
+        ],
+        [
+          "シグナルザリガニ",
+          "wikidata",
+          "Q693000"
+        ]
+      ]
+    },
+    "Papilio xuthus": {
+      "retained": "ナミアゲハ",
+      "sourceNames": [
+        [
+          "アゲハ",
+          "nilim-r07",
+          "59788"
+        ],
+        [
+          "ナミアゲハ",
+          "wikidata",
+          "Q132092"
+        ]
+      ]
+    },
+    "Passerculus sandwichensis": {
+      "retained": "クサチヒメドリ",
+      "sourceNames": [
+        [
+          "クサチヒメドリ",
+          "wikidata",
+          "Q287893"
+        ],
+        [
+          "サバンナシトド",
+          "nilim-r07",
+          "501566"
+        ]
+      ]
+    },
+    "Passiflora edulis": {
+      "retained": "パッションフルーツ",
+      "sourceNames": [
+        [
+          "クダモノトケイソウ",
+          "nilim-r07",
+          "20003516"
+        ],
+        [
+          "パッションフルーツ",
+          "wikidata",
+          "Q156790"
+        ]
+      ]
+    },
+    "Pelecanus crispus": {
+      "retained": "ニシハイイロペリカン",
+      "sourceNames": [
+        [
+          "ニシハイイロペリカン",
+          "wikidata",
+          "Q184751"
+        ],
+        [
+          "ハイイロペリカン",
+          "nilim-r07",
+          "500636"
+        ]
+      ]
+    },
+    "Pelecanus philippensis": {
+      "retained": "フィリピンペリカン",
+      "sourceNames": [
+        [
+          "フィリピンペリカン",
+          "wikidata",
+          "Q180360"
+        ],
+        [
+          "ホシバシペリカン",
+          "nilim-r07",
+          "30009876"
+        ]
+      ]
+    },
+    "Pelodiscus sinensis": {
+      "retained": "スッポン",
+      "sourceNames": [
+        [
+          "スッポン",
+          "wikidata",
+          "Q754028"
+        ],
+        [
+          "チュウゴクスッポン",
+          "nilim-r07",
+          "30010629"
+        ]
+      ]
+    },
+    "Petrorhagia nanteuilii": {
+      "retained": "イヌコモチナデシコ",
+      "sourceNames": [
+        [
+          "イヌコモチナデシコ",
+          "wikidata",
+          "Q5934018"
+        ],
+        [
+          "ミチバタナデシコ",
+          "nilim-r07",
+          "30009425"
+        ]
+      ]
+    },
+    "Phasianus colchicus": {
+      "retained": "コウライキジ",
+      "sourceNames": [
+        [
+          "キジ",
+          "nilim-r07",
+          "500763"
+        ],
+        [
+          "コウライキジ",
+          "wikidata",
+          "Q25432"
+        ]
+      ]
+    },
+    "Physalis angulata": {
+      "retained": "センナリホオズキ",
+      "sourceNames": [
+        [
+          "センナリホオズキ",
+          "wikidata",
+          "Q311677"
+        ],
+        [
+          "ヒロハフウリンホオズキ",
+          "nilim-r07",
+          "10001695"
+        ]
+      ]
+    },
+    "Physalis philadelphica": {
+      "retained": "トマティーヨ",
+      "sourceNames": [
+        [
+          "オオブドウホオズキ",
+          "nilim-r07",
+          "30009058"
+        ],
+        [
+          "トマティーヨ",
+          "wikidata",
+          "Q622525"
+        ]
+      ]
+    },
+    "Picea abies": {
+      "retained": "オウシュウトウヒ",
+      "sourceNames": [
+        [
+          "オウシュウトウヒ",
+          "wikidata",
+          "Q145992"
+        ],
+        [
+          "ドイツトウヒ",
+          "nilim-r07",
+          "700229"
+        ]
+      ]
+    },
+    "Pinus mugo": {
+      "retained": "モンタナマツ",
+      "sourceNames": [
+        [
+          "ムゴマツ",
+          "nilim-r07",
+          "20003399"
+        ],
+        [
+          "モンタナマツ",
+          "wikidata",
+          "Q147475"
+        ]
+      ]
+    },
+    "Pison tosawai": {
+      "retained": "チチジマピソン",
+      "sourceNames": [
+        [
+          "チチジマクモカリバチ",
+          "nilim-r07",
+          "86046"
+        ]
+      ]
+    },
+    "Pontederia cordata": {
+      "retained": "ポンテデリア・コルダータ",
+      "sourceNames": [
+        [
+          "ナガバミズアオイ",
+          "nilim-r07",
+          "30010022"
+        ],
+        [
+          "ポンテデリア・コルダータ",
+          "wikidata",
+          "Q621050"
+        ]
+      ]
+    },
+    "Populus nigra": {
+      "retained": "セイヨウハコヤナギ",
+      "sourceNames": [
+        [
+          "セイヨウハコヤナギ",
+          "wikidata",
+          "Q147064"
+        ],
+        [
+          "ヨーロッパクロヤマナラシ",
+          "nilim-r07",
+          "700264"
+        ]
+      ]
+    },
+    "Protobothrops flavoviridis": {
+      "retained": "ホンハブ",
+      "sourceNames": [
+        [
+          "ハブ",
+          "nilim-r07",
+          "501322"
+        ],
+        [
+          "ホンハブ",
+          "wikidata",
+          "Q46112"
+        ]
+      ]
+    },
+    "Psidium guajava": {
+      "retained": "グアバ",
+      "sourceNames": [
+        [
+          "グアバ",
+          "wikidata",
+          "Q166843"
+        ],
+        [
+          "バンジロウ",
+          "nilim-r07",
+          "704054"
+        ]
+      ]
+    },
+    "Psittacula krameri": {
+      "retained": "ワカケホンセイインコ",
+      "sourceNames": [
+        [
+          "ホンセイインコ",
+          "nilim-r07",
+          "500924"
+        ],
+        [
+          "ワカケホンセイインコ",
+          "wikidata",
+          "Q208060"
+        ]
+      ]
+    },
+    "Pteris nipponica": {
+      "retained": "マツザカシダ",
+      "sourceNames": [
+        [
+          "マツサカシダ",
+          "nilim-r07",
+          "700066"
+        ]
+      ]
+    },
+    "Pterocarya stenoptera": {
+      "retained": "シナサワグルミ",
+      "sourceNames": [
+        [
+          "カンポウフウ",
+          "nilim-r07",
+          "700259"
+        ],
+        [
+          "シナサワグルミ",
+          "wikidata",
+          "Q2699896"
+        ]
+      ]
+    },
+    "Pueraria montana": {
+      "retained": "クズ",
+      "sourceNames": [
+        [
+          "クズ",
+          "wikidata",
+          "Q1054489"
+        ],
+        [
+          "タイワンクズ",
+          "nilim-r07",
+          "703909"
+        ]
+      ]
+    },
+    "Pygocentrus nattereri": {
+      "retained": "ピラニア・ナッテリー",
+      "sourceNames": [
+        [
+          "ピラニアナッテリー",
+          "nilim-r07",
+          "30009567"
+        ],
+        [
+          "ピラニア・ナッテリー",
+          "wikidata",
+          "Q928382"
+        ]
+      ]
+    },
+    "Ravenala madagascariensis": {
+      "retained": "タビビトノキ",
+      "sourceNames": [
+        [
+          "オウギバショウ",
+          "nilim-r07",
+          "704585"
+        ],
+        [
+          "タビビトノキ",
+          "wikidata",
+          "Q673348"
+        ]
+      ]
+    },
+    "Rhinogobius kurodai": {
+      "retained": "トウヨシノボリ",
+      "sourceNames": [
+        [
+          "クロダハゼ",
+          "nilim-r07",
+          "30004691"
+        ],
+        [
+          "トウヨシノボリ",
+          "wikidata",
+          "Q114423040"
+        ]
+      ]
+    },
+    "Rhinogobius similis": {
+      "retained": "オオヨシノボリ",
+      "sourceNames": [
+        [
+          "オオヨシノボリ",
+          "wikidata",
+          "Q3504192"
+        ],
+        [
+          "ゴクラクハゼ",
+          "nilim-r07",
+          "500513"
+        ]
+      ]
+    },
+    "Rhynchosia acuminatifolia": {
+      "retained": "トキリマメ",
+      "sourceNames": [
+        [
+          "オオバタンキリマメ",
+          "nilim-r07",
+          "701175"
+        ],
+        [
+          "トキリマメ",
+          "wikidata",
+          "Q15106992"
+        ]
+      ]
+    },
+    "Ribes uva-crispa": {
+      "retained": "セイヨウスグリ",
+      "sourceNames": [
+        [
+          "セイヨウスグリ",
+          "wikidata",
+          "Q41503"
+        ],
+        [
+          "マルスグリ",
+          "nilim-r07",
+          "700936"
+        ]
+      ]
+    },
+    "Robinia pseudoacacia": {
+      "retained": "ニセアカシア",
+      "sourceNames": [
+        [
+          "ニセアカシア",
+          "wikidata",
+          "Q157417"
+        ],
+        [
+          "ハリエンジュ",
+          "nilim-r07",
+          "701177"
+        ]
+      ]
+    },
+    "Rubus idaeus": {
+      "retained": "ヨーロッパキイチゴ",
+      "sourceNames": [
+        [
+          "エゾキイチゴ",
+          "nilim-r07",
+          "701063"
+        ],
+        [
+          "ヨーロッパキイチゴ",
+          "wikidata",
+          "Q12252383"
+        ]
+      ]
+    },
+    "Rubus palmatus": {
+      "retained": "ナガバモミジイチゴ",
+      "sourceNames": [
+        [
+          "ナガバモミジイチゴ",
+          "wikidata",
+          "Q17250437"
+        ],
+        [
+          "モミジイチゴ",
+          "nilim-r07",
+          "701072"
+        ]
+      ]
+    },
+    "Rudbeckia hirta": {
+      "retained": "ブラックアイドスーザン",
+      "sourceNames": [
+        [
+          "キヌガサギク",
+          "nilim-r07",
+          "702404"
+        ],
+        [
+          "ブラックアイドスーザン",
+          "wikidata",
+          "Q2532820"
+        ]
+      ]
+    },
+    "Salvia splendens": {
+      "retained": "サルビア",
+      "sourceNames": [
+        [
+          "サルビア",
+          "wikidata",
+          "Q161080"
+        ],
+        [
+          "ヒゴロモソウ",
+          "nilim-r07",
+          "30005767"
+        ]
+      ]
+    },
+    "Silene dioica": {
+      "retained": "レッドキャンピオン",
+      "sourceNames": [
+        [
+          "アケボノセンノウ",
+          "nilim-r07",
+          "30007721"
+        ],
+        [
+          "レッドキャンピオン",
+          "wikidata",
+          "Q161699"
+        ]
+      ]
+    },
+    "Silybum marianum": {
+      "retained": "マリアアザミ",
+      "sourceNames": [
+        [
+          "オオアザミ",
+          "nilim-r07",
+          "10001783"
+        ],
+        [
+          "マリアアザミ",
+          "wikidata",
+          "Q193798"
+        ]
+      ]
+    },
+    "Sinomenium acutum": {
+      "retained": "オオツヅラフジ",
+      "sourceNames": [
+        [
+          "オオツヅラフジ",
+          "wikidata",
+          "Q3485032"
+        ],
+        [
+          "ツヅラフジ",
+          "nilim-r07",
+          "700723"
+        ]
+      ]
+    },
+    "Solidago canadensis": {
+      "retained": "セイタカアワダチソウ",
+      "sourceNames": [
+        [
+          "カナダアキノキリンソウ",
+          "nilim-r07",
+          "702422"
+        ],
+        [
+          "セイタカアワダチソウ",
+          "wikidata",
+          "Q254436"
+        ]
+      ]
+    },
+    "Syringa vulgaris": {
+      "retained": "ライラック",
+      "sourceNames": [
+        [
+          "ムラサキハシドイ",
+          "nilim-r07",
+          "701739"
+        ],
+        [
+          "ライラック",
+          "wikidata",
+          "Q6565319"
+        ]
+      ]
+    },
+    "Taxodium distichum": {
+      "retained": "ラクウショウ",
+      "sourceNames": [
+        [
+          "ヌマスギ",
+          "nilim-r07",
+          "703322"
+        ],
+        [
+          "ラクウショウ",
+          "wikidata",
+          "Q148950"
+        ]
+      ]
+    },
+    "Tradescantia fluminensis": {
+      "retained": "トキワツユクサ",
+      "sourceNames": [
+        [
+          "トキワツユクサ",
+          "wikidata",
+          "Q601079"
+        ],
+        [
+          "ノハカタカラクサ",
+          "nilim-r07",
+          "702674"
+        ]
+      ]
+    },
+    "Tradescantia pallida": {
+      "retained": "ムラサキゴテン",
+      "sourceNames": [
+        [
+          "ムラサキオオツユクサ",
+          "nilim-r07",
+          "30004650"
+        ],
+        [
+          "ムラサキゴテン",
+          "wikidata",
+          "Q1563504"
+        ]
+      ]
+    },
+    "Trillium smallii": {
+      "retained": "エンレイソウ",
+      "sourceNames": [
+        [
+          "エンレイソウ",
+          "wikidata",
+          "Q3539185"
+        ],
+        [
+          "コジマエンレイソウ",
+          "nilim-r07",
+          "10005192"
+        ]
+      ]
+    },
+    "Triticum aestivum": {
+      "retained": "パンコムギ",
+      "sourceNames": [
+        [
+          "コムギ",
+          "nilim-r07",
+          "702967"
+        ],
+        [
+          "パンコムギ",
+          "wikidata",
+          "Q161098"
+        ]
+      ]
+    },
+    "Tropaeolum majus": {
+      "retained": "キンレンカ",
+      "sourceNames": [
+        [
+          "キンレンカ",
+          "wikidata",
+          "Q156288"
+        ],
+        [
+          "ノウゼンハレン",
+          "nilim-r07",
+          "20003480"
+        ]
+      ]
+    },
+    "Vaccinium wrightii": {
+      "retained": "ギーマ (植物)",
+      "sourceNames": [
+        [
+          "ギーマ",
+          "nilim-r07",
+          "704143"
+        ]
+      ]
+    },
+    "Verbesina alternifolia": {
+      "retained": "ハチミツソウ",
+      "sourceNames": [
+        [
+          "ハチミツソウ",
+          "wikidata",
+          "Q11933237"
+        ],
+        [
+          "ハネミギク",
+          "nilim-r07",
+          "30004384"
+        ]
+      ]
+    },
+    "Vespa simillima": {
+      "retained": "ケブカスズメバチ",
+      "sourceNames": [
+        [
+          "キイロスズメバチ",
+          "nilim-r07",
+          "85696"
+        ],
+        [
+          "ケブカスズメバチ",
+          "wikidata",
+          "Q2707787"
+        ]
+      ]
+    },
+    "Vigna radiata": {
+      "retained": "リョクトウ",
+      "sourceNames": [
+        [
+          "ヤエナリ",
+          "nilim-r07",
+          "10002528"
+        ],
+        [
+          "リョクトウ",
+          "wikidata",
+          "Q484447"
+        ]
+      ]
+    },
+    "Vigna umbellata": {
+      "retained": "タケアズキ",
+      "sourceNames": [
+        [
+          "タケアズキ",
+          "wikidata",
+          "Q1368391"
+        ],
+        [
+          "ツルアズキ",
+          "nilim-r07",
+          "701208"
+        ]
+      ]
+    },
+    "Viola collina": {
+      "retained": "エゾノアオイスミレ",
+      "sourceNames": [
+        [
+          "エゾアオイスミレ",
+          "nilim-r07",
+          "701436"
+        ],
+        [
+          "エゾノアオイスミレ",
+          "wikidata",
+          "Q1652130"
+        ]
+      ]
+    },
+    "Vitis flexuosa": {
+      "retained": "サンカクズル",
+      "sourceNames": [
+        [
+          "サンカクズル",
+          "wikidata",
+          "Q1031569"
+        ],
+        [
+          "サンカクヅル",
+          "nilim-r07",
+          "701386"
+        ]
+      ]
+    },
+    "Vulpes vulpes": {
+      "retained": "アカギツネ",
+      "sourceNames": [
+        [
+          "アカギツネ",
+          "wikidata",
+          "Q8332"
+        ],
+        [
+          "キツネ",
+          "nilim-r07",
+          "30009096"
+        ]
+      ]
+    },
+    "Xanthodes transversa": {
+      "retained": "フタトガリコヤガ",
+      "sourceNames": [
+        [
+          "フタトガリアオイガ",
+          "nilim-r07",
+          "63429"
+        ],
+        [
+          "フタトガリコヤガ",
+          "wikidata",
+          "Q13491811"
+        ]
+      ]
+    },
+    "Xiphophorus hellerii": {
+      "retained": "ソードテール",
+      "sourceNames": [
+        [
+          "グリーンソードテール",
+          "nilim-r07",
+          "30007603"
+        ],
+        [
+          "ソードテール",
+          "wikidata",
+          "Q272188"
+        ]
+      ]
+    },
+    "Zalophus japonicus": {
+      "retained": "アシカ",
+      "sourceNames": [
+        [
+          "アシカ",
+          "wikidata",
+          "Q840036"
+        ],
+        [
+          "ニホンアシカ",
+          "nilim-r07",
+          "501476"
+        ]
+      ]
+    }
+  },
+  "newNamesExcluded": {
+    "Acridotheres javanicus": [
+      [
+        "ジャワハッカ",
+        "wikidata",
+        "Q74017"
+      ],
+      [
+        "モリハッカ",
+        "nilim-r07",
+        "501155"
+      ]
+    ],
+    "Anadara kagoshimensis": [
+      [
+        "サルボウガイ",
+        "wikidata",
+        "Q4750739"
+      ],
+      [
+        "サルボオ",
+        "nilim-r07",
+        "100469"
+      ]
+    ],
+    "Anthus rubescens": [
+      [
+        "アメリカタヒバリ",
+        "wikidata",
+        "Q871527"
+      ],
+      [
+        "タヒバリ",
+        "nilim-r07",
+        "500991"
+      ]
+    ],
+    "Calliphora vicina": [
+      [
+        "ホホアカクロバエ",
+        "nilim-r07",
+        "68458"
+      ],
+      [
+        "ホホアカグロバエ",
+        "wikidata",
+        "Q1060187"
+      ]
+    ],
+    "Callosciurus erythraeus": [
+      [
+        "クリハラリス",
+        "nilim-r07",
+        "501401"
+      ],
+      [
+        "パラスリス",
+        "wikidata",
+        "Q860603"
+      ]
+    ],
+    "Capitella capitata": [
+      [
+        "イトゴカイ",
+        "nilim-r07",
+        "100765"
+      ],
+      [
+        "カピテッラ・カピタータ",
+        "wikidata",
+        "Q2060342"
+      ]
+    ],
+    "Ceropria induta": [
+      [
+        "ナガニジゴミムシダマシ",
+        "wikidata",
+        "Q107564238"
+      ],
+      [
+        "ヒメナガニジゴミムシダマシ",
+        "nilim-r07",
+        "78088"
+      ]
+    ],
+    "Chilo suppressalis": [
+      [
+        "ニカメイガ",
+        "nilim-r07",
+        "60022"
+      ],
+      [
+        "ニカメイチュウ",
+        "wikidata",
+        "Q421516"
+      ]
+    ],
+    "Citrus japonica": [
+      [
+        "キンカン",
+        "nilim-r07",
+        "20003493"
+      ],
+      [
+        "チートルス・ジャポニカ",
+        "wikidata",
+        "Q124344319"
+      ]
+    ],
+    "Clematis parviloba": [
+      [
+        "クレマティス・パルヴィローバ",
+        "wikidata",
+        "Q15239263"
+      ],
+      [
+        "コバノボタンヅル",
+        "nilim-r07",
+        "700671"
+      ]
+    ],
+    "Clematis tashiroi": [
+      [
+        "クレマティス・タシロイ",
+        "wikidata",
+        "Q15239177"
+      ],
+      [
+        "ヤエヤマセンニンソウ",
+        "nilim-r07",
+        "703734"
+      ]
+    ],
+    "Clupea pallasii": [
+      [
+        "タイヘイヨウニシン",
+        "wikidata",
+        "Q1510347"
+      ],
+      [
+        "ニシン",
+        "nilim-r07",
+        "500029"
+      ]
+    ],
+    "Dactylispa issikii": [
+      [
+        "イッシキトゲハムシ",
+        "wikidata",
+        "Q119152175"
+      ],
+      [
+        "タケトゲハムシ",
+        "nilim-r07",
+        "79637"
+      ]
+    ],
+    "Eristalis tenax": [
+      [
+        "ナミハナアブ",
+        "nilim-r07",
+        "66641"
+      ],
+      [
+        "ハナアブ",
+        "wikidata",
+        "Q1048880"
+      ]
+    ],
+    "Felis catus": [
+      [
+        "ノネコ",
+        "nilim-r07",
+        "501473"
+      ],
+      [
+        "ヨーロッパヤマネコ",
+        "wikidata",
+        "Q20980826"
+      ]
+    ],
+    "Fragaria vesca": [
+      [
+        "エゾノヘビイチゴ",
+        "nilim-r07",
+        "700973"
+      ],
+      [
+        "エゾヘビイチゴ",
+        "wikidata",
+        "Q146684"
+      ]
+    ],
+    "Galanthus nivalis": [
+      [
+        "スノードロップ",
+        "nilim-r07",
+        "10001834"
+      ],
+      [
+        "マツユキソウ",
+        "wikidata",
+        "Q109995"
+      ]
+    ],
+    "Hemiclepsis marginata": [
+      [
+        "アタマヒル",
+        "wikidata",
+        "Q1604756"
+      ],
+      [
+        "アタマビル",
+        "nilim-r07",
+        "100893"
+      ]
+    ],
+    "Hypsugo alaschanicus": [
+      [
+        "オオアブラコウモリ",
+        "wikidata",
+        "Q2308782"
+      ],
+      [
+        "クロオオアブラコウモリ",
+        "nilim-r07",
+        "30009084"
+      ]
+    ],
+    "Istiblennius edentulus": [
+      [
+        "カエルウオ",
+        "wikidata",
+        "Q2446169"
+      ],
+      [
+        "ニセカエルウオ",
+        "nilim-r07",
+        "30009788"
+      ]
+    ],
+    "Ligustrum sinense": [
+      [
+        "コミノネズミモチ",
+        "wikidata",
+        "Q1074201"
+      ],
+      [
+        "シナイボタ",
+        "nilim-r07",
+        "30009288"
+      ]
+    ],
+    "Ligustrum vulgare": [
+      [
+        "セイヨウイボタ",
+        "wikidata",
+        "Q1848856"
+      ],
+      [
+        "ヨウシュイボタ",
+        "nilim-r07",
+        "10001650"
+      ]
+    ],
+    "Littoraria pallescens": [
+      [
+        "イロタマキビ",
+        "nilim-r07",
+        "100223"
+      ],
+      [
+        "イロタマキビガイ",
+        "wikidata",
+        "Q6653296"
+      ]
+    ],
+    "Macrothele gigas": [
+      [
+        "オオクロケブカジョウゴクモ",
+        "nilim-r07",
+        "50022"
+      ],
+      [
+        "オオクロケブカジョウゴグモ",
+        "wikidata",
+        "Q2392796"
+      ]
+    ],
+    "Maladera japonica": [
+      [
+        "ビロウドコガネ",
+        "nilim-r07",
+        "74101"
+      ],
+      [
+        "ビロードコガネ",
+        "wikidata",
+        "Q2308184"
+      ]
+    ],
+    "Medicago arabica": [
+      [
+        "メディカゴ・アラビカ",
+        "wikidata",
+        "Q159140"
+      ],
+      [
+        "モンツキウマゴヤシ",
+        "nilim-r07",
+        "30006830"
+      ]
+    ],
+    "Medicago minima": [
+      [
+        "コウマゴヤシ",
+        "nilim-r07",
+        "701166"
+      ],
+      [
+        "メディカゴ・ミニマ",
+        "wikidata",
+        "Q144139"
+      ]
+    ],
+    "Mentha arvensis": [
+      [
+        "ニホンハッカ",
+        "wikidata",
+        "Q160585"
+      ],
+      [
+        "ヨウシュハッカ",
+        "nilim-r07",
+        "701928"
+      ]
+    ],
+    "Neophocaena asiaeorientalis": [
+      [
+        "スナメリ",
+        "nilim-r07",
+        "30009313"
+      ],
+      [
+        "ヨウスコウスナメリ",
+        "wikidata",
+        "Q22286308"
+      ]
+    ],
+    "Neottia nidus-avis": [
+      [
+        "エゾサカネラン",
+        "nilim-r07",
+        "704624"
+      ],
+      [
+        "ニダスエイビスオーキッド",
+        "wikidata",
+        "Q157441"
+      ]
+    ],
+    "Ninox scutulata": [
+      [
+        "アオバズク",
+        "nilim-r07",
+        "500941"
+      ],
+      [
+        "フーアアオバズク",
+        "wikidata",
+        "Q856009"
+      ]
+    ],
+    "Opuntia ficus-indica": [
+      [
+        "ウチワサボテン",
+        "nilim-r07",
+        "20003741"
+      ],
+      [
+        "オオガタホウケン",
+        "wikidata",
+        "Q144412"
+      ]
+    ],
+    "Oreochromis niloticus": [
+      [
+        "ティラピア",
+        "wikidata",
+        "Q311170"
+      ],
+      [
+        "ナイルティラピア",
+        "nilim-r07",
+        "500349"
+      ]
+    ],
+    "Otus lempiji": [
+      [
+        "オオコノハズク",
+        "nilim-r07",
+        "500939"
+      ],
+      [
+        "スンダオオコノハズク",
+        "wikidata",
+        "Q1267153"
+      ]
+    ],
+    "Parablennius yatabei": [
+      [
+        "イソギンポ",
+        "nilim-r07",
+        "500383"
+      ],
+      [
+        "パラブレンニウス・ヤタベイ",
+        "wikidata",
+        "Q2711920"
+      ]
+    ],
+    "Parachauliodes japonicus": [
+      [
+        "クロスジヘビトンボ",
+        "wikidata",
+        "Q7582311"
+      ],
+      [
+        "ヤマトクロスジヘビトンボ",
+        "nilim-r07",
+        "56835"
+      ]
+    ],
+    "Phylloscopus borealis": [
+      [
+        "コムシクイ",
+        "nilim-r07",
+        "501062"
+      ],
+      [
+        "メボソムシクイ",
+        "wikidata",
+        "Q720497"
+      ]
+    ],
+    "Poa pratensis": [
+      [
+        "ケンタッキーブルーグラス",
+        "wikidata",
+        "Q147783"
+      ],
+      [
+        "ナガハグサ",
+        "nilim-r07",
+        "702901"
+      ]
+    ],
+    "Populus deltoides": [
+      [
+        "ヒロハハコヤナギ",
+        "wikidata",
+        "Q149319"
+      ],
+      [
+        "ヒロハヤマナラシ",
+        "nilim-r07",
+        "30004336"
+      ]
+    ],
+    "Pterodroma phaeopygia": [
+      [
+        "ガラパゴスシロハラミズナギドリ",
+        "wikidata",
+        "Q1274614"
+      ],
+      [
+        "ハワイシロハラミズナギドリ",
+        "nilim-r07",
+        "500613"
+      ]
+    ],
+    "Ranunculus repens": [
+      [
+        "コバノハイキンポウゲ",
+        "nilim-r07",
+        "30009426"
+      ],
+      [
+        "ハイキンポウゲ",
+        "wikidata",
+        "Q213356"
+      ]
+    ],
+    "Rhizophora stylosa": [
+      [
+        "オオバヒルギ",
+        "nilim-r07",
+        "704062"
+      ],
+      [
+        "ヤエヤマヒルギ",
+        "wikidata",
+        "Q15251914"
+      ]
+    ],
+    "Rubus armeniacus": [
+      [
+        "セイヨウヤブイチゴ",
+        "nilim-r07",
+        "701060"
+      ],
+      [
+        "ヒマラヤブラックベリー",
+        "wikidata",
+        "Q163056"
+      ]
+    ],
+    "Rubus nishimuranus": [
+      [
+        "ニシムラキイチゴ",
+        "nilim-r07",
+        "701069"
+      ],
+      [
+        "ハチジョウクサイチゴ",
+        "wikidata",
+        "Q17246136"
+      ]
+    ],
+    "Salix triandra": [
+      [
+        "セイヨウタチヤナギ",
+        "wikidata",
+        "Q157532"
+      ],
+      [
+        "タチヤナギ",
+        "nilim-r07",
+        "700293"
+      ]
+    ],
+    "Salvia reflexa": [
+      [
+        "イヌヒメコヅチ",
+        "nilim-r07",
+        "701963"
+      ],
+      [
+        "サルビア・リフレクサ",
+        "wikidata",
+        "Q7155221"
+      ]
+    ],
+    "Scirpophaga incertulas": [
+      [
+        "イッテンオオメイガ",
+        "nilim-r07",
+        "60358"
+      ],
+      [
+        "サンカメイチュウ",
+        "wikidata",
+        "Q3595381"
+      ]
+    ],
+    "Solanum torvum": [
+      [
+        "スズメナス",
+        "wikidata",
+        "Q978609"
+      ],
+      [
+        "スズメナスビ",
+        "nilim-r07",
+        "30008729"
+      ]
+    ],
+    "Tofieldia nuda": [
+      [
+        "クロカミゼキショウ",
+        "wikidata",
+        "Q12593202"
+      ],
+      [
+        "ハナゼキショウ",
+        "nilim-r07",
+        "10001820"
+      ]
+    ],
+    "Trifolium fragiferum": [
+      [
+        "ストベリークローバー",
+        "wikidata",
+        "Q158153"
+      ],
+      [
+        "ツメクサダマシ",
+        "nilim-r07",
+        "30005742"
+      ]
+    ],
+    "Turdus naumanni": [
+      [
+        "ツグミ",
+        "nilim-r07",
+        "501037"
+      ],
+      [
+        "ハチジョウツグミ",
+        "wikidata",
+        "Q843175"
+      ]
+    ],
+    "Viola variegata": [
+      [
+        "ゲンジスミレ",
+        "nilim-r07",
+        "704043"
+      ],
+      [
+        "フイリゲンジスミレ",
+        "wikidata",
+        "Q11080244"
+      ]
+    ],
+    "Zoothera dauma": [
+      [
+        "カッショクトラツグミ",
+        "wikidata",
+        "Q695723"
+      ],
+      [
+        "トラツグミ",
+        "nilim-r07",
+        "501026"
+      ]
+    ]
+  },
+  "modelJapanCoverage": {
+    "japanRetrieved": "2026-09-22",
+    "labelsSha256": "4648928b006f85d83d28e5a27074ca9363465d82e778d708b369c5eaf54b8ef5",
+    "japanSha256": "add1f8502bf15819e1f72dfa4051d532190b233b3e51e435559ae394d519f051",
+    "counts": {
+      "Aves": {
+        "total": 987,
+        "before": 696,
+        "after": 947
+      },
+      "Insecta": {
+        "total": 11404,
+        "before": 746,
+        "after": 5595
+      },
+      "all": {
+        "total": 54054,
+        "before": 7293,
+        "after": 16617
+      }
+    }
+  }
+}
