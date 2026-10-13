@@ -31,7 +31,7 @@ def download(path, url, fetch, export=False):
         if not fetch:
             raise ValueError('Missing cached S-Net response: ' + str(path))
         request = urllib.request.Request(url, data=b'' if export else None,
-                                         headers={'User-Agent': 'DigiViewer/0.6.2 (Japanese-name dictionary)'})
+                                         headers={'User-Agent': 'DigiViewer/0.7.0 (Japanese-name dictionary)'})
         with urllib.request.urlopen(request, timeout=60) as response:
             content = response.read()
         path.write_bytes(content)

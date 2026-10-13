@@ -39,7 +39,7 @@ python3 scripts/expand-japanese-species-names.py \
 
 取得途中で失敗したら同じキャッシュで再開できます。別の日の取得には新しいキャッシュを使い、取得日を正しく記録してください。全照会が完了し、JSON・列構造・件数の確認が済むまで同梱辞書を書き換えません。取得対象範囲と検索式を含む完全なJSONを保存してある場合は、`--cache` の代わりに `--wikidata-input` を指定できます。
 
-結果は追加辞書と `docs/japanese-names-expansion-audit.json` に出力します。後者には競合と表示率を記録します。モデル照合の表示率は画像判定の正解率ではありません。計測の条件・結果は `docs/japanese-names-expansion-0.6.2.md` を参照してください。
+結果は追加辞書と `docs/japanese-names-expansion-audit.json` に出力します。後者には競合と表示率を記録します。モデル照合の表示率は画像判定の正解率ではありません。計測の条件・結果は `docs/japanese-names-expansion-0.7.0.md` を参照してください。
 
 ## 確認
 
@@ -89,7 +89,7 @@ python3 scripts/expand-japanese-insect-names.py \
 - S-Netは `scripts/data/snet-targets.json` に固定した60学名を調べたものです。国内記録の多い未収録学名から、先行照合に和名の競合がないものを選んでいます。公開CSVの全行取得を確認し、種階級・同じ学名・和名が1つ・2機関以上を条件に、GBIFの同一標本・同じ科・種階級・和名・利用条件を再確認します。CC BY 4.0またはCC0の採用分だけを抽出・加工します。2機関の一致は誤同定がないことの保証ではありません。標本を照合するための機関・コレクション・標本番号・出典IDを記録し、採集者氏名や座標を同梱しません。
 - `scripts/data/japanese-name-decisions.json` は個別に確認した対応です。`Favonius saphirina` と既存の `Favonius saphirinus` はCOLの明示的なWikidata IDが共通であることを確認。既存和名を採用し、誤記候補を含めて判断理由を保存します。出典側のID・和名候補集合が変わった場合は自動更新せず処理を止めます。
 
-和名が複数あるもの、同名別種、分類が合わないものは未収録のままです。文字の類似、画像生成AIによる翻訳、亜種名の切り詰めで件数を増やしません。表示率の比較は[検証報告](../../docs/japanese-names-expansion-0.6.2.md)を参照してください。
+和名が複数あるもの、同名別種、分類が合わないものは未収録のままです。文字の類似、画像生成AIによる翻訳、亜種名の切り詰めで件数を増やしません。表示率の比較は[検証報告](../../docs/japanese-names-expansion-0.7.0.md)を参照してください。
 
 ### 再生成
 

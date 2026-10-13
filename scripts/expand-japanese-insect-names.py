@@ -142,7 +142,7 @@ class Cache:
                     if not getattr(self.local, 'connection', None):
                         self.local.connection = http.client.HTTPSConnection('api.checklistbank.org', timeout=45)
                     self.local.connection.request('GET', path, headers={
-                        'User-Agent': 'DigiViewer/0.6.2 (https://github.com/mayochan32/digiviewer; offline Japanese-name dictionary)',
+                        'User-Agent': 'DigiViewer/0.7.0 (https://github.com/mayochan32/digiviewer; offline Japanese-name dictionary)',
                         'Accept': 'application/json'})
                     response = self.local.connection.getresponse()
                     raw = response.read()

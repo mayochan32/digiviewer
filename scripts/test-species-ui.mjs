@@ -17,7 +17,7 @@ try {
       invoke: async (command, args) => {
       if (command === 'plugin:opener|open_url') { window.__openedUrls.push(args.url); return; }
       if (command === 'ensure_crop_directory') return '/fixtures/crops';
-      if (command === 'app_version') return '0.6.2';
+      if (command === 'app_version') return '0.7.0';
       if (command === 'plugin:event|listen') return 1;
       if (command === 'plugin:dialog|open') return '/fixtures';
       if (command === 'load_review_state') return [];

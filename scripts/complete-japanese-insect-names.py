@@ -62,7 +62,7 @@ class PublicCache:
                 raise ValueError('Missing cached response: ' + url)
             for attempt in range(5):
                 try:
-                    request = urllib.request.Request(url, headers={'User-Agent': 'DigiViewer/0.6.2 (offline Japanese-name dictionary)'})
+                    request = urllib.request.Request(url, headers={'User-Agent': 'DigiViewer/0.7.0 (offline Japanese-name dictionary)'})
                     with urllib.request.urlopen(request, timeout=45) as response:
                         data = json.load(response)
                     write(path, {'url': url, 'retrieved': self.retrieved, 'data': data})
