@@ -1,0 +1,4 @@
+# Dictionary provenance hashes must match the same bytes on every OS.
+/src/data/*.json text eol=lf
+/docs/japanese-*-audit.json text eol=lf
+/scripts/data/*.json text eol=lf
